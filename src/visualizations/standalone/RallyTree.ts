@@ -107,7 +107,7 @@ export function rallyTree() {
   function update(opts?: { sizeToFit?: boolean }) {
     // Calculate max rally length using D3 v7 max
     maxRally = max(points, (point) => {
-      if (point.rally && point.rallyLength) return point.rallyLength();
+      if (point.rallyLength) return point.rallyLength();
       return 0;
     }) || 0;
 

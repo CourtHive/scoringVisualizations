@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/html';
 import { rallyTree } from './RallyTree.ts';
-import { mcpToMatchUpV4 } from './data/mcpAdapter';
+import { feedMatchUp } from '../../engine/feedMatchUp';
+import { buildEpisodes } from '../../episodes/buildEpisodes';
 import { select } from 'd3';
 
 interface RallyTreeArgs {
@@ -11,7 +12,7 @@ interface RallyTreeArgs {
 
 /**
  * Rally Tree Visualization
- * 
+ *
  * Displays rally length distribution in a tree-like format.
  * Shows how rally lengths are distributed by player and outcome.
  * Each bar represents a point, positioned by rally length and player.
@@ -27,20 +28,16 @@ const meta: Meta<RallyTreeArgs> = {
     container.style.height = `${args.height}px`;
     container.style.padding = '20px';
     container.style.backgroundColor = '#ffffff';
-    
+
     // Real MCP match data: Federer vs Djokovic
-    const matchUp = mcpToMatchUpV4(0);
-    const matchData = matchUp.episodes;
-    const points = matchData.map(ep => ({
+    const matchUp = feedMatchUp(0);
+    const episodes = buildEpisodes(matchUp);
+    const points = episodes.map((ep) => ({
       winner: ep.point.winner,
       result: ep.point.result,
-      rally: ep.point.rally,
-      rallyLength: function() {
-        const rally = this.rally || '';
-        return Math.floor(rally.length / 2) || 2;
-      },
+      rallyLength: () => ep.point.rallyLength ?? 2,
     }));
-    
+
     // Create chart
     const chart = rallyTree();
     chart.options({
@@ -56,25 +53,25 @@ const meta: Meta<RallyTreeArgs> = {
       },
       points: {
         colors: {
-          'Winner': '#2ecc71',
-          'Ace': '#27ae60',
+          Winner: '#2ecc71',
+          Ace: '#27ae60',
           'Serve Winner': '#27ae60',
           'Unforced Error': '#e74c3c',
-          'Net': '#e67e22',
-          'Out': '#c0392b',
+          Net: '#e67e22',
+          Out: '#c0392b',
           'Passing Shot': '#2ecc71',
           'Forced Error': '#f39c12',
         },
       },
     });
-    
+
     chart.data(points);
-    
+
     setTimeout(() => {
       select(container).call(chart);
       if (chart.update) chart.update();
     }, 0);
-    
+
     return container;
   },
   argTypes: {

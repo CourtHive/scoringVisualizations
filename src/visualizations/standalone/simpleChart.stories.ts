@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/html';
 import { simpleChart } from './simpleChart';
-import { mcpRallyLengths } from './data/mcpAdapter';
+import { feedMatchUp, extractRallyLengths } from '../../engine/feedMatchUp';
 
 interface SimpleChartArgs {
   width: number;
@@ -10,7 +10,7 @@ interface SimpleChartArgs {
 
 /**
  * Simple Chart Visualization
- * 
+ *
  * Displays rally lengths as a line chart comparing two players.
  * Each line represents rally lengths over the course of points.
  */
@@ -24,15 +24,16 @@ const meta: Meta<SimpleChartArgs> = {
     container.style.width = '100%';
     container.style.height = '500px';
     container.style.padding = '20px';
-    
+
     // Real MCP match data: Federer vs Djokovic
-    const data = mcpRallyLengths(0);
-    
+    const matchUp = feedMatchUp(0);
+    const data = extractRallyLengths(matchUp);
+
     // Render chart
     setTimeout(() => {
       simpleChart('simple-chart-container', data);
     }, 0);
-    
+
     return container;
   },
   argTypes: {
@@ -71,14 +72,15 @@ export const ShortMatch: Story = {
     container.style.width = '100%';
     container.style.height = '400px';
     container.style.padding = '20px';
-    
+
     // Real MCP match data: Djokovic vs Nadal (shorter match, 99 points)
-    const data = mcpRallyLengths(2);
-    
+    const matchUp = feedMatchUp(2);
+    const data = extractRallyLengths(matchUp);
+
     setTimeout(() => {
       simpleChart('simple-chart-short', data);
     }, 0);
-    
+
     return container;
   },
 };
@@ -98,14 +100,15 @@ export const LongRallies: Story = {
     container.style.width = '100%';
     container.style.height = '400px';
     container.style.padding = '20px';
-    
+
     // Real MCP match data: Federer vs Wawrinka (127 points)
-    const data = mcpRallyLengths(1);
-    
+    const matchUp = feedMatchUp(1);
+    const data = extractRallyLengths(matchUp);
+
     setTimeout(() => {
       simpleChart('simple-chart-long', data);
     }, 0);
-    
+
     return container;
   },
 };
@@ -120,16 +123,15 @@ export const ContrastingStyles: Story = {
     container.style.width = '100%';
     container.style.height = '400px';
     container.style.padding = '20px';
-    
+
     // Real MCP match data: Schwartzman vs Cervantes Huegun (135 points)
-    const data = mcpRallyLengths(3);
-    
+    const matchUp = feedMatchUp(3);
+    const data = extractRallyLengths(matchUp);
+
     setTimeout(() => {
       simpleChart('simple-chart-contrast', data);
     }, 0);
-    
+
     return container;
   },
 };
-
-

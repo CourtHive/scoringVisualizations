@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/html';
 import { momentumChart } from './momentumChart';
-import { mcpToMatchUpV4 } from './data/mcpAdapter';
+import { feedMatchUp } from '../../engine/feedMatchUp';
+import { buildEpisodes } from '../../episodes/buildEpisodes';
 import { select } from 'd3';
 
 interface MomentumChartArgs {
@@ -14,7 +15,7 @@ interface MomentumChartArgs {
 
 /**
  * Momentum Chart Visualization
- * 
+ *
  * Displays the flow of momentum across multiple games in a set or match.
  * Each game is represented as a vertical or horizontal section showing
  * point progression and score changes.
@@ -29,7 +30,7 @@ const meta: Meta<MomentumChartArgs> = {
     container.style.width = '100%';
     container.style.height = '800px';
     container.style.padding = '20px';
-    
+
     // Create chart
     const chart = momentumChart();
     chart.options({
@@ -48,17 +49,17 @@ const meta: Meta<MomentumChartArgs> = {
         players: { 0: '#a55194', 1: '#6b6ecf' },
       },
     });
-    
+
     // Real MCP match data: Federer vs Djokovic
-    const matchUp = mcpToMatchUpV4(0);
-    const matchData = matchUp.episodes;
-    chart.data(matchData);
-    
+    const matchUp = feedMatchUp(0);
+    const episodes = buildEpisodes(matchUp);
+    chart.data(episodes);
+
     setTimeout(() => {
       select(container).call(chart);
       if (chart.update) chart.update();
     }, 0);
-    
+
     return container;
   },
   argTypes: {
@@ -165,7 +166,7 @@ export const CompactHorizontal: Story = {
     container.style.width = '100%';
     container.style.height = '400px';
     container.style.padding = '20px';
-    
+
     const chart = momentumChart();
     chart.options({
       display: {
@@ -183,11 +184,11 @@ export const CompactHorizontal: Story = {
         players: { 0: '#e74c3c', 1: '#3498db' },
       },
     });
-    
+
     // Real MCP match data: Djokovic vs Nadal
-    const matchUp = mcpToMatchUpV4(2);
-    const matchData = matchUp.episodes;
-    chart.data(matchData);
+    const matchUp = feedMatchUp(2);
+    const episodes = buildEpisodes(matchUp);
+    chart.data(episodes);
 
     setTimeout(() => {
       select(container).call(chart);

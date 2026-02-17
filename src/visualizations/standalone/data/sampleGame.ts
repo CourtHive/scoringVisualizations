@@ -2,11 +2,10 @@
  * Sample game data for visualization testing
  * Represents a single game with various point scenarios
  *
- * UMO v4 Data Model - Uses plain data structures
+ * Uses plain data structures
  */
 
 import type { Point, GameGroup, Episode } from '../types';
-import type { UMOv4Episode, GameGroup as UMOv4GameGroup } from '../types/UMOv4';
 
 /**
  * Standard game: Player 0 wins 40-15
@@ -531,98 +530,3 @@ export function pointsToEpisodes(points: Point[]): Episode[] {
   });
 }
 
-/**
- * UMO v4 Episode Generator
- * Converts Point arrays to UMO v4 Episode format
- */
-export function pointsToEpisodesV4(points: Point[], gameIndex: number, setIndex: number): UMOv4Episode[] {
-  const tennisScore = (p0: number, p1: number): string => {
-    const scores = ['0', '15', '30', '40'];
-    if (p0 >= 3 && p1 >= 3) {
-      if (p0 === p1) return '40-40';
-      return p0 > p1 ? 'A-40' : '40-A';
-    }
-    const s0 = scores[Math.min(p0, 3)];
-    const s1 = scores[Math.min(p1, 3)];
-    return `${s0}-${s1}`;
-  };
-
-  return points.map((point, idx) => {
-    const isLastPoint = idx === points.length - 1;
-    const gameScore = point.points || [0, 0];
-
-    return {
-      point: {
-        id: `set${setIndex}-game${gameIndex}-point${idx}`,
-        index: point.index,
-        timestamp: new Date(Date.now() + point.index * 1000).toISOString(),
-        set: setIndex,
-        game: gameIndex,
-        gameInSet: gameIndex,
-        pointInGame: idx,
-        server: point.server,
-        winner: point.winner,
-        gameScore: [...gameScore] as [number, number],
-        gamesScore: [0, 0],
-        setsScore: [0, 0],
-        setCumulativePoints: [...gameScore] as [number, number], // For single game, cumulative = game score
-        tennisScore: point.score || tennisScore(gameScore[0], gameScore[1]),
-        rallyLength: point.notation ? point.notation.split(/\d+/).length - 1 : 0, // Add numeric length
-        rally: point.notation
-          ? {
-              notation: point.notation,
-              length: point.notation.split(/\d+/).length - 1,
-              rallyLength: point.notation.split(/\d+/).length - 1,
-            }
-          : undefined,
-        result: point.result as any,
-        tiebreak: point.tiebreak || false,
-        breakpoint: point.breakpoint || false,
-        setpoint: false,
-        matchUpPoint: false,
-      },
-      context: {
-        pointsNeededToWinGame: [Math.max(4 - gameScore[0], 0), Math.max(4 - gameScore[1], 0)],
-        pointsNeededToWinSet: [24, 24],
-        gamesNeededToWinSet: [6, 6],
-        gameComplete: isLastPoint,
-        gameWinner: isLastPoint ? point.winner : undefined,
-        setComplete: false,
-        setWinner: undefined,
-        matchUpComplete: false,
-        matchUpWinner: undefined,
-      },
-    };
-  });
-}
-
-/**
- * UMO v4 Game Groups
- */
-export const sampleGameGroupV4: UMOv4GameGroup = {
-  index: 0,
-  set: 0,
-  points: pointsToEpisodesV4(sampleGamePoints, 0, 0),
-  score: [1, 0],
-  complete: true,
-  winner: 0,
-};
-
-export const deuceGameGroupV4: UMOv4GameGroup = {
-  index: 1,
-  set: 0,
-  points: pointsToEpisodesV4(deuceGamePoints, 1, 0),
-  score: [1, 1],
-  complete: true,
-  winner: 1,
-};
-
-export const tiebreakGameGroupV4: UMOv4GameGroup = {
-  index: 6,
-  set: 0,
-  points: pointsToEpisodesV4(tiebreakGamePoints, 6, 0),
-  score: [7, 6],
-  complete: true,
-  winner: 0,
-  last_game: true,
-};

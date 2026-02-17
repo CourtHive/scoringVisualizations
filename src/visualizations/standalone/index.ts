@@ -29,10 +29,6 @@ export {
   pointsToEpisodes,
 } from './data/sampleGame';
 
-export {
-  generateSampleMatch,
-  generateSimpleChartData,
-} from './data/sampleMatch';
 
 // Types
 export type {

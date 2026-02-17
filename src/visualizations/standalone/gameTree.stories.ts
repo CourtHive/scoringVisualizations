@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/html';
 import { gameTree } from './gameTree';
 import { sampleGamePoints, deuceGamePoints, noAdGamePoints, pointsToEpisodes } from './data/sampleGame';
-import { mcpToEpisodesV4 } from './data/mcpAdapter';
+import { feedMatchUp } from '../../engine/feedMatchUp';
+import { buildEpisodes } from '../../episodes/buildEpisodes';
 import { setDev } from './utils/setDev';
 import { select } from 'd3';
 
@@ -58,11 +59,8 @@ const meta: Meta<GameTreeArgs> = {
 
     // Set dev data for debugging
     setDev({
-      // umo: mcpGameFixture.matchUp,
       data: episodes,
-      // points: mcpGameFixture.matchUp.history?.points || [],
       episodes: episodes,
-      // vizPoints: mcpGamePoints,
     });
 
     setTimeout(() => {
@@ -124,15 +122,13 @@ export const MultipleGames: Story = {
     });
 
     // Real MCP match data: Federer vs Djokovic (all episodes)
-    const episodes = mcpToEpisodesV4(0);
+    const matchUp = feedMatchUp(0);
+    const episodes = buildEpisodes(matchUp);
     chart.data(episodes);
 
     setDev({
-      // umo: mcpGameFixture.matchUp,
       data: episodes,
-      // points: mcpGameFixture.matchUp.history?.points || [],
       episodes: episodes,
-      // vizPoints: mcpGamePoints,
     });
 
     setTimeout(() => {
@@ -199,11 +195,8 @@ export const DeuceGame: Story = {
     chart.data(episodes);
 
     setDev({
-      // umo: mcpGameFixture.matchUp,
       data: episodes,
-      // points: mcpGameFixture.matchUp.history?.points || [],
       episodes: episodes,
-      // vizPoints: mcpGamePoints,
     });
 
     setTimeout(() => {
@@ -253,11 +246,8 @@ export const NoAdScoring: Story = {
     chart.data(episodes);
 
     setDev({
-      // umo: mcpGameFixture.matchUp,
       data: episodes,
-      // points: mcpGameFixture.matchUp.history?.points || [],
       episodes: episodes,
-      // vizPoints: mcpGamePoints,
     });
 
     setTimeout(() => {
@@ -313,11 +303,8 @@ export const ColorCodedResults: Story = {
     chart.data(episodes);
 
     setDev({
-      // umo: mcpGameFixture.matchUp,
       data: episodes,
-      // points: mcpGameFixture.matchUp.history?.points || [],
       episodes: episodes,
-      // vizPoints: mcpGamePoints,
     });
 
     setTimeout(() => {

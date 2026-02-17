@@ -7,6 +7,12 @@ export interface EpisodePoint {
   score: string;
   set: number;
   game: number;
+  // Fields from ScoringEngine / MCP data
+  rallyLength?: number;
+  result?: string;
+  notation?: string;
+  tiebreak?: boolean;
+  points?: [number, number];
 }
 
 export interface EpisodeGame {

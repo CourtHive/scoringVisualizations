@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/html';
 import { gameFish } from './gameFish';
 import { sampleGamePoints, deuceGamePoints, tiebreakGamePoints } from './data/sampleGame';
-import { mcpGamePoints } from './data/mcpAdapter';
+import { feedMatchUp, extractGamePoints } from '../../engine/feedMatchUp';
 import { select } from 'd3';
 
 interface GameFishArgs {
@@ -14,7 +14,7 @@ interface GameFishArgs {
 
 /**
  * Game Fish Visualization
- * 
+ *
  * Displays point-by-point details of a tennis game in a compact visual format.
  * Shows server, rally length, point results, and score progression.
  */
@@ -28,7 +28,7 @@ const meta: Meta<GameFishArgs> = {
     container.style.width = '100%';
     container.style.height = '600px';
     container.style.padding = '20px';
-    
+
     // Create chart
     const chart = gameFish();
     chart.options({
@@ -46,9 +46,10 @@ const meta: Meta<GameFishArgs> = {
       },
       score: [1, 0],
     });
-    
+
     // Real MCP match data: first game of Federer vs Djokovic
-    chart.data(mcpGamePoints(0, 0, 0));
+    const matchUp = feedMatchUp(0);
+    chart.data(extractGamePoints(matchUp, 0, 0));
 
     setTimeout(() => {
       select(container).call(chart);
@@ -121,7 +122,8 @@ export const Horizontal: Story = {
     });
 
     // Real MCP match data: second game of Federer vs Djokovic
-    chart.data(mcpGamePoints(0, 0, 1));
+    const matchUp = feedMatchUp(0);
+    chart.data(extractGamePoints(matchUp, 0, 1));
 
     setTimeout(() => {
       select(container).call(chart);
@@ -149,7 +151,7 @@ export const DeuceGame: Story = {
     container.style.width = '100%';
     container.style.height = '700px';
     container.style.padding = '20px';
-    
+
     const chart = gameFish();
     chart.options({
       display: {
@@ -166,14 +168,14 @@ export const DeuceGame: Story = {
       },
       score: [1, 1],
     });
-    
+
     chart.data(deuceGamePoints);
-    
+
     setTimeout(() => {
       select(container).call(chart);
       if (chart.update) chart.update();
     }, 0);
-    
+
     return container;
   },
 };
@@ -195,7 +197,7 @@ export const Tiebreak: Story = {
     container.style.width = '100%';
     container.style.height = '800px';
     container.style.padding = '20px';
-    
+
     const chart = gameFish();
     chart.options({
       display: {
@@ -212,14 +214,14 @@ export const Tiebreak: Story = {
       },
       score: [7, 6],
     });
-    
+
     chart.data(tiebreakGamePoints);
-    
+
     setTimeout(() => {
       select(container).call(chart);
       if (chart.update) chart.update();
     }, 0);
-    
+
     return container;
   },
 };
@@ -254,7 +256,7 @@ export const CompactView: Story = {
     container.style.width = '100%';
     container.style.height = '400px';
     container.style.padding = '20px';
-    
+
     const chart = gameFish();
     chart.options({
       display: {
@@ -271,9 +273,10 @@ export const CompactView: Story = {
       },
       score: [1, 0],
     });
-    
+
     // Real MCP match data: first game of Djokovic vs Nadal
-    chart.data(mcpGamePoints(2, 0, 0));
+    const matchUp = feedMatchUp(2);
+    chart.data(extractGamePoints(matchUp, 0, 0));
 
     setTimeout(() => {
       select(container).call(chart);

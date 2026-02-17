@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/html';
 import { ptsMatch } from './ptsChart';
-import { mcpToMatchUpV4 } from './data/mcpAdapter';
+import { feedMatchUp } from '../../engine/feedMatchUp';
+import { buildEpisodes } from '../../episodes/buildEpisodes';
 import { createJsonViewer } from './helpers/JsonViewer';
 import { select } from 'd3';
 
@@ -48,11 +49,10 @@ const meta: Meta<PtsChartArgs> = {
       },
     });
 
-    // Real MCP match data: Federer vs Djokovic (UMO v4)
-    const matchUp = mcpToMatchUpV4(0);
-
-    // Pass episodes array - chart.data() will handle UMO v4 format
-    chart.data(matchUp.episodes);
+    // Real MCP match data: Federer vs Djokovic
+    const matchUp = feedMatchUp(0);
+    const episodes = buildEpisodes(matchUp);
+    chart.data(episodes);
 
     setTimeout(() => {
       select(chartContainer).call(chart);
@@ -70,7 +70,7 @@ const meta: Meta<PtsChartArgs> = {
     dataContainer.appendChild(dataTitle);
 
     const jsonContainer = document.createElement('div');
-    createJsonViewer(jsonContainer, matchUp.episodes.slice(0, 20), { expanded: 1 });
+    createJsonViewer(jsonContainer, episodes.slice(0, 20), { expanded: 1 });
     dataContainer.appendChild(jsonContainer);
 
     const note = document.createElement('p');
@@ -168,8 +168,9 @@ export const SingleSet: Story = {
     });
 
     // Real MCP match data: Federer vs Djokovic — filter to first set only
-    const matchUp = mcpToMatchUpV4(0);
-    const set1Data = matchUp.episodes.filter((ep) => ep.point.set === 0);
+    const matchUp = feedMatchUp(0);
+    const episodes = buildEpisodes(matchUp);
+    const set1Data = episodes.filter((ep) => ep.point.set === 0);
 
     chart.data(set1Data);
 
@@ -220,8 +221,9 @@ export const WithRallyBars: Story = {
     });
 
     // Real MCP match data: Federer vs Djokovic — filter to first set only
-    const matchUp = mcpToMatchUpV4(0);
-    const set1Data = matchUp.episodes.filter((ep) => ep.point.set === 0);
+    const matchUp = feedMatchUp(0);
+    const episodes = buildEpisodes(matchUp);
+    const set1Data = episodes.filter((ep) => ep.point.set === 0);
 
     chart.data(set1Data);
 
@@ -263,9 +265,9 @@ export const WideLayout: Story = {
       },
     });
 
-    const matchUp = mcpToMatchUpV4(0);
-
-    chart.data(matchUp.episodes);
+    const matchUp = feedMatchUp(0);
+    const episodes = buildEpisodes(matchUp);
+    chart.data(episodes);
 
     setTimeout(() => {
       select(container).call(chart);
