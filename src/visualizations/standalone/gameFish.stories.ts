@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/html';
 import { gameFish } from './gameFish';
 import { sampleGamePoints, deuceGamePoints, tiebreakGamePoints } from './data/sampleGame';
+import { mcpGamePoints } from './data/mcpAdapter';
 import { select } from 'd3';
 
 interface GameFishArgs {
@@ -46,13 +47,14 @@ const meta: Meta<GameFishArgs> = {
       score: [1, 0],
     });
     
-    chart.data(sampleGamePoints);
-    
+    // Real MCP match data: first game of Federer vs Djokovic
+    chart.data(mcpGamePoints(0, 0, 0));
+
     setTimeout(() => {
       select(container).call(chart);
       if (chart.update) chart.update();
     }, 0);
-    
+
     return container;
   },
   argTypes: {
@@ -93,6 +95,40 @@ export const Horizontal: Story = {
     showRally: true,
     showGrid: true,
     cellSize: 20,
+  },
+  render: (args) => {
+    const container = document.createElement('div');
+    container.id = 'game-fish-horizontal';
+    container.style.width = '100%';
+    container.style.height = '600px';
+    container.style.padding = '20px';
+
+    const chart = gameFish();
+    chart.options({
+      display: {
+        sizeToFit: true,
+        orientation: args.orientation,
+        service: args.showService,
+        rally: args.showRally,
+        grid: args.showGrid,
+        transition_time: 0,
+      },
+      fish: {
+        cell_size: args.cellSize,
+        gridcells: ['0', '15', '30', '40', 'G'],
+      },
+      score: [1, 0],
+    });
+
+    // Real MCP match data: second game of Federer vs Djokovic
+    chart.data(mcpGamePoints(0, 0, 1));
+
+    setTimeout(() => {
+      select(container).call(chart);
+      if (chart.update) chart.update();
+    }, 0);
+
+    return container;
   },
 };
 
@@ -236,13 +272,14 @@ export const CompactView: Story = {
       score: [1, 0],
     });
     
-    chart.data(sampleGamePoints);
-    
+    // Real MCP match data: first game of Djokovic vs Nadal
+    chart.data(mcpGamePoints(2, 0, 0));
+
     setTimeout(() => {
       select(container).call(chart);
       if (chart.update) chart.update();
     }, 0);
-    
+
     return container;
   },
 };

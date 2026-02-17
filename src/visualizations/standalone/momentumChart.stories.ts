@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/html';
 import { momentumChart } from './momentumChart';
-import { generateSampleMatchUpV4 } from './data/sampleMatch';
+import { mcpToMatchUpV4 } from './data/mcpAdapter';
 import { select } from 'd3';
 
 interface MomentumChartArgs {
@@ -49,8 +49,8 @@ const meta: Meta<MomentumChartArgs> = {
       },
     });
     
-    // Generate sample match data
-    const matchUp = generateSampleMatchUpV4();
+    // Real MCP match data: Federer vs Djokovic
+    const matchUp = mcpToMatchUpV4(0);
     const matchData = matchUp.episodes;
     chart.data(matchData);
     
@@ -184,15 +184,16 @@ export const CompactHorizontal: Story = {
       },
     });
     
-    const matchUp = generateSampleMatchUpV4();
+    // Real MCP match data: Djokovic vs Nadal
+    const matchUp = mcpToMatchUpV4(2);
     const matchData = matchUp.episodes;
     chart.data(matchData);
-    
+
     setTimeout(() => {
       select(container).call(chart);
       if (chart.update) chart.update();
     }, 0);
-    
+
     return container;
   },
 };

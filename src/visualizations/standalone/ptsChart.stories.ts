@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/html';
 import { ptsMatch } from './ptsChart';
-import { generateSampleMatchUpV4 } from './data/sampleMatch';
+import { mcpToMatchUpV4 } from './data/mcpAdapter';
 import { createJsonViewer } from './helpers/JsonViewer';
 import { select } from 'd3';
 
@@ -48,8 +48,8 @@ const meta: Meta<PtsChartArgs> = {
       },
     });
 
-    // Generate sample matchUp data (UMO v4)
-    const matchUp = generateSampleMatchUpV4();
+    // Real MCP match data: Federer vs Djokovic (UMO v4)
+    const matchUp = mcpToMatchUpV4(0);
 
     // Pass episodes array - chart.data() will handle UMO v4 format
     chart.data(matchUp.episodes);
@@ -167,8 +167,8 @@ export const SingleSet: Story = {
       },
     });
 
-    // Generate matchUp data (UMO v4) and filter to first set only
-    const matchUp = generateSampleMatchUpV4();
+    // Real MCP match data: Federer vs Djokovic — filter to first set only
+    const matchUp = mcpToMatchUpV4(0);
     const set1Data = matchUp.episodes.filter((ep) => ep.point.set === 0);
 
     chart.data(set1Data);
@@ -219,8 +219,8 @@ export const WithRallyBars: Story = {
       },
     });
 
-    // Generate matchUp data (UMO v4) and filter to first set only
-    const matchUp = generateSampleMatchUpV4();
+    // Real MCP match data: Federer vs Djokovic — filter to first set only
+    const matchUp = mcpToMatchUpV4(0);
     const set1Data = matchUp.episodes.filter((ep) => ep.point.set === 0);
 
     chart.data(set1Data);
@@ -263,7 +263,7 @@ export const WideLayout: Story = {
       },
     });
 
-    const matchUp = generateSampleMatchUpV4();
+    const matchUp = mcpToMatchUpV4(0);
 
     chart.data(matchUp.episodes);
 

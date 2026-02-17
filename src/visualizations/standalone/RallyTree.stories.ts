@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/html';
 import { rallyTree } from './RallyTree.ts';
-import { generateSampleMatchUpV4 } from './data/sampleMatch';
+import { mcpToMatchUpV4 } from './data/mcpAdapter';
 import { select } from 'd3';
 
 interface RallyTreeArgs {
@@ -28,8 +28,8 @@ const meta: Meta<RallyTreeArgs> = {
     container.style.padding = '20px';
     container.style.backgroundColor = '#ffffff';
     
-    // Generate sample data
-    const matchUp = generateSampleMatchUpV4();
+    // Real MCP match data: Federer vs Djokovic
+    const matchUp = mcpToMatchUpV4(0);
     const matchData = matchUp.episodes;
     const points = matchData.map(ep => ({
       winner: ep.point.winner,

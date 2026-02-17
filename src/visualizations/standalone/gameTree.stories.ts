@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/html';
 import { gameTree } from './gameTree';
 import { sampleGamePoints, deuceGamePoints, noAdGamePoints, pointsToEpisodes } from './data/sampleGame';
-import { generateMultipleGamesV4 } from './data/sampleGames';
+import { mcpToEpisodesV4 } from './data/mcpAdapter';
 import { setDev } from './utils/setDev';
 import { select } from 'd3';
 
@@ -123,7 +123,8 @@ export const MultipleGames: Story = {
       },
     });
 
-    const episodes = generateMultipleGamesV4();
+    // Real MCP match data: Federer vs Djokovic (all episodes)
+    const episodes = mcpToEpisodesV4(0);
     chart.data(episodes);
 
     setDev({

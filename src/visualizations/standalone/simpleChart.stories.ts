@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/html';
 import { simpleChart } from './simpleChart';
-import { generateSimpleChartData } from './data/sampleMatch';
+import { mcpRallyLengths } from './data/mcpAdapter';
 
 interface SimpleChartArgs {
   width: number;
@@ -25,8 +25,8 @@ const meta: Meta<SimpleChartArgs> = {
     container.style.height = '500px';
     container.style.padding = '20px';
     
-    // Generate sample data
-    const data = generateSimpleChartData();
+    // Real MCP match data: Federer vs Djokovic
+    const data = mcpRallyLengths(0);
     
     // Render chart
     setTimeout(() => {
@@ -72,11 +72,8 @@ export const ShortMatch: Story = {
     container.style.height = '400px';
     container.style.padding = '20px';
     
-    // Generate shorter match data
-    const data = [
-      [3, 5, 2, 8, 4, 6, 3, 7, 5, 4],
-      [4, 3, 6, 4, 5, 3, 8, 2, 4, 5],
-    ];
+    // Real MCP match data: Djokovic vs Nadal (shorter match, 99 points)
+    const data = mcpRallyLengths(2);
     
     setTimeout(() => {
       simpleChart('simple-chart-short', data);
@@ -102,11 +99,8 @@ export const LongRallies: Story = {
     container.style.height = '400px';
     container.style.padding = '20px';
     
-    // Generate data with longer rallies
-    const data = [
-      Array.from({ length: 25 }, () => Math.floor(Math.random() * 20) + 8),
-      Array.from({ length: 25 }, () => Math.floor(Math.random() * 20) + 8),
-    ];
+    // Real MCP match data: Federer vs Wawrinka (127 points)
+    const data = mcpRallyLengths(1);
     
     setTimeout(() => {
       simpleChart('simple-chart-long', data);
@@ -127,12 +121,8 @@ export const ContrastingStyles: Story = {
     container.style.height = '400px';
     container.style.padding = '20px';
     
-    // Player 0: Shorter rallies (aggressive)
-    // Player 1: Longer rallies (baseline)
-    const data = [
-      Array.from({ length: 30 }, () => Math.floor(Math.random() * 6) + 2),
-      Array.from({ length: 30 }, () => Math.floor(Math.random() * 12) + 8),
-    ];
+    // Real MCP match data: Schwartzman vs Cervantes Huegun (135 points)
+    const data = mcpRallyLengths(3);
     
     setTimeout(() => {
       simpleChart('simple-chart-contrast', data);
