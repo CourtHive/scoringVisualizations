@@ -1,6 +1,4 @@
-import { rallyCount } from './legacyRally';
-import { select, selectAll, max as d3Max, min as d3Min, scaleLinear, scaleBand, range } from 'd3';
-import { normalizeEpisodes } from './utils/adapters';
+import { select, scaleLinear, scaleBand, range } from 'd3';
 
 export function gameFish() {
   let data: any;
@@ -596,7 +594,7 @@ export function gameFish() {
         return translate(o, l, 0);
       }
 
-      function rallyTstart(d: any, i: number) {
+      function _rallyTstart(d: any, i: number) {
         const o = midpoint;
         const l = radius + cL(d, i);
         return translate(o, l, 0);

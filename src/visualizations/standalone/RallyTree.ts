@@ -4,7 +4,7 @@
  * Shows how rally lengths are distributed by player and outcome
  */
 
-import { select, max, scaleLinear, area, curveLinear, curveBasis } from 'd3';
+import { max, scaleLinear, area, curveLinear, curveBasis } from 'd3';
 
 interface Point {
   winner: 0 | 1;

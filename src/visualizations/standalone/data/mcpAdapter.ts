@@ -322,9 +322,7 @@ function buildGameInfo(fixture: McpFixture): Record<number, GameInfoEntry> {
   const info: Record<number, GameInfoEntry> = {};
   let matchGame = 0;
 
-  fixture.sets.forEach((set, setIdx) => {
-    const isLastSet = setIdx === fixture.sets.length - 1;
-
+  fixture.sets.forEach((set) => {
     set.games.forEach((game, gameInSet) => {
       const isLastGameInSet = gameInSet === set.games.length - 1;
       const [startPt, endPt] = game.range;

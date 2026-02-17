@@ -17,7 +17,7 @@ interface SimpleChartArgs {
 const meta: Meta<SimpleChartArgs> = {
   title: 'Visualizations/SimpleChart',
   tags: ['autodocs'],
-  render: (args) => {
+  render: (_args) => {
     // Create container
     const container = document.createElement('div');
     container.id = 'simple-chart-container';

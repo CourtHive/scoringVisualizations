@@ -5,7 +5,7 @@
  * Allows visualizations to gradually migrate while maintaining backward compatibility
  */
 
-import type { Episode, Point, GameGroup } from '../types';
+import type { Episode, GameGroup } from '../types';
 import type { UMOv4Episode, GameGroup as UMOv4GameGroup } from '../types/UMOv4';
 
 /**

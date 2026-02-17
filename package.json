@@ -33,10 +33,16 @@
     "d3": "^7.9.0"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@storybook/addon-docs": "^10.2.9",
     "@storybook/addon-links": "^10.2.9",
     "@storybook/html-vite": "^10.2.9",
     "@types/d3": "^7.4.3",
+    "@typescript-eslint/eslint-plugin": "^8.56.0",
+    "@typescript-eslint/parser": "^8.56.0",
+    "eslint": "^9.39.2",
+    "eslint-plugin-sonarjs": "^3.0.7",
+    "globals": "^17.3.0",
     "storybook": "^10.2.9",
     "typescript": "^5.7.0",
     "vitest": "^3.0.0"

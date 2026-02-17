@@ -1,6 +1,6 @@
-import { select, selectAll, max as d3Max, min as d3Min, scaleLinear, scaleBand, range, line } from 'd3';
+import { select, scaleLinear, scaleBand, range, line } from 'd3';
 import { rallyCount } from './legacyRally';
-import { normalizeEpisodes, isUMOv4Array } from './utils/adapters';
+import { normalizeEpisodes } from './utils/adapters';
 
 function keyWalk(valuesObject: any, optionsObject: any) {
   if (!valuesObject || !optionsObject) return;
@@ -308,7 +308,7 @@ export function ptsMatch() {
           });
 
           // Return array of set objects with all required accessors for ptsSet
-          return Array.from(setsMap.values()).map((episodes: any[], setIndex: number) => {
+          return Array.from(setsMap.values()).map((episodes: any[], _setIndex: number) => {
             const points = episodes.map((ep: any) => ep.point);
             const lastEpisode = episodes[episodes.length - 1];
             const isComplete = lastEpisode?.set?.complete ?? false;
@@ -344,7 +344,7 @@ export function ptsMatch() {
                   },
                 ],
               },
-              scoreboard: (perspective?: any) => {
+              scoreboard: (_perspective?: any) => {
                 const games = lastEpisode?.game?.games || [0, 0];
                 return `${games[0]}-${games[1]}`;
               },

@@ -334,7 +334,7 @@ function generateRally(): string {
   return rally;
 }
 
-function generateResult(winner: number): string {
+function generateResult(_winner: number): string {
   const results = ['Winner', 'Unforced Error', 'Out', 'Net', 'Ace', 'Serve Winner', 'Passing Shot', 'Forced Error'];
   return results[Math.floor(Math.random() * results.length)];
 }

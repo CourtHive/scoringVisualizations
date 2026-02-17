@@ -7,7 +7,6 @@ import type { Episode } from './types';
  * @param matchUp - A TODS MatchUp object (from ScoringEngine.getState())
  * @returns Episode[] - Array of episodes, one per point played
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function buildEpisodes(matchUp: any): Episode[] {
   const points = matchUp?.history?.points;
   if (!Array.isArray(points) || points.length === 0) return [];
@@ -89,14 +88,12 @@ export function buildEpisodes(matchUp: any): Episode[] {
   return episodes;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function deriveSetWinner(matchUp: any, setIndex: number): number | undefined {
   const sets = matchUp?.score?.sets;
   if (!Array.isArray(sets) || !sets[setIndex]) return undefined;
   return sets[setIndex].winningSide;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function buildSetsArray(matchUp: any, currentSetIndex: number): number[][] {
   const sets = matchUp?.score?.sets;
   if (!Array.isArray(sets)) return [];

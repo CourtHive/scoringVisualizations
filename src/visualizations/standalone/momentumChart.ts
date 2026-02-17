@@ -1,7 +1,7 @@
 import { groupGames } from './groupGames';
 import { gameFish } from './gameFish';
 
-import { select, selectAll, max as d3Max, min as d3Min, scaleLinear } from 'd3';
+import { select, selectAll } from 'd3';
 import { rallyCount } from './legacyRally';
 import { normalizeEpisodes } from './utils/adapters';
 

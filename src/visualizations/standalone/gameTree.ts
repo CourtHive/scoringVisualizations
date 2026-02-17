@@ -2,7 +2,7 @@
  * Game Tree Visualization - Standalone Version (D3 v7)
  * Now supports both UMO v4 and legacy Episode formats
  */
-import { select, selectAll, max as d3Max, min as d3Min, scaleLinear } from 'd3';
+import { select, scaleLinear } from 'd3';
 import { normalizeEpisodes } from './utils/adapters';
 
 // Helper Functions

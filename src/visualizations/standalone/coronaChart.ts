@@ -244,7 +244,7 @@ export function coronaChart(
       .attr('y', 0)
       .text(lastName(players[0]))
       .attr('transform', `translate(${prefs.width / 2},${prefs.height / 2 - 35})`)
-      .on('click', function (event: any) {
+      .on('click', function (_event: any) {
         if (prefs.functions?.click_name) {
           prefs.functions.click_name(players[0]);
         }
@@ -260,7 +260,7 @@ export function coronaChart(
       .attr('y', 0)
       .text(score_string[0])
       .attr('transform', `translate(${prefs.width / 2},${prefs.height / 2 - 8})`)
-      .on('click', function (event: any) {
+      .on('click', function (_event: any) {
         if (prefs.functions?.click_score) {
           prefs.functions.click_score(players[0]);
         }
@@ -276,7 +276,7 @@ export function coronaChart(
       .attr('y', 0)
       .text(lastName(players[1]))
       .attr('transform', `translate(${prefs.width / 2},${prefs.height / 2 + 45})`)
-      .on('click', function (event: any) {
+      .on('click', function (_event: any) {
         if (prefs.functions?.click_name) {
           prefs.functions.click_name(players[1]);
         }
@@ -292,7 +292,7 @@ export function coronaChart(
       .attr('y', 0)
       .text(score_string[1])
       .attr('transform', `translate(${prefs.width / 2},${prefs.height / 2 + 13})`)
-      .on('click', function (event: any) {
+      .on('click', function (_event: any) {
         if (prefs.functions?.click_score) {
           prefs.functions.click_score(players[1]);
         }
