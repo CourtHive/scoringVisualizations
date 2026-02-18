@@ -1,44 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import { buildEpisodes } from '../episodes/buildEpisodes';
+import { feedMatchUp } from '../engine/feedMatchUp';
 
-/**
- * Helper to create a ScoringEngine-style MatchUp from simple point data.
- * Simulates what ScoringEngine.getState() returns.
- */
-function makeMatchUp(
-  points: Array<{
-    winner: number;
-    server: number;
-    set: number;
-    game: number;
-    score?: string;
-    pointNumber?: number;
-    isBreakpoint?: boolean;
-    pointsToGame?: number[];
-    pointsToSet?: number[];
-    gamesToSet?: number[];
-    result?: string;
-    rallyLength?: number;
-  }>,
-  options?: {
-    winningSide?: number;
-    sets?: Array<{ side1Score: number; side2Score: number; winningSide?: number }>;
-  },
-) {
-  return {
-    history: {
-      points: points.map((p, i) => ({
-        ...p,
-        pointNumber: p.pointNumber ?? i + 1,
-        index: i,
-      })),
-    },
-    score: {
-      sets: options?.sets ?? [{ side1Score: 0, side2Score: 0 }],
-    },
-    winningSide: options?.winningSide,
-  };
-}
+import { scoreGovernor } from 'tods-competition-factory';
+
+const { ScoringEngine } = scoreGovernor;
 
 describe('buildEpisodes', () => {
   it('returns empty array for null/undefined input', () => {
@@ -51,127 +17,164 @@ describe('buildEpisodes', () => {
     expect(buildEpisodes({ history: { points: [] } })).toEqual([]);
   });
 
-  it('produces one episode per point', () => {
-    const matchUp = makeMatchUp([
-      { winner: 0, server: 0, set: 0, game: 0, score: '15-0', pointsToGame: [3, 4], pointsToSet: [23, 24], gamesToSet: [6, 6] },
-      { winner: 1, server: 0, set: 0, game: 0, score: '15-15', pointsToGame: [2, 4], pointsToSet: [22, 24], gamesToSet: [6, 6] },
-    ]);
+  it('produces one episode per point with real ScoringEngine', () => {
+    const engine = new ScoringEngine({ matchUpFormat: 'SET3-S:6/TB7' });
+    engine.addPoint({ winner: 0, server: 0 });
+    engine.addPoint({ winner: 1, server: 0 });
 
-    const episodes = buildEpisodes(matchUp);
+    const episodes = buildEpisodes(engine.getState());
     expect(episodes).toHaveLength(2);
     expect(episodes[0].action).toBe('addPoint');
     expect(episodes[0].point.winner).toBe(0);
-    expect(episodes[0].point.server).toBe(0);
     expect(episodes[1].point.winner).toBe(1);
   });
 
-  it('detects game completion when game index changes', () => {
-    const matchUp = makeMatchUp(
-      [
-        { winner: 0, server: 0, set: 0, game: 0, score: '40-0', pointsToGame: [1, 4], gamesToSet: [6, 6] },
-        { winner: 0, server: 1, set: 0, game: 1, score: '0-15', pointsToGame: [4, 4], gamesToSet: [5, 6] },
-      ],
-      { sets: [{ side1Score: 1, side2Score: 0 }] },
-    );
+  it('detects game completion from real ScoringEngine', () => {
+    const engine = new ScoringEngine({ matchUpFormat: 'SET3-S:6/TB7' });
 
-    const episodes = buildEpisodes(matchUp);
-    expect(episodes[0].game.complete).toBe(true);
-    expect(episodes[0].game.winner).toBe(0);
-    expect(episodes[1].game.complete).toBe(false);
+    // Win 4 points in a row → game complete
+    engine.addPoint({ winner: 0, server: 0 });
+    engine.addPoint({ winner: 0, server: 0 });
+    engine.addPoint({ winner: 0, server: 0 });
+    engine.addPoint({ winner: 0, server: 0 });
+    // Next point starts a new game
+    engine.addPoint({ winner: 1, server: 1 });
+
+    const episodes = buildEpisodes(engine.getState());
+    expect(episodes).toHaveLength(5);
+
+    // 4th point (index 3) should complete the game
+    expect(episodes[3].game.complete).toBe(true);
+    expect(episodes[3].game.winner).toBe(0);
+    expect(episodes[3].point.score).toBe('G');
+
+    // 5th point should start new game
+    expect(episodes[4].game.complete).toBe(false);
+    expect(episodes[4].point.game).toBe(1);
   });
 
-  it('populates needed fields from point data', () => {
-    const matchUp = makeMatchUp([
-      { winner: 0, server: 0, set: 0, game: 0, score: '15-0', pointsToGame: [3, 4], pointsToSet: [23, 24], gamesToSet: [6, 6] },
-    ]);
+  it('tracks within-game point counts', () => {
+    const engine = new ScoringEngine({ matchUpFormat: 'SET3-S:6/TB7' });
+    engine.addPoint({ winner: 0, server: 0 });
+    engine.addPoint({ winner: 1, server: 0 });
+    engine.addPoint({ winner: 0, server: 0 });
 
-    const episodes = buildEpisodes(matchUp);
-    expect(episodes[0].needed.points_to_game).toEqual([3, 4]);
-    expect(episodes[0].needed.points_to_set).toEqual([23, 24]);
-    expect(episodes[0].needed.games_to_set).toEqual([6, 6]);
-  });
-
-  it('sets next_service from the next point server', () => {
-    const matchUp = makeMatchUp(
-      [
-        { winner: 0, server: 0, set: 0, game: 0, score: '40-0' },
-        { winner: 1, server: 1, set: 0, game: 1, score: '0-15' },
-      ],
-      { sets: [{ side1Score: 1, side2Score: 0 }] },
-    );
-
-    const episodes = buildEpisodes(matchUp);
-    expect(episodes[0].next_service).toBe(1);
-    // Last point uses own server as fallback
-    expect(episodes[1].next_service).toBe(1);
-  });
-
-  it('tracks cumulative set points', () => {
-    const matchUp = makeMatchUp([
-      { winner: 0, server: 0, set: 0, game: 0, score: '15-0' },
-      { winner: 1, server: 0, set: 0, game: 0, score: '15-15' },
-      { winner: 0, server: 0, set: 0, game: 0, score: '30-15' },
-    ]);
-
-    const episodes = buildEpisodes(matchUp);
+    const episodes = buildEpisodes(engine.getState());
     expect(episodes[0].point.points).toEqual([1, 0]);
     expect(episodes[1].point.points).toEqual([1, 1]);
     expect(episodes[2].point.points).toEqual([2, 1]);
   });
 
-  it('shows G for game-completing points', () => {
-    const matchUp = makeMatchUp(
-      [
-        { winner: 0, server: 0, set: 0, game: 0, score: '40-0' },
-        { winner: 0, server: 1, set: 0, game: 1, score: '0-0' },
-      ],
-      { sets: [{ side1Score: 1, side2Score: 0 }] },
-    );
+  it('tracks setCumulativePoints alongside within-game points', () => {
+    const engine = new ScoringEngine({ matchUpFormat: 'SET3-S:6/TB7' });
+    // Win game 0 for player 0 (4 points)
+    for (let i = 0; i < 4; i++) engine.addPoint({ winner: 0, server: 0 });
+    // Start game 1: player 1 wins 2, player 0 wins 1
+    engine.addPoint({ winner: 1, server: 1 });
+    engine.addPoint({ winner: 0, server: 1 });
+    engine.addPoint({ winner: 1, server: 1 });
 
-    const episodes = buildEpisodes(matchUp);
-    expect(episodes[0].point.score).toBe('G');
-    expect(episodes[1].point.score).toBe('0-0');
+    const episodes = buildEpisodes(engine.getState());
+    // Within-game points reset after game 0
+    expect(episodes[4].point.points).toEqual([0, 1]); // first point of game 1
+    expect(episodes[5].point.points).toEqual([1, 1]);
+    expect(episodes[6].point.points).toEqual([1, 2]);
+
+    // Cumulative set points keep counting
+    expect(episodes[4].point.setCumulativePoints).toEqual([4, 1]);
+    expect(episodes[5].point.setCumulativePoints).toEqual([5, 1]);
+    expect(episodes[6].point.setCumulativePoints).toEqual([5, 2]);
   });
 
-  it('preserves optional fields (result, rallyLength, notation, tiebreak)', () => {
-    const matchUp = makeMatchUp([
-      {
-        winner: 0, server: 0, set: 0, game: 0, score: '15-0',
-        result: 'Ace', rallyLength: 1, isBreakpoint: false,
-      },
-    ]);
-    // Add MCP-specific fields
-    (matchUp.history.points[0] as any).mcpCode = '4fsb1';
-    (matchUp.history.points[0] as any).tiebreak = false;
+  it('populates needed fields from ScoringEngine point data', () => {
+    const engine = new ScoringEngine({ matchUpFormat: 'SET3-S:6/TB7' });
+    engine.addPoint({ winner: 0, server: 0 });
 
-    const episodes = buildEpisodes(matchUp);
+    const episodes = buildEpisodes(engine.getState());
+    const needed = episodes[0].needed;
+    expect(needed).toHaveProperty('points_to_game');
+    expect(needed).toHaveProperty('points_to_set');
+    expect(needed).toHaveProperty('games_to_set');
+  });
+
+  it('sets next_service from the next point server', () => {
+    const engine = new ScoringEngine({ matchUpFormat: 'SET3-S:6/TB7' });
+    // Win a game with player 0 serving
+    engine.addPoint({ winner: 0, server: 0 });
+    engine.addPoint({ winner: 0, server: 0 });
+    engine.addPoint({ winner: 0, server: 0 });
+    engine.addPoint({ winner: 0, server: 0 });
+    // Next game, player 1 serves
+    engine.addPoint({ winner: 1, server: 1 });
+
+    const episodes = buildEpisodes(engine.getState());
+    // Last point of game 0 should show next_service = 1
+    expect(episodes[3].next_service).toBe(1);
+  });
+
+  it('preserves optional fields (result, rallyLength)', () => {
+    const engine = new ScoringEngine({ matchUpFormat: 'SET3-S:6/TB7' });
+    engine.addPoint({ winner: 0, server: 0, result: 'Ace', rallyLength: 1 });
+
+    const episodes = buildEpisodes(engine.getState());
     expect(episodes[0].point.result).toBe('Ace');
     expect(episodes[0].point.rallyLength).toBe(1);
-    expect(episodes[0].point.notation).toBe('4fsb1');
-    expect(episodes[0].point.tiebreak).toBe(false);
   });
 
   it('updates games score when games complete', () => {
-    const matchUp = makeMatchUp(
-      [
-        { winner: 0, server: 0, set: 0, game: 0, score: '40-0' },
-        { winner: 1, server: 1, set: 0, game: 1, score: '0-15' },
-        { winner: 1, server: 1, set: 0, game: 1, score: '0-30' },
-        { winner: 1, server: 1, set: 0, game: 1, score: '0-40' },
-        { winner: 1, server: 1, set: 0, game: 1, score: '0-0' },
-        { winner: 0, server: 0, set: 0, game: 2, score: '15-0' },
-      ],
-      { sets: [{ side1Score: 1, side2Score: 1 }] },
-    );
+    const engine = new ScoringEngine({ matchUpFormat: 'SET3-S:6/TB7' });
 
+    // Win game 0 for player 0
+    for (let i = 0; i < 4; i++) engine.addPoint({ winner: 0, server: 0 });
+    // Win game 1 for player 1
+    for (let i = 0; i < 4; i++) engine.addPoint({ winner: 1, server: 1 });
+    // Start game 2
+    engine.addPoint({ winner: 0, server: 0 });
+
+    const episodes = buildEpisodes(engine.getState());
+
+    // After game 0 completes: games [1, 0]
+    expect(episodes[3].game.games).toEqual([1, 0]);
+    // During game 1: games stay [1, 0]
+    expect(episodes[4].game.games).toEqual([1, 0]);
+    // After game 1 completes: games [1, 1]
+    expect(episodes[7].game.games).toEqual([1, 1]);
+    // Game 2 starts: games [1, 1]
+    expect(episodes[8].game.games).toEqual([1, 1]);
+  });
+
+  it('works with real MCP fixture data (feedMatchUp)', () => {
+    const matchUp = feedMatchUp(0);
     const episodes = buildEpisodes(matchUp);
-    // Game 0 completes: side 0 wins, games go to [1, 0]
-    expect(episodes[0].game.games).toEqual([1, 0]);
-    // During game 1: games stay at [1, 0]
-    expect(episodes[1].game.games).toEqual([1, 0]);
-    // Game 1 completes: side 1 wins, games go to [1, 1]
-    expect(episodes[4].game.games).toEqual([1, 1]);
-    // Game 2 starts: games are [1, 1]
-    expect(episodes[5].game.games).toEqual([1, 1]);
+
+    expect(episodes.length).toBe(matchUp.history.points.length);
+    expect(episodes.length).toBeGreaterThan(50); // Real match should have many points
+
+    // First episode checks
+    expect(episodes[0].point.set).toBe(0);
+    expect(episodes[0].point.game).toBe(0);
+
+    // Check game completions exist
+    const completedGames = episodes.filter((ep) => ep.game.complete);
+    expect(completedGames.length).toBeGreaterThan(10);
+  });
+
+  it('handles undo scenario: feed 10 points then undo 3', () => {
+    const engine = new ScoringEngine({ matchUpFormat: 'SET3-S:6/TB7' });
+
+    // Feed 10 points
+    for (let i = 0; i < 10; i++) {
+      engine.addPoint({ winner: (i % 2) as 0 | 1, server: 0 });
+    }
+    expect(engine.getPointCount()).toBe(10);
+
+    // Undo 3
+    engine.undo();
+    engine.undo();
+    engine.undo();
+    expect(engine.getPointCount()).toBe(7);
+
+    const episodes = buildEpisodes(engine.getState());
+    expect(episodes).toHaveLength(7);
   });
 });

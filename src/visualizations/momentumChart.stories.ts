@@ -1,0 +1,326 @@
+import type { Meta, StoryObj } from '@storybook/html';
+import { momentumChart } from './momentumChart';
+import { feedMatchUp } from '../engine/feedMatchUp';
+import { buildEpisodes } from '../episodes/buildEpisodes';
+import { createPlaybackEngine } from '../engine/createPlaybackEngine';
+import { createPlaybackControlsUI } from './helpers/PlaybackControls';
+import { select } from 'd3';
+
+interface MomentumChartArgs {
+  orientation: 'vertical' | 'horizontal';
+  showService: boolean;
+  showRally: boolean;
+  showGrid: boolean;
+  showScore: boolean;
+  continuous: boolean;
+  matchIndex?: number;
+  delayMs?: number;
+}
+
+/**
+ * Momentum Chart Visualization
+ *
+ * Displays the flow of momentum across multiple games in a set or match.
+ * Each game is represented as a vertical or horizontal section showing
+ * point progression and score changes.
+ */
+const meta: Meta<MomentumChartArgs> = {
+  title: 'Visualizations/MomentumChart',
+  tags: ['autodocs'],
+  render: (args) => {
+    // Create container
+    const container = document.createElement('div');
+    container.id = 'momentum-chart-container';
+    container.style.width = '100%';
+    container.style.height = '800px';
+    container.style.padding = '20px';
+
+    // Create chart
+    const chart = momentumChart();
+    chart.options({
+      display: {
+        sizeToFit: true,
+        continuous: args.continuous,
+        orientation: args.orientation,
+        service: args.showService,
+        rally: args.showRally,
+        grid: args.showGrid,
+        score: args.showScore,
+        momentum_score: true,
+        transition_time: 0,
+      },
+      colors: {
+        players: { 0: '#a55194', 1: '#6b6ecf' },
+      },
+    });
+
+    // Real MCP match data: Federer vs Djokovic
+    const matchUp = feedMatchUp(0);
+    const episodes = buildEpisodes(matchUp);
+    chart.data(episodes);
+
+    setTimeout(() => {
+      select(container).call(chart);
+      if (chart.update) chart.update();
+    }, 0);
+
+    return container;
+  },
+  argTypes: {
+    orientation: {
+      control: 'select',
+      options: ['vertical', 'horizontal'],
+    },
+    showService: { control: 'boolean' },
+    showRally: { control: 'boolean' },
+    showGrid: { control: 'boolean' },
+    showScore: { control: 'boolean' },
+    continuous: { control: 'boolean' },
+    matchIndex: {
+      control: 'select',
+      options: { 'Federer vs Djokovic': 0, 'Federer vs Wawrinka': 1, 'Djokovic vs Nadal': 2, 'Schwartzman vs Cervantes': 3 },
+    },
+    delayMs: { control: { type: 'range', min: 50, max: 2000, step: 50 } },
+  },
+};
+
+export default meta;
+type Story = StoryObj<MomentumChartArgs>;
+
+/**
+ * Default momentum view - Full match
+ */
+export const Default: Story = {
+  args: {
+    orientation: 'vertical',
+    showService: false,
+    showRally: true,
+    showGrid: false,
+    showScore: true,
+    continuous: false,
+  },
+};
+
+/**
+ * Horizontal orientation
+ */
+export const Horizontal: Story = {
+  args: {
+    orientation: 'horizontal',
+    showService: false,
+    showRally: true,
+    showGrid: false,
+    showScore: true,
+    continuous: false,
+  },
+};
+
+/**
+ * Continuous mode - no gaps between games
+ */
+export const ContinuousMode: Story = {
+  args: {
+    orientation: 'vertical',
+    showService: false,
+    showRally: true,
+    showGrid: false,
+    showScore: true,
+    continuous: true,
+  },
+};
+
+/**
+ * With service and grid indicators
+ */
+export const DetailedView: Story = {
+  args: {
+    orientation: 'vertical',
+    showService: true,
+    showRally: true,
+    showGrid: true,
+    showScore: true,
+    continuous: false,
+  },
+};
+
+/**
+ * Minimal view - rally bars only
+ */
+export const MinimalView: Story = {
+  args: {
+    orientation: 'vertical',
+    showService: false,
+    showRally: true,
+    showGrid: false,
+    showScore: false,
+    continuous: false,
+  },
+};
+
+/**
+ * Compact horizontal layout
+ */
+export const CompactHorizontal: Story = {
+  args: {
+    orientation: 'horizontal',
+    showService: false,
+    showRally: true,
+    showGrid: false,
+    showScore: true,
+    continuous: true,
+  },
+  render: (args) => {
+    const container = document.createElement('div');
+    container.id = 'momentum-chart-compact';
+    container.style.width = '100%';
+    container.style.height = '400px';
+    container.style.padding = '20px';
+
+    const chart = momentumChart();
+    chart.options({
+      display: {
+        sizeToFit: true,
+        continuous: args.continuous,
+        orientation: args.orientation,
+        service: args.showService,
+        rally: args.showRally,
+        grid: args.showGrid,
+        score: args.showScore,
+        momentum_score: true,
+        transition_time: 0,
+      },
+      colors: {
+        players: { 0: '#e74c3c', 1: '#3498db' },
+      },
+    });
+
+    // Real MCP match data: Djokovic vs Nadal
+    const matchUp = feedMatchUp(2);
+    const episodes = buildEpisodes(matchUp);
+    chart.data(episodes);
+
+    setTimeout(() => {
+      select(container).call(chart);
+      if (chart.update) chart.update();
+    }, 0);
+
+    return container;
+  },
+};
+
+/**
+ * Live Playback — Points appear incrementally via the reactive LiveEngine.
+ */
+export const LivePlayback: Story = {
+  args: {
+    orientation: 'vertical',
+    showService: false,
+    showRally: true,
+    showGrid: false,
+    showScore: true,
+    continuous: false,
+    matchIndex: 0,
+    delayMs: 200,
+  },
+  render: (args) => {
+    const container = document.createElement('div');
+
+    const chart = momentumChart();
+    chart.options({
+      display: {
+        sizeToFit: true,
+        continuous: args.continuous,
+        orientation: args.orientation,
+        service: args.showService,
+        rally: args.showRally,
+        grid: args.showGrid,
+        score: args.showScore,
+        momentum_score: true,
+        transition_time: 0,
+      },
+      colors: {
+        players: { 0: '#a55194', 1: '#6b6ecf' },
+      },
+    });
+
+    const chartDiv = document.createElement('div');
+    chartDiv.style.width = '100%';
+    chartDiv.style.height = '800px';
+
+    const playback = createPlaybackEngine({
+      matchIndex: args.matchIndex,
+      delayMs: args.delayMs,
+    });
+
+    let mounted = false;
+    playback.liveEngine.subscribe((matchUp) => {
+      chart.matchUp(matchUp);
+      if (mounted) chart.update();
+    });
+
+    const controls = createPlaybackControlsUI(playback, { showScoreboard: true });
+    container.appendChild(controls);
+    container.appendChild(chartDiv);
+
+    setTimeout(() => {
+      select(chartDiv).call(chart);
+      mounted = true;
+      playback.start();
+    }, 0);
+
+    return container;
+  },
+};
+
+/**
+ * Undo/Redo — Feed 20 points then interact.
+ */
+export const UndoRedo: Story = {
+  args: {
+    orientation: 'vertical',
+    showService: false,
+    showRally: true,
+    showGrid: false,
+    showScore: true,
+    continuous: false,
+    matchIndex: 0,
+  },
+  render: (args) => {
+    const container = document.createElement('div');
+
+    const chart = momentumChart();
+    chart.options({
+      display: {
+        sizeToFit: true, continuous: args.continuous, orientation: args.orientation,
+        service: args.showService, rally: args.showRally, grid: args.showGrid,
+        score: args.showScore, momentum_score: true, transition_time: 0,
+      },
+      colors: { players: { 0: '#a55194', 1: '#6b6ecf' } },
+    });
+
+    const chartDiv = document.createElement('div');
+    chartDiv.style.cssText = 'width:100%; height:800px;';
+
+    const playback = createPlaybackEngine({ matchIndex: args.matchIndex });
+    for (let i = 0; i < 20; i++) playback.stepForward();
+
+    let mounted = false;
+    playback.liveEngine.subscribe((matchUp) => {
+      chart.matchUp(matchUp);
+      if (mounted) chart.update();
+    });
+
+    const controls = createPlaybackControlsUI(playback, { showScoreboard: true });
+    container.appendChild(controls);
+    container.appendChild(chartDiv);
+
+    setTimeout(() => {
+      select(chartDiv).call(chart);
+      mounted = true;
+      chart.matchUp(playback.liveEngine.getState());
+      chart.update();
+    }, 0);
+
+    return container;
+  },
+};

@@ -15,9 +15,11 @@ export function buildEpisodes(matchUp: any): Episode[] {
 
   // Track running state
   let setCumulativePoints: [number, number] = [0, 0];
+  let gamePointCounts: [number, number] = [0, 0];
   let gamesScore: [number, number] = [0, 0];
   let setsScore: [number, number] = [0, 0];
   let currentSet = 0;
+  let currentGame = 0;
 
   for (let i = 0; i < points.length; i++) {
     const point = points[i];
@@ -34,13 +36,25 @@ export function buildEpisodes(matchUp: any): Episode[] {
     // Handle set transition: reset per-set accumulators
     if (point.set !== currentSet) {
       setCumulativePoints = [0, 0];
+      gamePointCounts = [0, 0];
       gamesScore = [0, 0];
       currentSet = point.set;
+      currentGame = point.game;
+    }
+
+    // Handle game transition: reset within-game point counts
+    if (point.game !== currentGame) {
+      gamePointCounts = [0, 0];
+      currentGame = point.game;
     }
 
     // Update cumulative set points
     if (point.winner === 0) setCumulativePoints[0]++;
     else setCumulativePoints[1]++;
+
+    // Update within-game point counts
+    if (point.winner === 0) gamePointCounts[0]++;
+    else gamePointCounts[1]++;
 
     // Determine game winner when game completes
     const isGameEnd = gameComplete || (isLastPoint && matchComplete);
@@ -87,7 +101,9 @@ export function buildEpisodes(matchUp: any): Episode[] {
         result: point.result,
         notation: point.mcpCode,
         tiebreak: point.tiebreak ?? false,
-        points: [...setCumulativePoints] as [number, number],
+        serve: point.serve, // 1 = first serve, 2 = second serve
+        points: [...gamePointCounts] as [number, number],
+        setCumulativePoints: [...setCumulativePoints] as [number, number],
       },
       game: {
         complete: isGameEnd,
@@ -116,6 +132,7 @@ export function buildEpisodes(matchUp: any): Episode[] {
     // Update running gamesScore after game completion
     if (gameComplete && gameWinner !== undefined) {
       gamesScore[gameWinner]++;
+      gamePointCounts = [0, 0];
     }
 
     // Update running setsScore after set completion

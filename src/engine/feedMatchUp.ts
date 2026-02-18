@@ -5,9 +5,8 @@
  * No scoring logic lives here — the ScoringEngine is the single source of truth.
  */
 
-// @ts-expect-error - tods-competition-factory types not fully resolved via pnpm link
 import { scoreGovernor } from 'tods-competition-factory';
-import mcpFixtures from '../visualizations/standalone/data/mcpFixtures.json';
+import mcpFixtures from '../visualizations/data/mcpFixtures.json';
 
 const { ScoringEngine } = scoreGovernor;
 
@@ -62,7 +61,7 @@ const fixtures = mcpFixtures as unknown as McpFixture[];
 
 const UNFORCED_ERROR = 'Unforced Error';
 
-const RESULT_MAP: Record<string, string> = {
+export const RESULT_MAP: Record<string, string> = {
   'Ace': 'Ace',
   'Winner': 'Winner',
   'Serve Winner': 'Serve Winner',
@@ -88,7 +87,7 @@ export function feedMatchUp(matchIndex = 0): any {
     engine.addPoint({
       winner: pt.winner as 0 | 1,
       server: pt.server as 0 | 1,
-      result: RESULT_MAP[pt.result] || 'Winner',
+      result: (RESULT_MAP[pt.result] || 'Winner') as any,
       rallyLength: pt.rallyLength,
     });
   }
@@ -98,7 +97,7 @@ export function feedMatchUp(matchIndex = 0): any {
   // Enrich engine points with MCP-specific fields the ScoringEngine doesn't track
   if (matchUp?.history?.points) {
     for (let i = 0; i < matchUp.history.points.length; i++) {
-      const enginePt = matchUp.history.points[i];
+      const enginePt = matchUp.history.points[i] as any;
       const mcpPt = fixture.points[i];
       if (enginePt && mcpPt) {
         enginePt.mcpCode = mcpPt.code;

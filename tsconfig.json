@@ -20,7 +20,6 @@
     "node_modules",
     "dist",
     "**/*.stories.ts",
-    "**/*.stories.tsx",
-    "src/visualizations/standalone/**"
+    "**/*.stories.tsx"
   ]
 }

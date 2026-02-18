@@ -12,7 +12,9 @@ export interface EpisodePoint {
   result?: string;
   notation?: string;
   tiebreak?: boolean;
+  serve?: 1 | 2; // 1 = first serve, 2 = second serve (from ScoringEngine)
   points?: [number, number];
+  setCumulativePoints?: [number, number];
 }
 
 export interface EpisodeGame {
