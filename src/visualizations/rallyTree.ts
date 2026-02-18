@@ -91,8 +91,10 @@ export function rallyTree() {
   let rtroot: Selection<SVGSVGElement, any, any, any>;
   let rttree: Selection<SVGGElement, any, any, any>;
   let rtarea: Selection<SVGGElement, any, any, any>;
+  let parentNode: Element | null = null;
 
   function chart(selection: Selection<any, any, any, any>) {
+    parentNode = selection.node();
     const root = selection.append('div').attr('class', 'rallyRoot');
 
     rtroot = root
@@ -122,7 +124,11 @@ export function rallyTree() {
     }
 
     if (options.display.sizeToFit || (opts && opts.sizeToFit)) {
-      // Would get dimensions from parent in real implementation
+      if (parentNode) {
+        const dims = parentNode.getBoundingClientRect();
+        if (dims.width > 0) options.width = dims.width;
+        if (dims.height > 0) options.height = dims.height;
+      }
       options.width = Math.max(options.width, 100);
       options.height = Math.max(options.height, 100);
     }
@@ -239,18 +245,26 @@ export function rallyTree() {
   }
 
   function rallyWinPct(player: 0 | 1): number[] {
+    // Cumulative win percentage: for each rally length, compute the odds
+    // that the player wins a point of AT LEAST that length. This matches
+    // the "Persistence of Server Advantage" methodology (Jeff Sackmann).
+    // Summing from each rally length onwards smooths the yo-yo effect
+    // inherent in per-length calculations.
     const pct: number[] = [];
     const maxLen = maxRally || 20;
-    
+
     for (let i = 0; i <= maxLen; i++) {
-      const totalPoints = (ryl[0][i] || 0) + (ryl[1][i] || 0);
-      if (totalPoints > 0) {
-        pct.push((ryl[player][i] || 0) / totalPoints * 100);
-      } else {
-        pct.push(0);
+      let cumPlayed = 0;
+      let cumWon = 0;
+      for (let j = i; j <= maxLen; j++) {
+        const p0 = ryl[0][j] || 0;
+        const p1 = ryl[1][j] || 0;
+        cumPlayed += p0 + p1;
+        cumWon += ryl[player][j] || 0;
       }
+      pct.push(cumPlayed > 0 ? (cumWon / cumPlayed) * 100 : 0);
     }
-    
+
     return pct;
   }
 

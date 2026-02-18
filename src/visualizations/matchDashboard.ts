@@ -95,26 +95,26 @@ export function matchDashboard() {
     // Row 2, Col 1: Corona chart
     coronaDiv = document.createElement("div");
     coronaDiv.style.cssText =
-      "min-height: 200px; display: flex; align-items: center; justify-content: center;";
+      "min-height: 300px; display: flex; align-items: center; justify-content: center;";
     container.appendChild(coronaDiv);
 
     // Row 2, Col 2: Stat view
     statsDiv = document.createElement("div");
-    statsDiv.style.cssText = "min-height: 200px; overflow-y: auto;";
+    statsDiv.style.cssText = "min-height: 200px; overflow: hidden;";
     container.appendChild(statsDiv);
 
     // Row 2, Col 3: GameTree + RallyTree stacked
     const rightCol = document.createElement("div");
     rightCol.style.cssText =
-      "display: flex; flex-direction: column; align-items: center; gap: 12px; min-height: 400px;";
+      "display: flex; flex-direction: column; align-items: center; gap: 12px; min-height: 500px;";
     container.appendChild(rightCol);
 
     gameTreeDiv = document.createElement("div");
-    gameTreeDiv.style.cssText = "flex: 1; width: 100%; min-height: 250px;";
+    gameTreeDiv.style.cssText = "flex: 1; width: 100%; min-height: 280px;";
     rightCol.appendChild(gameTreeDiv);
 
     rallyTreeDiv = document.createElement("div");
-    rallyTreeDiv.style.cssText = "flex: 1; width: 100%; min-height: 250px;";
+    rallyTreeDiv.style.cssText = "flex: 1; width: 100%; min-height: 250px; display: flex; justify-content: center;";
     rightCol.appendChild(rallyTreeDiv);
 
     // ── Initialize sub-charts ─────────────────────────────────
@@ -264,19 +264,23 @@ export function matchDashboard() {
   dashboard.update = function () {
     if (!mounted) return;
 
-    charts.ptsHorizonChart.update();
-    charts.statViewChart.update();
-    charts.gameTreeChart.update();
-    charts.rallyTreeChart.update();
+    // Defer to requestAnimationFrame so the browser has completed grid
+    // layout — sizeToFit measurements need accurate getBoundingClientRect.
+    requestAnimationFrame(() => {
+      charts.ptsHorizonChart.update();
+      charts.statViewChart.update();
+      charts.gameTreeChart.update();
+      charts.rallyTreeChart.update();
 
-    // Render corona
-    if (options.display.coronaChart && matchUpState && allEpisodes.length > 0) {
-      coronaChartFromMatchUp(coronaDiv, matchUpState, {
-        colors: options.colors,
-        players: options.players,
-        display: { info: true },
-      });
-    }
+      // Render corona
+      if (options.display.coronaChart && matchUpState && allEpisodes.length > 0) {
+        coronaChartFromMatchUp(coronaDiv, matchUpState, {
+          colors: options.colors,
+          players: options.players,
+          display: { info: true },
+        });
+      }
+    });
   };
 
   dashboard.options = function (values?: Partial<DashboardOptions>) {
