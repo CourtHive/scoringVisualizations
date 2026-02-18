@@ -25,6 +25,7 @@ export { ptsMatch } from './visualizations/ptsChart';
 export { gameFish } from './visualizations/gameFish';
 export { statView } from './visualizations/statView';
 export { matchDashboard } from './visualizations/matchDashboard';
+export { simpleChart } from './visualizations/simpleChart';
 
 // Statistics
 export { computeMatchStats, computeMatchStatsFromMatchUp } from './statistics';

@@ -681,7 +681,9 @@ export function gameFish() {
     };
 
     function findOffset(point: any) {
-      const pts = point.setCumulativePoints || point.points;
+      // In school mode (momentum chart), use cumulative set points for nose-to-tail alignment.
+      // In standalone mode, use game-level points so the grid stays centered.
+      const pts = (options.fish.school && point.setCumulativePoints) || point.points;
       if (!pts || pts.length < 2) return 0;
       return pts[options.display.reverse ? 0 : 1] - pts[options.display.reverse ? 1 : 0];
     }
