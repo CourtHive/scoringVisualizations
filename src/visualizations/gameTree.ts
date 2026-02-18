@@ -612,7 +612,8 @@ export function gameTree() {
           return radius * 0.25;
         })
         .attr('fill', function (_, i: number) {
-          return !options.selectors.enabled || (options.selectors.enabled && options.selectors.selected[i])
+          const neitherSelected = !options.selectors.selected[0] && !options.selectors.selected[1];
+          return !options.selectors.enabled || neitherSelected || options.selectors.selected[i]
             ? options.nodes.colors[i]
             : options.nodes.colors.neutral;
         })
@@ -644,7 +645,8 @@ export function gameTree() {
           return radius * 0.25;
         })
         .attr('fill', function (_, i: number) {
-          return !options.selectors.enabled || (options.selectors.enabled && options.selectors.selected[i])
+          const neitherSelected = !options.selectors.selected[0] && !options.selectors.selected[1];
+          return !options.selectors.enabled || neitherSelected || options.selectors.selected[i]
             ? options.nodes.colors[i]
             : options.nodes.colors.neutral;
         });
@@ -899,15 +901,11 @@ export function gameTree() {
         options.selectors.selected[1] = false;
       }
     } else {
-      select('[id=' + selector + ']')
-        .attr('opacity', 0.4)
-        .attr('status', 'none')
-        .attr('fill', options.nodes.colors.neutral);
-      if (isOpponent) {
-        options.selectors.selected[1] = false;
-      } else {
-        options.selectors.selected[0] = false;
-      }
+      // Clicking already-selected player removes all filters
+      options.selectors.selected[0] = false;
+      options.selectors.selected[1] = false;
+      select('[id=Player]').attr('opacity', 1).attr('status', 'none').attr('fill', options.nodes.colors[0]);
+      select('[id=Opponent]').attr('opacity', 1).attr('status', 'none').attr('fill', options.nodes.colors[1]);
     }
     update();
   }

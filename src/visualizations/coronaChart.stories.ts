@@ -15,12 +15,25 @@ interface CoronaChartArgs {
 }
 
 /**
- * Corona Chart Visualization
+ * Corona Chart — Radial Horizon Graph
  *
- * Displays point-by-point score differentials in a radial/circular format.
- * Creates a "corona" effect showing momentum swings around a central point.
+ * The "Corona" is a Radial Horizon Graph intended to provide a compact,
+ * iconic representation of a match. Corona graphs are formally known as
+ * radial area graphs.
+ *
+ * The name draws from astronomy: a coronagraph is "a telescope that can see
+ * things very close to the Sun. It uses a disk to block the Sun's bright
+ * surface, revealing the faint solar corona." Similarly, the Corona
+ * highlights important aspects of a match normally obscured by the quantity
+ * of data available.
+ *
  * Each radial segment represents a game, with the distance from center
- * indicating the cumulative score differential.
+ * indicating the cumulative score differential. Darker color bands indicate
+ * a greater point difference. The visualization enables rapid comparison of
+ * sets or matches — enough detail to differentiate a 6-0 "cakewalk" from a
+ * 6-0 where every game went to deuce and beyond.
+ *
+ * @see https://tennisviz.blogspot.com/2015/08/points-to-set-horizon-corona.html
  */
 const meta: Meta<CoronaChartArgs> = {
   title: 'Visualizations/CoronaChart',

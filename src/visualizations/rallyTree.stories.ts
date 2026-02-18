@@ -15,11 +15,33 @@ interface RallyTreeArgs {
 }
 
 /**
- * Rally Tree Visualization
+ * Rally Tree — Rally Length Distribution
  *
- * Displays rally length distribution in a tree-like format.
- * Shows how rally lengths are distributed by player and outcome.
- * Each bar represents a point, positioned by rally length and player.
+ * Tennis is an "intermittent" sport. The level of intensity varies greatly
+ * with rally length and time between points. When rallies are visualized
+ * temporally from the first point to the last, the result is a jagged chart
+ * where patterns are difficult to discern. Rally Tree brings a different
+ * perspective to rally analysis.
+ *
+ * Rally Tree depicts the distribution of points across various rally
+ * lengths, beginning at the top with rally lengths of zero (Aces, Serve
+ * Winners, or Double Faults). Color coding differentiates errors where
+ * balls were "netted" vs. hit long.
+ *
+ * An overlay depicts the percentage chance that a point was won for any
+ * given rally length. The offset vertical lines represent 50% either side
+ * of center (0%). For "served points" views this gives a graphic
+ * representation of the Persistence of Server Advantage, which varies
+ * greatly among players. Note: this is NOT the same as percentage of
+ * points won for a given rally length.
+ *
+ * Rally Tree integrates with Game Tree and other components so that
+ * selections in one component drive views in another — e.g. selecting a
+ * progression from 0-0 to 0-15 in Game Tree filters the Rally Tree to
+ * show only those points.
+ *
+ * @see Jeff Sackmann, "Persistence of Server Advantage"
+ * @see https://tennisviz.blogspot.com/
  */
 const meta: Meta<RallyTreeArgs> = {
   title: 'Visualizations/RallyTree',

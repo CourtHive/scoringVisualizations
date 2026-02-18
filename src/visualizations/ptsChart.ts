@@ -63,7 +63,7 @@ export function ptsMatch() {
     class: 'ptsMatch',
 
     resize: true,
-    width: window.innerWidth,
+    width: 600,
     height: 80,
     max_height: 100,
 
@@ -436,7 +436,7 @@ function ptsChart() {
     class: 'ptsChart',
 
     resize: true,
-    width: window.innerWidth,
+    width: 600,
     height: 80,
 
     margins: {
@@ -956,7 +956,7 @@ function ptsChart() {
             if (i == 0) {
               ptsHover.selectAll('.' + options.class + 'Bar').attr('opacity', options.display.point_opacity);
             }
-            /** highlightScore(d, i); */
+            highlightScore(i);
           })
           .on('mouseout', function(event: any, d: any) {
             const i = d;
@@ -1000,6 +1000,25 @@ function ptsChart() {
             .attr('opacity', 1)
             .attr('fill', winner === undefined ? 'black' : options.colors.players[winner])
             .text(game_score);
+        }
+
+        function highlightScore(i: number) {
+          const point = points[i]?.point;
+          if (!point) return;
+
+          const result = point.result || '';
+          const rallyLength = point.rallyLength || 0;
+          const label = `${result}${rallyLength ? ' (Rally: ' + rallyLength + ')' : ''}`;
+
+          set_winner
+            .attr('opacity', 1)
+            .attr('fill', options.colors.players[point.winner])
+            .text(label);
+
+          set_score
+            .attr('opacity', 1)
+            .attr('fill', options.colors.players[point.winner])
+            .text(point.score || '');
         }
 
         function calcStops(point: any) {

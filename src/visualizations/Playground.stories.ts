@@ -73,7 +73,7 @@ export const MultiViz: Story = {
     root.appendChild(topRow);
 
     const ptsDiv = document.createElement('div');
-    ptsDiv.style.cssText = 'width:100%; height:400px; background:#fff;';
+    ptsDiv.style.cssText = 'width:50%; height:400px; background:#fff;';
     root.appendChild(ptsDiv);
 
     // ── Charts ─────────────────────────────────────────────────
@@ -183,7 +183,7 @@ export const UndoRedoDemo: Story = {
     root.appendChild(topRow);
 
     const ptsDiv = document.createElement('div');
-    ptsDiv.style.cssText = 'width:100%; height:400px; background:#fff;';
+    ptsDiv.style.cssText = 'width:50%; height:400px; background:#fff;';
     root.appendChild(ptsDiv);
 
     // ── Charts ─────────────────────────────────────────────────

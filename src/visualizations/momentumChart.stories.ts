@@ -18,11 +18,25 @@ interface MomentumChartArgs {
 }
 
 /**
- * Momentum Chart Visualization
+ * Momentum Chart — Game-by-Game Match Flow
  *
- * Displays the flow of momentum across multiple games in a set or match.
- * Each game is represented as a vertical or horizontal section showing
- * point progression and score changes.
+ * The Momentum Chart displays the flow of a match across multiple games,
+ * with each game rendered as a GameFish — a compact visualization of point
+ * progression within a single game. Games are laid out nose-to-tail in
+ * vertical or horizontal orientation, giving a complete picture of how the
+ * match unfolded.
+ *
+ * Rally lengths are depicted with bars behind each GameFish. Service
+ * indicators (colored dots) alternate sides based on which player is
+ * serving: light green = service winner, yellow = serve in, red = fault.
+ * The game grid in the center indicates the point winner by cell color and
+ * the final "key shot" that determined the outcome.
+ *
+ * Available modes: "school" (default) lays out games in a grid with set
+ * boundaries; "continuous" removes gaps between games for a seamless flow.
+ *
+ * The chart is capped at 800px width to prevent overflow, with sizeToFit
+ * scaling within the container.
  */
 const meta: Meta<MomentumChartArgs> = {
   title: 'Visualizations/MomentumChart',

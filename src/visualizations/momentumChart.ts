@@ -15,8 +15,8 @@ export function momentumChart() {
 
   const options: any = {
     id: 'm1',
-    fullWidth: window.innerWidth,
-    fullHeight: window.innerHeight,
+    fullWidth: 600,
+    fullHeight: 800,
     margins: {
       top: 1,
       bottom: 1, // Chrome bug can't be 0
@@ -112,7 +112,7 @@ export function momentumChart() {
         if (options.display.sizeToFit || (opts && opts.sizeToFit)) {
           const dims = selection.node().getBoundingClientRect();
           if (options.display.orientation == 'vertical') {
-            options.fullWidth = Math.max(dims.width, 100);
+            options.fullWidth = Math.min(Math.max(dims.width, 100), 800);
             options.fullHeight = Math.max(dims.height, 100);
           } else {
             options.fullHeight = Math.max(dims.height, 100);
@@ -210,14 +210,17 @@ export function momentumChart() {
         // This resize *must* take place after the fishshcool has been generated!
         // ---------------------------------------------------------------------
         root
-          .attr('width', options.width + 'px')
-          .attr('height', (vert ? 100 + coords[1] : options.height) + 'px')
+          .style('width', options.width + 'px')
+          .style('max-width', '100%')
+          .style('overflow', 'hidden')
+          .style('height', (vert ? 100 + coords[1] : options.height) + 'px')
           .on('mouseover', showImages)
           .on('mouseout', hideImages);
 
         momentumFrame
-          .attr('width', options.width + 'px')
-          .attr('height', (vert ? 100 + coords[1] : options.height) + 'px');
+          .attr('width', options.width)
+          .attr('height', (vert ? 100 + coords[1] : options.height))
+          .style('max-width', '100%');
         // ---------------------------------------------------------------------
 
         const midline = fish.selectAll('.midline' + options.id).data([0]);

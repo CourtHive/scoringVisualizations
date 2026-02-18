@@ -8,15 +8,15 @@
  * Inspired by legacy matchView.js displayPoints() coordination.
  */
 
-import { select } from 'd3';
-import { ptsHorizon } from './ptsHorizon';
-import { coronaChart, coronaChartFromMatchUp } from './coronaChart';
-import { statView } from './statView';
-import { gameTree } from './gameTree';
-import { rallyTree } from './rallyTree';
-import { buildEpisodes } from '../episodes/buildEpisodes';
-import { computeMatchStats } from '../statistics/matchStatistics';
-import type { Episode } from '../episodes/types';
+import { select } from "d3";
+import { ptsHorizon } from "./ptsHorizon";
+import { coronaChart, coronaChartFromMatchUp } from "./coronaChart";
+import { statView } from "./statView";
+import { gameTree } from "./gameTree";
+import { rallyTree } from "./rallyTree";
+import { buildEpisodes } from "../episodes/buildEpisodes";
+import { computeMatchStats } from "../statistics/matchStatistics";
+import type { Episode } from "../episodes/types";
 
 interface DashboardOptions {
   colors: [string, string];
@@ -44,8 +44,8 @@ export function matchDashboard() {
   let mounted = false;
 
   const options: DashboardOptions = {
-    colors: ['#a55194', '#6b6ecf'],
-    players: ['Player 1', 'Player 2'],
+    colors: ["#a55194", "#6b6ecf"],
+    players: ["Player 1", "Player 2"],
     display: {
       ptsHorizon: true,
       coronaChart: true,
@@ -76,54 +76,63 @@ export function matchDashboard() {
 
   function dashboard(el: HTMLElement) {
     container = el;
-    container.innerHTML = '';
+    container.innerHTML = "";
 
     // CSS grid: ptsHorizon full width top; 3-column body below
     container.style.cssText = `
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
-      grid-template-rows: auto 1fr;
+      grid-template-rows: auto minmax(500px, 1fr);
       gap: 8px;
       width: 100%;
     `;
 
     // Row 1: Horizon (full width)
-    horizonDiv = document.createElement('div');
-    horizonDiv.style.cssText = 'grid-column: 1 / -1; min-height: 80px;';
+    horizonDiv = document.createElement("div");
+    horizonDiv.style.cssText = "grid-column: 1 / -1; min-height: 80px;";
     container.appendChild(horizonDiv);
 
     // Row 2, Col 1: Corona chart
-    coronaDiv = document.createElement('div');
-    coronaDiv.style.cssText = 'min-height: 200px; display: flex; align-items: center; justify-content: center;';
+    coronaDiv = document.createElement("div");
+    coronaDiv.style.cssText =
+      "min-height: 200px; display: flex; align-items: center; justify-content: center;";
     container.appendChild(coronaDiv);
 
     // Row 2, Col 2: Stat view
-    statsDiv = document.createElement('div');
-    statsDiv.style.cssText = 'min-height: 200px; overflow-y: auto;';
+    statsDiv = document.createElement("div");
+    statsDiv.style.cssText = "min-height: 200px; overflow-y: auto;";
     container.appendChild(statsDiv);
 
     // Row 2, Col 3: GameTree + RallyTree stacked
-    const rightCol = document.createElement('div');
-    rightCol.style.cssText = 'display: flex; flex-direction: column; gap: 8px; min-height: 200px;';
+    const rightCol = document.createElement("div");
+    rightCol.style.cssText =
+      "display: flex; flex-direction: column; align-items: center; gap: 12px; min-height: 400px;";
     container.appendChild(rightCol);
 
-    gameTreeDiv = document.createElement('div');
-    gameTreeDiv.style.cssText = 'flex: 1; min-height: 150px;';
+    gameTreeDiv = document.createElement("div");
+    gameTreeDiv.style.cssText = "flex: 1; width: 100%; min-height: 250px;";
     rightCol.appendChild(gameTreeDiv);
 
-    rallyTreeDiv = document.createElement('div');
-    rallyTreeDiv.style.cssText = 'flex: 1; min-height: 150px;';
+    rallyTreeDiv = document.createElement("div");
+    rallyTreeDiv.style.cssText = "flex: 1; width: 100%; min-height: 250px;";
     rightCol.appendChild(rallyTreeDiv);
 
     // ── Initialize sub-charts ─────────────────────────────────
 
     // ptsHorizon
     charts.ptsHorizonChart.options({
-      display: { sizeToFit: true, bands: 3, mode: 'mirror', transition_time: 0 },
+      display: {
+        sizeToFit: true,
+        bands: 3,
+        mode: "mirror",
+        transition_time: 0,
+      },
       elements: { brush: true },
     });
     charts.ptsHorizonChart.colors(options.colors);
-    charts.ptsHorizonChart.events({ brush: { start: null, brushing: null, end: filterAll } });
+    charts.ptsHorizonChart.events({
+      brush: { start: null, brushing: null, end: filterAll },
+    });
     select(horizonDiv).call(charts.ptsHorizonChart as any);
 
     // statView
@@ -132,7 +141,12 @@ export function matchDashboard() {
 
     // gameTree
     charts.gameTreeChart.options({
-      display: { sizeToFit: true },
+      display: { sizeToFit: true, showEmpty: false, noAd: false, show_images: false },
+      lines: {
+        points: { winners: 'green', errors: '#BA1212', unknown: '#2ed2db' },
+        colors: { underlines: 'black' },
+      },
+      nodes: { colors: { 0: options.colors[0], 1: options.colors[1], neutral: '#ecf0f1' } },
       labels: { Player: options.players[0], Opponent: options.players[1] },
     });
     select(gameTreeDiv).call(charts.gameTreeChart as any);
@@ -154,9 +168,8 @@ export function matchDashboard() {
     const end = Math.ceil(extent[1]);
 
     // Slice episodes to selected range
-    const filtered = end - start > 1
-      ? allEpisodes.slice(start, end)
-      : allEpisodes;
+    const filtered =
+      end - start > 1 ? allEpisodes.slice(start, end) : allEpisodes;
 
     // Update gameTree
     if (options.display.gameTree) {
@@ -190,7 +203,7 @@ export function matchDashboard() {
   // ── Corona re-render ──────────────────────────────────────────
 
   function renderCorona(episodes?: Episode[]) {
-    select(coronaDiv).selectAll('*').remove();
+    select(coronaDiv).selectAll("*").remove();
 
     if (!episodes || episodes.length === 0) return;
 
@@ -202,12 +215,25 @@ export function matchDashboard() {
       diffs.push(diff);
     }
 
-    const size = Math.min(coronaDiv.clientWidth || 200, coronaDiv.clientHeight || 200);
-    const svg = select(coronaDiv).append('svg').attr('width', size).attr('height', size);
+    const size = Math.min(
+      coronaDiv.clientWidth || 200,
+      coronaDiv.clientHeight || 200,
+    );
+    const svg = select(coronaDiv)
+      .append("svg")
+      .attr("width", size)
+      .attr("height", size);
 
     coronaChart(
       svg as any,
-      [{ p2sdiff: diffs, games_score: [0, 0], players: options.players, winner_index: 0 }],
+      [
+        {
+          p2sdiff: diffs,
+          games_score: [0, 0],
+          players: options.players,
+          winner_index: 0,
+        },
+      ],
       {
         width: size,
         height: size,
@@ -244,14 +270,12 @@ export function matchDashboard() {
     charts.rallyTreeChart.update();
 
     // Render corona
-    if (options.display.coronaChart && matchUpState) {
-      if (allEpisodes.length > 0) {
-        coronaChartFromMatchUp(coronaDiv, matchUpState, {
-          colors: options.colors,
-          players: options.players,
-          display: { info: true },
-        });
-      }
+    if (options.display.coronaChart && matchUpState && allEpisodes.length > 0) {
+      coronaChartFromMatchUp(coronaDiv, matchUpState, {
+        colors: options.colors,
+        players: options.players,
+        display: { info: true },
+      });
     }
   };
 

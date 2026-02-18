@@ -15,10 +15,28 @@ interface PtsHorizonArgs {
 }
 
 /**
- * PtsHorizon Visualization
+ * PtsHorizon — Condensed Points-to-Set via Horizon Graph
  *
- * A point-level "horizon chart" showing cumulative score differentials
- * across sets, with optional draggable brush handles for range selection.
+ * Horizon Graphs provide a condensed representation of the Points-to-Set
+ * chart, showing the difference between the PTS number for each player.
+ * The darker a player's color, the further ahead they are in the set. At a
+ * glance it is possible to tell when momentum changed in a match.
+ *
+ * Horizon graphs were developed by Panopticon Software (now DataWatch) and
+ * excel at displaying a large number of time series simultaneously. They
+ * preserve data density while preserving resolution — a match functions as
+ * a time series, a chronological progression of points. The data is cut
+ * into layered bands with color gradations where darker colors indicate a
+ * greater point difference.
+ *
+ * In match views, "brushing" selects ranges of points. This drives
+ * cross-visualization filtering: Game Tree, Rally Tree, Stat View, and
+ * Corona Chart all update to reflect the brushed range.
+ *
+ * Horizon graphs can quickly differentiate a 6-0, 6-0 win that was a
+ * "cakewalk" from a 6-0, 6-0 where every game went to deuce and beyond.
+ *
+ * @see https://tennisviz.blogspot.com/2015/08/points-to-set-horizon-corona.html
  */
 const meta: Meta<PtsHorizonArgs> = {
   title: 'Visualizations/PtsHorizon',

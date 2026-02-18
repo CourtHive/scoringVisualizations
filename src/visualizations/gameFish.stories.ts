@@ -17,10 +17,27 @@ interface GameFishArgs {
 }
 
 /**
- * Game Fish Visualization
+ * GameFish — Point Progression, Key Shots, Rallies
  *
- * Displays point-by-point details of a tennis game in a compact visual format.
- * Shows server, rally length, point results, and score progression.
+ * The GameFish visualization provides a single-glance overview of one game
+ * from a tennis match. It is an enhancement of the standard score-matrix
+ * for tennis matches.
+ *
+ * The boxes on the edges of the graphic indicate which player was serving.
+ * Light green dots represent Service Winners; yellow dots represent serves
+ * that were "In"; red dots represent faults. The boxes alternate sides
+ * based on the server for each point.
+ *
+ * The Game Grid in the center indicates the winner of the point by cell
+ * color as well as the final "Key Shot" which determined the point winner.
+ * Winners are shown in green, errors in red, and other outcomes in the
+ * default player color.
+ *
+ * Rally lengths are depicted with bluish-grey bars which appear "behind"
+ * the GameFish, giving a visual sense of point intensity.
+ *
+ * GameFish is the building block of the Momentum Chart, where multiple
+ * games are laid out nose-to-tail to show the flow of an entire match.
  */
 const meta: Meta<GameFishArgs> = {
   title: 'Visualizations/GameFish',

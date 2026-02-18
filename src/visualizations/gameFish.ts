@@ -15,8 +15,8 @@ export function gameFish() {
   const options: any = {
     id: 'gf1',
     score: [0, 0],
-    width: window.innerWidth,
-    height: window.innerHeight,
+    width: 600,
+    height: 600,
     margins: {
       top: 10,
       bottom: 10,
@@ -553,10 +553,10 @@ export function gameFish() {
 
       // ancillary functions for update()
       function circleRadius() {
-        return options.display.player || options.display.service ? radius / 4 : radius / 2;
+        return options.display.player || options.display.service ? radius / 3 : radius / 2;
       }
       function lineWidth() {
-        return radius > 20 ? 1 : 0.5;
+        return radius > 20 ? 1.5 : 0.75;
       }
       function colorShot(d: any) {
         return options.colors.results[d.result];

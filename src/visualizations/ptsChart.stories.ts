@@ -17,11 +17,33 @@ interface PtsChartArgs {
 }
 
 /**
- * PTS Chart Visualization (Points-Per-Set)
+ * Points to Set (PTS) — Visual Match Summary
  *
- * Displays a comprehensive view of all points across sets in a match.
- * Shows game boundaries, breakpoints, and point-by-point progression.
- * Each set is rendered as a separate horizontal band.
+ * "Points-to-Set" presents a visual summary of a tennis match and captures
+ * the dynamics of Point Progression during play. The Y-axis ranges from 24
+ * (the minimum points needed to win a standard set) down to 0 (set won).
+ * The X-axis displays total points played within the set.
+ *
+ * Every point won advances a player closer to set victory, but losing games
+ * can paradoxically increase the "Points-to-Set" number. For instance, when
+ * leading 5-4 and losing the game (making it 5-5), both players shift from
+ * needing 4 and 12 points respectively to each needing 8 points.
+ *
+ * PTS charts make it easy to see that two 6-3 sets can be very different,
+ * or that a 6-3 set can contain as many points as a 7-5 set. They provide
+ * a clearer indication of where two players stand than traditional "Total
+ * Points Won".
+ *
+ * Interactive features include: orientation highlighting to emphasize player
+ * perspective, game highlighting to isolate individual games, deuce
+ * visualization showing jagged lines during extended rallies, and breakpoint
+ * indicators. Hovering on the first point of each set displays winners
+ * (green) and errors (red) as well as rally lengths. Hovering over the last
+ * point highlights which games were won by each player.
+ *
+ * PTS concept credit: Francis Diebold.
+ *
+ * @see https://tennisviz.blogspot.com/2015/08/points-to-set.html
  */
 const meta: Meta<PtsChartArgs> = {
   title: 'Visualizations/PtsChart',

@@ -22,11 +22,33 @@ interface GameTreeArgs {
 }
 
 /**
- * Game Tree Visualization
+ * Game Tree — Point Progression via Sankey Diagram
  *
- * Displays a tree diagram showing the progression of points through a game.
- * Each branch represents a possible score path, with line width indicating
- * the number of points played through that path.
+ * "Game Tree" is a depiction of Point Progression for a selection of games
+ * within a tennis match or across a series of matches. Games start at 0-0
+ * and "progress" through the tree until a player wins the game. The
+ * visualization possesses the Markov property: future states are constrained
+ * by the current score at any moment in a game.
+ *
+ * The thickness of the lines connecting any two scores indicates the number
+ * of points which "progressed" between the two nodes. The color of lines
+ * indicates the percentage of points won due to Winners (green) and
+ * Errors (red).
+ *
+ * The two circles in the upper-left are "Selectors" — click to choose which
+ * player's service games to view. Deselecting both shows all points
+ * regardless of server. Clicking an already-selected player removes all
+ * filters, restoring the initial unfiltered view.
+ *
+ * Hovering over point lines displays the number of points that progressed
+ * between two nodes; hovering over a point node displays the percentage of
+ * games won from that score position.
+ *
+ * Original design (c) GameSetMap (Damien Saunder & David Webb). The first
+ * known application of a Sankey Diagram / Harness Flow Map to Point
+ * Progression in Tennis. Reproduced and enhanced with permission.
+ *
+ * @see https://tennisviz.blogspot.com/2015/10/game-tree.html
  */
 const meta: Meta<GameTreeArgs> = {
   title: "Visualizations/GameTree",

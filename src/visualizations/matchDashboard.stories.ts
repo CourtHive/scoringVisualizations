@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/html';
 import { matchDashboard } from './matchDashboard';
-import { feedMatchUp } from '../engine/feedMatchUp';
+import { feedMatchUp, getMcpFixture } from '../engine/feedMatchUp';
 import { createPlaybackEngine } from '../engine/createPlaybackEngine';
 import { createPlaybackControlsUI } from './helpers/PlaybackControls';
 
@@ -51,12 +51,15 @@ export const Default: Story = {
     dashboardDiv.style.cssText = 'width:100%;';
     container.appendChild(dashboardDiv);
 
-    const matchUp = feedMatchUp(args.matchIndex ?? 0);
+    const idx = args.matchIndex ?? 0;
+    const matchUp = feedMatchUp(idx);
+    const fixture = getMcpFixture(idx);
+    const players = fixture.players as [string, string];
 
     setTimeout(() => {
       const dashboard = matchDashboard();
       dashboard(dashboardDiv);
-      dashboard.matchUp(matchUp);
+      dashboard.matchUp(matchUp, players);
       dashboard.update();
     }, 0);
 
@@ -85,6 +88,9 @@ export const LivePlayback: Story = {
       delayMs: args.delayMs,
     });
 
+    const fixture = playback.getFixture();
+    const players = fixture.players as [string, string];
+
     const controls = createPlaybackControlsUI(playback, { showScoreboard: true });
     container.appendChild(controls);
     container.appendChild(dashboardDiv);
@@ -94,7 +100,7 @@ export const LivePlayback: Story = {
       dashboard(dashboardDiv);
 
       playback.liveEngine.subscribe((matchUp: any) => {
-        dashboard.matchUp(matchUp);
+        dashboard.matchUp(matchUp, players);
         dashboard.update();
       });
 
@@ -122,10 +128,12 @@ export const UndoRedo: Story = {
     dashboardDiv.style.cssText = 'width:100%;';
 
     const playback = createPlaybackEngine({ matchIndex: args.matchIndex });
+    const fixture = playback.getFixture();
+    const players = fixture.players as [string, string];
     for (let i = 0; i < 20; i++) playback.stepForward();
 
     playback.liveEngine.subscribe((matchUp: any) => {
-      dashboard.matchUp(matchUp);
+      dashboard.matchUp(matchUp, players);
       dashboard.update();
     });
 
@@ -137,7 +145,7 @@ export const UndoRedo: Story = {
 
     setTimeout(() => {
       dashboard(dashboardDiv);
-      dashboard.matchUp(playback.liveEngine.getState());
+      dashboard.matchUp(playback.liveEngine.getState(), players);
       dashboard.update();
     }, 0);
 
