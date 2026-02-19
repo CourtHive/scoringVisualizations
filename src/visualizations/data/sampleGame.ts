@@ -135,7 +135,7 @@ export const deuceGamePoints: Point[] = [
     result: 'Net',
     score: '30-40',
     points: [2, 3], // 30-40
-    breakpoint: true,
+    isBreakpoint: true,
   },
   {
     index: 5,
@@ -184,7 +184,7 @@ export const deuceGamePoints: Point[] = [
     result: 'Winner',
     score: '40-A',
     points: [4, 5], // Advantage receiver (Player 1)
-    breakpoint: true,
+    isBreakpoint: true,
   },
   {
     index: 9,
@@ -523,10 +523,10 @@ export function pointsToEpisodes(points: Point[]): Episode[] {
         complete: false,
       },
       needed: {
-        points_to_game: [4, 4], // Simplified - standard game
-        points_to_set: [pointsToSetP0, pointsToSetP1],
-        games_to_set: [6, 6], // Standard set
-        is_breakpoint: point.breakpoint === true,
+        pointsToGame: [4, 4], // Simplified - standard game
+        pointsToSet: [pointsToSetP0, pointsToSetP1],
+        gamesToSet: [6, 6], // Standard set
+        isBreakpoint: point.isBreakpoint === true,
       },
     };
   });

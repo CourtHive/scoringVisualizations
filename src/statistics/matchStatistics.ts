@@ -194,7 +194,7 @@ function counters(episodes: Episode[]): Counters {
     if (result === 'Forced Error') c.ForcedErrors[1 - winner]++;
 
     // Breakpoints: the breakpoint flag indicates receiver has breakpoint opportunity
-    if (pt.breakpoint) {
+    if (pt.isBreakpoint) {
       c.Breakpoints[1 - server]++;
     }
 
@@ -202,7 +202,7 @@ function counters(episodes: Episode[]): Counters {
     const isGameEnd = ep.game.complete;
     if (isGameEnd) {
       // Break point converted: game won by receiver
-      if (pt.breakpoint && winner !== server) {
+      if (pt.isBreakpoint && winner !== server) {
         c.BreakpointsConverted[1 - server]++;
       }
 
