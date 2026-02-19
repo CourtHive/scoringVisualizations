@@ -30,3 +30,6 @@ export { simpleChart } from './visualizations/simpleChart';
 // Statistics
 export { computeMatchStats, computeMatchStatsFromMatchUp } from './statistics';
 export type { StatObject } from './statistics';
+
+// Visualization event types
+export type { PtsChartEvents, GameFishEvents, GameTreeEvents, MomentumChartEvents } from './visualizations/types/events';

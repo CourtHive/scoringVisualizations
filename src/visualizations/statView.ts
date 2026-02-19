@@ -10,6 +10,7 @@
 import { select, scaleLinear } from 'd3';
 import { buildEpisodes } from '../episodes/buildEpisodes';
 import { computeMatchStats, type StatObject } from '../statistics/matchStatistics';
+import { keyWalk } from './utils/keyWalk';
 
 interface StatViewOptions {
   id: string;
@@ -234,19 +235,3 @@ export function statView() {
   return chart;
 }
 
-function keyWalk(valuesObject: any, optionsObject: any) {
-  if (!valuesObject || !optionsObject) return;
-  const vKeys = Object.keys(valuesObject);
-  const oKeys = Object.keys(optionsObject);
-  for (let k = 0; k < vKeys.length; k++) {
-    if (oKeys.indexOf(vKeys[k]) >= 0) {
-      const oo = optionsObject[vKeys[k]];
-      const vo = valuesObject[vKeys[k]];
-      if (typeof oo === 'object' && typeof vo !== 'function' && oo && oo.constructor !== Array) {
-        keyWalk(valuesObject[vKeys[k]], optionsObject[vKeys[k]]);
-      } else {
-        optionsObject[vKeys[k]] = valuesObject[vKeys[k]];
-      }
-    }
-  }
-}

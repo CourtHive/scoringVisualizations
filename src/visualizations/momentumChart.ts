@@ -6,6 +6,7 @@ import { gameFish } from './gameFish';
 import { select, selectAll } from 'd3';
 import { rallyCount } from './legacyRally';
 import { buildEpisodes } from '../episodes/buildEpisodes';
+import { keyWalk } from './utils/keyWalk';
 
 export function momentumChart() {
   let data: any;
@@ -179,6 +180,7 @@ export function momentumChart() {
             },
             colors: { players: { 0: options.colors.players[0], 1: options.colors.players[1] } },
           });
+          fish_school[i].events({ point: events.point });
           fish_school[i].data(g.points);
           fish_school[i].coords(coords).update();
           const new_coords = fish_school[i].coords();
@@ -476,25 +478,9 @@ export function momentumChart() {
   chart.options = function (values) {
     if (!arguments.length) return options;
     keyWalk(values, options);
+    if (values.events) keyWalk(values.events, events);
     return chart;
   };
-
-  function keyWalk(valuesObject, optionsObject) {
-    if (!valuesObject || !optionsObject) return;
-    const vKeys = Object.keys(valuesObject);
-    const oKeys = Object.keys(optionsObject);
-    for (let k = 0; k < vKeys.length; k++) {
-      if (oKeys.indexOf(vKeys[k]) >= 0) {
-        const oo = optionsObject[vKeys[k]];
-        const vo = valuesObject[vKeys[k]];
-        if (typeof oo == 'object' && typeof vo !== 'function' && oo.constructor !== Array) {
-          keyWalk(valuesObject[vKeys[k]], optionsObject[vKeys[k]]);
-        } else {
-          optionsObject[vKeys[k]] = valuesObject[vKeys[k]];
-        }
-      }
-    }
-  }
 
   chart.events = function (functions) {
     if (!arguments.length) return events;

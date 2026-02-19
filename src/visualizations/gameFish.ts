@@ -2,6 +2,7 @@
 // @ts-nocheck
 import { select, scaleLinear, scaleBand, range } from 'd3';
 import { extractGamePoints } from '../engine/feedMatchUp';
+import { keyWalk } from './utils/keyWalk';
 
 export function gameFish() {
   let data: any;
@@ -350,11 +351,16 @@ export function gameFish() {
           .attr('transform', rallyT)
           .attr('height', vert ? lScale.bandwidth() : rallyCalc)
           .attr('width', vert ? rallyCalc : lScale.bandwidth())
-          .on('mouseover', function () {
+          .on('mouseover', function (event: any, d: any) {
             select(this).attr('fill', 'yellow');
+            if (events.point.mouseover) events.point.mouseover(d, event);
           })
-          .on('mouseout', function () {
+          .on('mouseout', function (event: any, d: any) {
             select(this).attr('fill', '#eeeeff');
+            if (events.point.mouseout) events.point.mouseout(d, event);
+          })
+          .on('click', function (event: any, d: any) {
+            if (events.point.click) events.point.click(d, event);
           });
       } else {
         bars.selectAll('.rally_bar' + options.id).remove();
@@ -704,25 +710,9 @@ export function gameFish() {
   chart.options = function (values: any) {
     if (!arguments.length) return options;
     keyWalk(values, options);
+    if (values.events) keyWalk(values.events, events);
     return chart;
   };
-
-  function keyWalk(valuesObject: any, optionsObject: any) {
-    if (!valuesObject || !optionsObject) return;
-    const vKeys = Object.keys(valuesObject);
-    const oKeys = Object.keys(optionsObject);
-    for (let k = 0; k < vKeys.length; k++) {
-      if (oKeys.indexOf(vKeys[k]) >= 0) {
-        const oo = optionsObject[vKeys[k]];
-        const vo = valuesObject[vKeys[k]];
-        if (typeof oo == 'object' && typeof vo !== 'function' && oo && oo.constructor !== Array) {
-          keyWalk(valuesObject[vKeys[k]], optionsObject[vKeys[k]]);
-        } else {
-          optionsObject[vKeys[k]] = valuesObject[vKeys[k]];
-        }
-      }
-    }
-  }
 
   chart.events = function (functions: any[]) {
     if (!arguments.length) return events;

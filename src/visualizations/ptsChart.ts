@@ -3,23 +3,7 @@
 import { select, scaleLinear, scaleBand, range, line } from 'd3';
 import { rallyCount } from './legacyRally';
 import { buildEpisodes } from '../episodes/buildEpisodes';
-
-function keyWalk(valuesObject: any, optionsObject: any) {
-  if (!valuesObject || !optionsObject) return;
-  const vKeys = Object.keys(valuesObject);
-  const oKeys = Object.keys(optionsObject);
-  for (const key of vKeys) {
-    if (oKeys.includes(key)) {
-      const oo = optionsObject[key];
-      const vo = valuesObject[key];
-      if (typeof oo == 'object' && typeof vo !== 'function' && oo && oo.constructor !== Array) {
-        keyWalk(valuesObject[key], optionsObject[key]);
-      } else {
-        optionsObject[key] = valuesObject[key];
-      }
-    }
-  }
-}
+import { keyWalk } from './utils/keyWalk';
 
 function groupGames(point_episodes: any[]) {
   const episodes = point_episodes;
@@ -197,6 +181,7 @@ export function ptsMatch() {
   chart.options = function (values: any) {
     if (!arguments.length) return options;
     keyWalk(values, options);
+    if (values.events) keyWalk(values.events, events);
     return chart;
   };
 
@@ -901,6 +886,7 @@ function ptsChart() {
           .append('line')
           .attr('class', options.class + 'Bar')
           .attr('opacity', '0')
+          .style('pointer-events', 'all')
           .merge(point_bars)
           .attr('opacity', () => {
             const opacity = options.display.win_err_highlight ? '.4' : '0';
@@ -1101,11 +1087,7 @@ function ptsChart() {
 
   chart.events = function (functions: any) {
     if (!arguments.length) return events;
-    const fKeys = Object.keys(functions);
-    const eKeys = Object.keys(events);
-    for (const fKey of fKeys) {
-      if (eKeys.includes(fKey)) events[fKey] = functions[fKey];
-    }
+    keyWalk(functions, events);
     return chart;
   };
 

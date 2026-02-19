@@ -6,6 +6,7 @@
  */
 import { select, scaleLinear } from 'd3';
 import { buildEpisodes } from '../episodes/buildEpisodes';
+import { keyWalk } from './utils/keyWalk';
 
 // Helper Functions
 // ----------------
@@ -227,9 +228,9 @@ export function gameTree() {
     leftImage: { click: null },
     rightImage: { click: null },
     update: { begin: null, end: null },
-    point: { mousemove: null, mouseout: null },
-    node: { mousemove: null, mouseout: null },
-    score: { mousemove: null, mouseout: null },
+    point: { mousemove: null, mouseout: null, click: null },
+    node: { mousemove: null, mouseout: null, click: null },
+    score: { mousemove: null, mouseout: null, click: null },
     label: { mousemove: null, mouseout: null, click: selectView },
     selector: { mousemove: null, mouseout: null, click: selectView },
   };
@@ -432,7 +433,7 @@ export function gameTree() {
             : options.nodes.colors.neutral;
         })
         .on('mousemove', function (d: any, i: number) {
-          if (events.score.mousemove) events.score.mousemove(d, i);
+          if (events.node.mousemove) events.node.mousemove(d, i);
         })
         .on('mouseout', function (d: any, i: number) {
           if (events.node.mouseout) events.node.mouseout(d, i);
@@ -734,25 +735,9 @@ export function gameTree() {
   chart.options = function (values) {
     if (!arguments.length) return options;
     keyWalk(values, options);
+    if (values.events) keyWalk(values.events, events);
     return chart;
   };
-
-  function keyWalk(valuesObject, optionsObject) {
-    if (!valuesObject || !optionsObject) return;
-    const vKeys = Object.keys(valuesObject);
-    const oKeys = Object.keys(optionsObject);
-    for (let k = 0; k < vKeys.length; k++) {
-      if (oKeys.indexOf(vKeys[k]) >= 0) {
-        const oo = optionsObject[vKeys[k]];
-        const vo = valuesObject[vKeys[k]];
-        if (typeof oo == 'object' && typeof vo !== 'function' && oo && oo.constructor !== Array) {
-          keyWalk(valuesObject[vKeys[k]], optionsObject[vKeys[k]]);
-        } else {
-          optionsObject[vKeys[k]] = valuesObject[vKeys[k]];
-        }
-      }
-    }
-  }
 
   chart.events = function (functions) {
     if (!arguments.length) return events;
