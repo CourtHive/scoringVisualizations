@@ -7,10 +7,11 @@
  * Ported from legacy statView.js to D3 v7 TypeScript.
  */
 
-import { select, scaleLinear } from 'd3';
-import { buildEpisodes } from '../episodes/buildEpisodes';
-import { computeMatchStats, type StatObject } from '../statistics/matchStatistics';
-import { keyWalk } from './utils/keyWalk';
+import { computeMatchStats } from "../statistics/matchStatistics";
+import type { StatObject } from "tods-competition-factory";
+import { buildEpisodes } from "../episodes/buildEpisodes";
+import { keyWalk } from "./utils/keyWalk";
+import { select, scaleLinear } from "d3";
 
 interface StatViewOptions {
   id: string;
@@ -38,7 +39,7 @@ export function statView() {
   let updateFn: ((opts?: any) => void) | undefined;
 
   const options: StatViewOptions = {
-    id: 'sv',
+    id: "sv",
     width: 400,
     height: 300,
     rowHeight: 30,
@@ -48,23 +49,28 @@ export function statView() {
       transition_time: 300,
     },
     colors: {
-      players: { 0: '#a55194', 1: '#6b6ecf' },
+      players: { 0: "#a55194", 1: "#6b6ecf" },
     },
   };
 
   const events = {
-    update: { begin: null as (() => void) | null, end: null as (() => void) | null },
+    update: {
+      begin: null as (() => void) | null,
+      end: null as (() => void) | null,
+    },
   };
 
   function chart(selection: any) {
     selection.each(function (_: any, i: number, n: any) {
       const domParent = select(n[i]);
-      const root = domParent.append('div').attr('id', options.id);
+      const root = domParent.append("div").attr("id", options.id);
 
       updateFn = function (opts?: any) {
-        const fData = data.filter((d) => d.numerator && (d.numerator[0] || d.numerator[1]));
+        const fData = data.filter(
+          (d) => d.numerator && (d.numerator[0] || d.numerator[1]),
+        );
 
-        if (options.display.sizeToFit.width || (opts && opts.sizeToFit && opts.sizeToFit.width)) {
+        if (options.display.sizeToFit.width || opts?.sizeToFit?.width) {
           const dims = domParent.node()?.getBoundingClientRect();
           if (dims) options.width = Math.max(dims.width, 100);
         }
@@ -74,64 +80,85 @@ export function statView() {
         const fontSize = rh * 0.5;
 
         // Row containers — one <svg> per stat
-        const itemContainer = root.selectAll<SVGSVGElement, StatObject>('svg')
+        const itemContainer = root
+          .selectAll<SVGSVGElement, StatObject>("svg")
           .data(fData, (d: StatObject) => d.name);
 
         itemContainer.exit().remove();
 
-        const itemEnter = itemContainer.enter().append('svg');
+        const itemEnter = itemContainer.enter().append("svg");
 
-        const items = itemEnter.merge(itemContainer)
-          .attr('width', options.width)
-          .attr('height', options.rowHeight);
+        const items = itemEnter
+          .merge(itemContainer)
+          .attr("width", options.width)
+          .attr("height", options.rowHeight);
 
         // Group per row
-        const item = items.selectAll<SVGGElement, StatObject>('g.stat-row')
+        const item = items
+          .selectAll<SVGGElement, StatObject>("g.stat-row")
           .data((d) => [d]);
 
-        const itemGEnter = item.enter().append('g').attr('class', 'stat-row');
-        const itemG = itemGEnter.merge(item)
-          .attr('width', options.width)
-          .attr('height', rh)
-          .attr('transform', `translate(${options.margins.left},${options.margins.top})`);
+        const itemGEnter = item.enter().append("g").attr("class", "stat-row");
+        const itemG = itemGEnter
+          .merge(item)
+          .attr("width", options.width)
+          .attr("height", rh)
+          .attr(
+            "transform",
+            `translate(${options.margins.left},${options.margins.top})`,
+          );
 
         // ── Text elements ──────────────────────────────────────
 
         function formatValue(d: StatObject, playerIdx: 0 | 1): string {
-          const num = d.numerator?.[playerIdx] ?? '';
+          const num = d.numerator?.[playerIdx] ?? "";
           const den = d.denominator?.[playerIdx];
           const pctVal = d.pct?.[playerIdx];
 
-          let text = den !== undefined ? `${num}/${den}` : `${num}`;
+          let text = den !== undefined && den ? `${num}/${den}` : `${num}`;
 
           if (pctVal !== undefined) {
-            text = w > 400 ? `${Math.round(pctVal)}% (${text})` : `${Math.round(pctVal)}%`;
+            text =
+              w > 400
+                ? `${Math.round(pctVal)}% (${text})`
+                : `${Math.round(pctVal)}%`;
           }
 
           return text;
         }
 
-        function buildTextData(d: StatObject): Array<{ text: string; anchor: string; x: number }> {
+        function buildTextData(
+          d: StatObject,
+        ): Array<{ text: string; anchor: string; x: number }> {
           return [
-            { text: d.name, anchor: 'middle', x: options.width / 2 },
-            { text: formatValue(d, 0), anchor: 'start', x: 0 },
-            { text: formatValue(d, 1), anchor: 'end', x: w },
+            { text: d.name, anchor: "middle", x: options.width / 2 },
+            { text: formatValue(d, 0), anchor: "start", x: 0 },
+            { text: formatValue(d, 1), anchor: "end", x: w },
           ];
         }
 
-        const textSel = itemG.selectAll<SVGTextElement, { text: string; anchor: string; x: number }>('text')
+        const textSel = itemG
+          .selectAll<
+            SVGTextElement,
+            { text: string; anchor: string; x: number }
+          >("text")
           .data(buildTextData);
 
         textSel.exit().remove();
 
-        textSel.enter().append('text')
+        textSel
+          .enter()
+          .append("text")
           .merge(textSel)
           .text((d) => d.text)
-          .style('text-anchor', (d) => d.anchor)
-          .style('dominant-baseline', 'middle')
-          .style('font-size', `${fontSize}px`)
-          .style('fill', 'black')
-          .attr('transform', (d) => `translate(${d.x},${options.rowHeight / 4})`);
+          .style("text-anchor", (d) => d.anchor)
+          .style("dominant-baseline", "middle")
+          .style("font-size", `${fontSize}px`)
+          .style("fill", "black")
+          .attr(
+            "transform",
+            (d) => `translate(${d.x},${options.rowHeight / 4})`,
+          );
 
         // ── Bars ───────────────────────────────────────────────
 
@@ -141,9 +168,10 @@ export function statView() {
           if (d.numerator !== undefined) {
             const total = d.numerator[0] + d.numerator[1];
             if (total !== 0) {
-              let pct1 = parseFloat((d.numerator[0] / total).toFixed(1)) * 100;
-              pct1 = pct1 > 100 ? 100 : pct1;
-              const pct2 = 100 - (!isNaN(pct1) ? pct1 : 0);
+              let pct1 =
+                Number.parseFloat((d.numerator[0] / total).toFixed(1)) * 100;
+              pct1 = Math.min(pct1, 100);
+              const pct2 = 100 - (Number.isNaN(pct1) ? 0 : pct1);
               if (d.numerator[0] < 0 && d.numerator[1] < 0) {
                 return [pct2, pct1];
               }
@@ -157,24 +185,27 @@ export function statView() {
           return [];
         }
 
-        const barSel = itemG.selectAll<SVGRectElement, number>('rect')
+        const barSel = itemG
+          .selectAll<SVGRectElement, number>("rect")
           .data(calcBarData);
 
         barSel.exit().remove();
 
-        barSel.enter().append('rect')
+        barSel
+          .enter()
+          .append("rect")
           .merge(barSel)
           .transition()
           .duration(options.display.transition_time)
-          .attr('width', (d) => {
-            const s = !isNaN(d) ? barScale(d) : 0;
-            return s < 0 || isNaN(s) ? 0 : s;
+          .attr("width", (d) => {
+            const s = Number.isNaN(d) ? 0 : barScale(d);
+            return s < 0 || Number.isNaN(s) ? 0 : s;
           })
-          .attr('height', rh / 2)
-          .attr('fill', (_d, idx) => options.colors.players[idx as 0 | 1])
-          .attr('transform', (d, idx) => {
+          .attr("height", rh / 2)
+          .attr("fill", (_d, idx) => options.colors.players[idx as 0 | 1])
+          .attr("transform", (d, idx) => {
             const xoff = idx ? w - barScale(d) : 0;
-            return `translate(${!isNaN(xoff) ? xoff : 0},${options.rowHeight / 2})`;
+            return `translate(${Number.isFinite(xoff) ? xoff : 0},${options.rowHeight / 2})`;
           });
       };
     });
@@ -208,7 +239,7 @@ export function statView() {
 
   chart.update = function (opts?: any) {
     if (events.update.begin) events.update.begin();
-    if (typeof updateFn === 'function') updateFn(opts);
+    if (typeof updateFn === "function") updateFn(opts);
     setTimeout(() => {
       if (events.update.end) events.update.end();
     }, options.display.transition_time);
@@ -227,11 +258,11 @@ export function statView() {
   };
 
   chart.colors = function (playerColors?: [string, string]) {
-    if (!arguments.length) return [options.colors.players[0], options.colors.players[1]];
+    if (!arguments.length)
+      return [options.colors.players[0], options.colors.players[1]];
     options.colors.players = { 0: playerColors![0], 1: playerColors![1] };
     return chart;
   };
 
   return chart;
 }
-

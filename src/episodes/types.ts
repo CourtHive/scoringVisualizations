@@ -3,7 +3,7 @@ export interface EpisodePoint {
   server: number;
   pointNumber: number;
   index: number;
-  breakpoint: boolean;
+  isBreakpoint: boolean;
   score: string;
   set: number;
   game: number;
@@ -32,9 +32,9 @@ export interface EpisodeSet {
 }
 
 export interface EpisodeNeeded {
-  points_to_game: number[];
-  points_to_set: number[];
-  games_to_set: number[];
+  pointsToGame: number[];
+  pointsToSet: number[];
+  gamesToSet: number[];
 }
 
 export interface Episode {
@@ -43,7 +43,7 @@ export interface Episode {
   game: EpisodeGame;
   set: EpisodeSet;
   needed: EpisodeNeeded;
-  next_service: number;
+  nextService: number;
   result: boolean;
   complete: boolean;
 }

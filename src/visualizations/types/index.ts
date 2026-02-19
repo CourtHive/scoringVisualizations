@@ -21,7 +21,7 @@ export interface Point {
   score?: string; // Game score after point (e.g., '15-0', '30-15')
   points?: [number, number]; // Cumulative point count [player0, player1]
   tiebreak?: boolean;
-  breakpoint?: boolean | number;
+  isBreakpoint?: boolean | number;
 }
 
 /**
@@ -39,10 +39,10 @@ export interface Episode {
     complete: boolean;
   };
   needed: {
-    points_to_game: [number, number]; // points needed for each player to win current game
-    points_to_set: [number, number]; // points needed for each player to win current set
-    games_to_set: [number, number]; // games needed for each player to win current set
-    is_breakpoint?: boolean;
+    pointsToGame: [number, number]; // points needed for each player to win current game
+    pointsToSet: [number, number]; // points needed for each player to win current set
+    gamesToSet: [number, number]; // games needed for each player to win current set
+    isBreakpoint?: boolean;
   };
 }
 

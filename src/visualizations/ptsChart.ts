@@ -380,7 +380,7 @@ function ptsChart() {
   let set_data: any;
 
   let game_data: any;
-  let points_to_set: any;
+  let pointsToSet: any;
 
   const winners = new Set(['Ace', 'Winner', 'Serve Winner']);
   const errors = new Set(['Forced Error', 'Unforced Error', 'Double Fault', 'Penalty', 'Out', 'Net']);
@@ -573,17 +573,17 @@ function ptsChart() {
         const range_start = points[0].point.index;
 
         game_data = groupGames(points);
-        points_to_set = points.map((p: any) => p.needed?.points_to_set);
+        pointsToSet = points.map((p: any) => p.needed?.pointsToSet);
         const pts_max = Math.max(
           ...[].concat(
-            points_to_set.map((p: number[]) => p[0]),
-            points_to_set.map((p: number[]) => p[1]),
+            pointsToSet.map((p: number[]) => p[0]),
+            pointsToSet.map((p: number[]) => p[1]),
           ),
         );
-        const pts_start = Math.max(...points_to_set[0]);
+        const pts_start = Math.max(...pointsToSet[0]);
 
         // add pts prior to first point
-        points_to_set.unshift([pts_start, pts_start]);
+        pointsToSet.unshift([pts_start, pts_start]);
 
         const longest_rally =
           Math.max.apply(
@@ -748,14 +748,14 @@ function ptsChart() {
           })
           // .attr('d', function(d: any) { return lineGen(player_data[d]) })
           .attr('d', (d: any) => {
-            return lineGen(points_to_set.map((p: any) => p[d]));
+            return lineGen(pointsToSet.map((p: any) => p[d]));
           });
 
         const bp_data = [
-          points_to_set.map((p: any) => {
+          pointsToSet.map((p: any) => {
             return { pts: p[0] };
           }),
-          points_to_set.map((p: any) => {
+          pointsToSet.map((p: any) => {
             return { pts: p[1] };
           }),
         ];
@@ -786,13 +786,13 @@ function ptsChart() {
           .transition()
           .duration(resize ? 0 : options.display.transition_time / 2)
           .attr('fill', (d: any, i: any) => {
-            if (points[i - 1] && points[i - 1].point.breakpoint != undefined) {
+            if (points[i - 1] && points[i - 1].point.isBreakpoint != undefined) {
               return options.colors.players[d._i];
             }
           })
           .style('opacity', (d: any, i: any) => {
-            if (points[i - 1] && points[i - 1].point.breakpoint != undefined) {
-              // return points[i - 1].point.breakpoint == d._i ? 1 : 0
+            if (points[i - 1] && points[i - 1].point.isBreakpoint != undefined) {
+              // return points[i - 1].point.isBreakpoint == d._i ? 1 : 0
               return points[i - 1].point.server == 1 - d._i ? 1 : 0;
             }
           })

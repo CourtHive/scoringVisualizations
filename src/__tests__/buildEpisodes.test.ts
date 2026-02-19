@@ -92,12 +92,12 @@ describe('buildEpisodes', () => {
 
     const episodes = buildEpisodes(engine.getState());
     const needed = episodes[0].needed;
-    expect(needed).toHaveProperty('points_to_game');
-    expect(needed).toHaveProperty('points_to_set');
-    expect(needed).toHaveProperty('games_to_set');
+    expect(needed).toHaveProperty('pointsToGame');
+    expect(needed).toHaveProperty('pointsToSet');
+    expect(needed).toHaveProperty('gamesToSet');
   });
 
-  it('sets next_service from the next point server', () => {
+  it('sets nextService from the next point server', () => {
     const engine = new ScoringEngine({ matchUpFormat: 'SET3-S:6/TB7' });
     // Win a game with player 0 serving
     engine.addPoint({ winner: 0, server: 0 });
@@ -108,8 +108,8 @@ describe('buildEpisodes', () => {
     engine.addPoint({ winner: 1, server: 1 });
 
     const episodes = buildEpisodes(engine.getState());
-    // Last point of game 0 should show next_service = 1
-    expect(episodes[3].next_service).toBe(1);
+    // Last point of game 0 should show nextService = 1
+    expect(episodes[3].nextService).toBe(1);
   });
 
   it('preserves optional fields (result, rallyLength)', () => {
