@@ -5,10 +5,10 @@
  * Displays point-by-point score differentials in a radial/circular format
  */
 
-import { scaleLinear, radialArea, curveBasis, select } from 'd3';
-import { buildSetMap } from '../engine/buildSetMap';
+import { scaleLinear, radialArea, curveBasis, select } from "d3";
+import { buildSetMap } from "../engine/buildSetMap";
 
-type Selection<A, B, C, D> = import('d3').Selection<A, B, C, D>;
+type Selection<A, B, C, D> = import("d3").Selection<A, B, C, D>;
 
 function sum(arr: number[]): number {
   return arr.reduce((sum, val) => sum + Number.parseFloat(val.toString()), 0);
@@ -75,9 +75,9 @@ interface CoronaPrefs {
   };
 }
 
-const FONT_WEIGHT_BOLD = 'bold';
-const FONT_WEIGHT = 'font-weight';
-const TEXT_ANCHOR = 'text-anchor';
+const FONT_WEIGHT_BOLD = "bold";
+const FONT_WEIGHT = "font-weight";
+const TEXT_ANCHOR = "text-anchor";
 
 export function coronaChart(
   target: Selection<any, any, any, any>,
@@ -104,11 +104,11 @@ export function coronaChart(
   const max = 24; // Fixed maximum for consistent scaling
 
   const pts_corona = target
-    .append('svg:g')
-    .attr('class', 'pts_corona')
-    .attr('width', prefs.width)
-    .attr('height', prefs.height)
-    .attr('transform', `translate(${x},${y})`);
+    .append("svg:g")
+    .attr("class", "pts_corona")
+    .attr("width", prefs.width)
+    .attr("height", prefs.height)
+    .attr("transform", `translate(${x},${y})`);
 
   // Display options
   if (prefs.display.info) {
@@ -129,12 +129,12 @@ export function coronaChart(
 
   // Create clip path
   pts_corona
-    .append('clipPath')
-    .attr('id', 'clip')
-    .append('circle')
-    .attr('cx', 0)
-    .attr('cy', 0)
-    .attr('r', radius((max / 24) * 8));
+    .append("clipPath")
+    .attr("id", "clip")
+    .append("circle")
+    .attr("cx", 0)
+    .attr("cy", 0)
+    .attr("r", radius((max / 24) * 8));
 
   const indices = indicesOf(0, data);
   const ranges = createRanges(indices, data);
@@ -166,7 +166,12 @@ export function coronaChart(
     segment(slice3rds, ranges[s][0], player_color, 1);
   }
 
-  function segment(subset: number[], offset: number, player_color: string, opacity: number): void {
+  function segment(
+    subset: number[],
+    offset: number,
+    player_color: string,
+    opacity: number,
+  ): void {
     // D3 v7: radialArea remains the same
     const area = radialArea<number>()
       .curve(curveBasis)
@@ -176,33 +181,33 @@ export function coronaChart(
 
     // D3 v7: Event handler signature changed - event is first parameter
     const svg = pts_corona
-      .append('g')
+      .append("g")
       .datum(subset)
-      .attr('width', prefs.width)
-      .attr('height', prefs.height)
-      .append('g')
-      .attr('transform', `translate(${prefs.width / 2},${prefs.height / 2})`)
-      .on('mouseover', function (event: any, d: any) {
+      .attr("width", prefs.width)
+      .attr("height", prefs.height)
+      .append("g")
+      .attr("transform", `translate(${prefs.width / 2},${prefs.height / 2})`)
+      .on("mouseover", function (event: any, d: any) {
         if (prefs.functions?.mouseover) {
           prefs.functions.mouseover(d);
         }
       });
 
     svg
-      .append('path')
-      .attr('class', 'area')
-      .attr('clip-path', 'url(#clip)')
-      .attr('fill', player_color)
-      .attr('opacity', opacity)
-      .attr('d', area);
+      .append("path")
+      .attr("class", "area")
+      .attr("clip-path", "url(#clip)")
+      .attr("fill", player_color)
+      .attr("opacity", opacity)
+      .attr("d", area);
   }
 
   function badgeDisplay(): void {
     const lastSet = set_map.at(-1);
     pts_corona
-      .append('a')
-      .attr('target', '_blank')
-      .attr('xlink:href', () => {
+      .append("a")
+      .attr("target", "_blank")
+      .attr("xlink:href", () => {
         if (prefs.muid) {
           if (prefs.context?.playerName) {
             return `/viewpro/browse.html?playerName=${prefs.context.playerName}&&muid=${prefs.muid}`;
@@ -210,94 +215,109 @@ export function coronaChart(
             return `/viewpro/?muid=${prefs.muid}`;
           }
         }
-        return '#';
+        return "#";
       })
-      .append('text')
-      .attr('font-size', '14px')
-      .attr('fill', colors[lastSet?.winner_index || 0])
+      .append("text")
+      .attr("font-size", "14px")
+      .attr("fill", colors[lastSet?.winner_index || 0])
       .attr(FONT_WEIGHT, FONT_WEIGHT_BOLD)
-      .attr(TEXT_ANCHOR, 'middle')
-      .attr('x', 0)
-      .attr('y', 0)
+      .attr(TEXT_ANCHOR, "middle")
+      .attr("x", 0)
+      .attr("y", 0)
       .text(prefs.display.badge)
-      .attr('transform', `translate(${prefs.width / 2},${prefs.height / 2 + 5})`);
+      .attr(
+        "transform",
+        `translate(${prefs.width / 2},${prefs.height / 2 + 5})`,
+      );
   }
 
   function scoreDisplay(): void {
     // Build game score strings for each player
-    const score_string: { 0: string; 1: string } = { 0: '', 1: '' };
+    const score_string: { 0: string; 1: string } = { 0: "", 1: "" };
     for (const set of set_map) {
       if (set.games_score) {
-        score_string[0] += set.games_score[0] + ' ';
-        score_string[1] += set.games_score[1] + ' ';
+        score_string[0] += set.games_score[0] + " ";
+        score_string[1] += set.games_score[1] + " ";
       }
     }
     score_string[0] = score_string[0].trim();
     score_string[1] = score_string[1].trim();
 
-    const players = set_map[0].players || ['Player 1', 'Player 2'];
-    const lastName = (name: string) => name.split(' ').pop() || name;
+    const players = set_map[0].players || ["Player 1", "Player 2"];
+    const lastName = (name: string) => name.split(" ").pop() || name;
 
     // D3 v7: Event handler signature changed - event is first parameter
     pts_corona
-      .append('text')
-      .attr('font-size', '18px')
-      .attr('fill', colors[0])
+      .append("text")
+      .attr("font-size", "18px")
+      .attr("fill", colors[0])
       .attr(FONT_WEIGHT, FONT_WEIGHT_BOLD)
-      .attr(TEXT_ANCHOR, 'middle')
-      .attr('x', 0)
-      .attr('y', 0)
+      .attr(TEXT_ANCHOR, "middle")
+      .attr("x", 0)
+      .attr("y", 0)
       .text(lastName(players[0]))
-      .attr('transform', `translate(${prefs.width / 2},${prefs.height / 2 - 35})`)
-      .on('click', function (_event: any) {
+      .attr(
+        "transform",
+        `translate(${prefs.width / 2},${prefs.height / 2 - 35})`,
+      )
+      .on("click", function (_event: any) {
         if (prefs.functions?.click_name) {
           prefs.functions.click_name(players[0]);
         }
       });
 
     pts_corona
-      .append('text')
-      .attr('font-size', '16px')
-      .attr('fill', colors[0])
-      .attr(FONT_WEIGHT, 'bold')
-      .attr(TEXT_ANCHOR, 'middle')
-      .attr('x', 0)
-      .attr('y', 0)
+      .append("text")
+      .attr("font-size", "16px")
+      .attr("fill", colors[0])
+      .attr(FONT_WEIGHT, "bold")
+      .attr(TEXT_ANCHOR, "middle")
+      .attr("x", 0)
+      .attr("y", 0)
       .text(score_string[0])
-      .attr('transform', `translate(${prefs.width / 2},${prefs.height / 2 - 8})`)
-      .on('click', function (_event: any) {
+      .attr(
+        "transform",
+        `translate(${prefs.width / 2},${prefs.height / 2 - 8})`,
+      )
+      .on("click", function (_event: any) {
         if (prefs.functions?.click_score) {
           prefs.functions.click_score(players[0]);
         }
       });
 
     pts_corona
-      .append('text')
-      .attr('font-size', '18px')
-      .attr('fill', colors[1])
-      .attr(FONT_WEIGHT, 'bold')
-      .attr(TEXT_ANCHOR, 'middle')
-      .attr('x', 0)
-      .attr('y', 0)
+      .append("text")
+      .attr("font-size", "18px")
+      .attr("fill", colors[1])
+      .attr(FONT_WEIGHT, "bold")
+      .attr(TEXT_ANCHOR, "middle")
+      .attr("x", 0)
+      .attr("y", 0)
       .text(lastName(players[1]))
-      .attr('transform', `translate(${prefs.width / 2},${prefs.height / 2 + 45})`)
-      .on('click', function (_event: any) {
+      .attr(
+        "transform",
+        `translate(${prefs.width / 2},${prefs.height / 2 + 45})`,
+      )
+      .on("click", function (_event: any) {
         if (prefs.functions?.click_name) {
           prefs.functions.click_name(players[1]);
         }
       });
 
     pts_corona
-      .append('text')
-      .attr('font-size', '16px')
-      .attr('fill', colors[1])
-      .attr(FONT_WEIGHT, 'bold')
-      .attr(TEXT_ANCHOR, 'middle')
-      .attr('x', 0)
-      .attr('y', 0)
+      .append("text")
+      .attr("font-size", "16px")
+      .attr("fill", colors[1])
+      .attr(FONT_WEIGHT, "bold")
+      .attr(TEXT_ANCHOR, "middle")
+      .attr("x", 0)
+      .attr("y", 0)
       .text(score_string[1])
-      .attr('transform', `translate(${prefs.width / 2},${prefs.height / 2 + 13})`)
-      .on('click', function (_event: any) {
+      .attr(
+        "transform",
+        `translate(${prefs.width / 2},${prefs.height / 2 + 13})`,
+      )
+      .on("click", function (_event: any) {
         if (prefs.functions?.click_score) {
           prefs.functions.click_score(players[1]);
         }
@@ -326,21 +346,27 @@ export function coronaChartFromMatchUp(
   const width = options?.width ?? Math.max(rect.width, 400);
   const height = options?.height ?? Math.max(rect.height, 400);
   const size = Math.min(width, height);
-  const players: [string, string] = options?.players ?? ['Player 1', 'Player 2'];
+  const players: [string, string] = options?.players ?? [
+    "Player 1",
+    "Player 2",
+  ];
 
   // Clear previous SVG
-  select(container).selectAll('svg').remove();
+  select(container).selectAll("svg").remove();
 
   const setMap = buildSetMap(matchUp, players);
   if (setMap.length === 0) return;
 
-  const svg = select(container).append('svg').attr('width', size).attr('height', size);
+  const svg = select(container)
+    .append("svg")
+    .attr("width", size)
+    .attr("height", size);
 
   const prefs: CoronaPrefs = {
     width: size,
     height: size,
     radius: options?.radius ?? size * 1.35,
-    colors: options?.colors ?? ['#a55194', '#6b6ecf'],
+    colors: options?.colors ?? ["#a55194", "#6b6ecf"],
     display: options?.display ?? { info: false, badge: false, home: false },
     functions: {},
   };
