@@ -71,7 +71,7 @@ const meta: Meta<PtsChartArgs> = {
       },
       display: {
         sizeToFit: args.sizeToFit,
-        win_err_highlight: args.showRallyBars,
+        winErrHighlight: args.showRallyBars,
       },
     });
 
@@ -196,7 +196,7 @@ export const SingleSet: Story = {
       },
       display: {
         sizeToFit: args.sizeToFit,
-        win_err_highlight: args.showRallyBars,
+        winErrHighlight: args.showRallyBars,
       },
     });
 
@@ -249,7 +249,7 @@ export const WithRallyBars: Story = {
       },
       display: {
         sizeToFit: args.sizeToFit,
-        win_err_highlight: args.showRallyBars,
+        winErrHighlight: args.showRallyBars,
       },
     });
 
@@ -294,7 +294,7 @@ export const WideLayout: Story = {
       },
       display: {
         sizeToFit: args.sizeToFit,
-        win_err_highlight: args.showRallyBars,
+        winErrHighlight: args.showRallyBars,
       },
     });
 
@@ -332,7 +332,7 @@ export const LivePlayback: Story = {
       margins: { top: args.topMargin, bottom: args.bottomMargin },
       display: {
         sizeToFit: args.sizeToFit,
-        win_err_highlight: args.showRallyBars,
+        winErrHighlight: args.showRallyBars,
       },
     });
 
@@ -380,7 +380,7 @@ export const UndoRedo: Story = {
     const chart = ptsMatch();
     chart.options({
       margins: { top: args.topMargin, bottom: args.bottomMargin },
-      display: { sizeToFit: args.sizeToFit, win_err_highlight: args.showRallyBars },
+      display: { sizeToFit: args.sizeToFit, winErrHighlight: args.showRallyBars },
     });
 
     const chartDiv = document.createElement('div');

@@ -56,7 +56,7 @@ const meta: Meta<PtsHorizonArgs> = {
         sizeToFit: true,
         bands: args.bands,
         mode: args.mode,
-        transition_time: 0,
+        transitionTime: 0,
       },
       elements: { brush: args.showBrush },
     });
@@ -141,7 +141,7 @@ export const WithBrush: Story = {
         sizeToFit: true,
         bands: args.bands,
         mode: args.mode,
-        transition_time: 0,
+        transitionTime: 0,
       },
       elements: { brush: true },
     });
@@ -194,7 +194,7 @@ export const LivePlayback: Story = {
         sizeToFit: true,
         bands: args.bands,
         mode: args.mode,
-        transition_time: 0,
+        transitionTime: 0,
       },
       elements: { brush: args.showBrush },
     });
@@ -248,7 +248,7 @@ export const UndoRedo: Story = {
         sizeToFit: true,
         bands: args.bands,
         mode: args.mode,
-        transition_time: 0,
+        transitionTime: 0,
       },
       elements: { brush: args.showBrush },
     });

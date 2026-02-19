@@ -62,9 +62,9 @@ const meta: Meta<CoronaChartArgs> = {
     const sampleSetMap = [
       {
         p2sdiff: generateScoreDiffs(50),
-        games_score: [6, 4] as [number, number],
+        gamesScore: [6, 4] as [number, number],
         players: ['Player One', 'Player Two'] as [string, string],
-        winner_index: 0 as 0 | 1,
+        winnerIndex: 0 as 0 | 1,
       },
     ];
 
@@ -159,9 +159,9 @@ export const ExtraLarge: Story = {
     const sampleSetMap = [
       {
         p2sdiff: generateScoreDiffs(80),
-        games_score: [7, 6] as [number, number],
+        gamesScore: [7, 6] as [number, number],
         players: ['Federer', 'Nadal'] as [string, string],
-        winner_index: 0 as 0 | 1,
+        winnerIndex: 0 as 0 | 1,
       },
     ];
 
@@ -208,15 +208,15 @@ export const WithResult: Story = {
     const sampleSetMap = [
       {
         p2sdiff: generateScoreDiffs(60),
-        games_score: [6, 3] as [number, number],
+        gamesScore: [6, 3] as [number, number],
         players: ['Serena Williams', 'Venus Williams'] as [string, string],
-        winner_index: 0 as 0 | 1,
+        winnerIndex: 0 as 0 | 1,
       },
       {
         p2sdiff: generateScoreDiffs(50),
-        games_score: [6, 2] as [number, number],
+        gamesScore: [6, 2] as [number, number],
         players: ['Serena Williams', 'Venus Williams'] as [string, string],
-        winner_index: 0 as 0 | 1,
+        winnerIndex: 0 as 0 | 1,
       },
     ];
 
@@ -263,9 +263,9 @@ export const WithBadge: Story = {
     const sampleSetMap = [
       {
         p2sdiff: generateScoreDiffs(55),
-        games_score: [7, 5] as [number, number],
+        gamesScore: [7, 5] as [number, number],
         players: ['Djokovic', 'Murray'] as [string, string],
-        winner_index: 0 as 0 | 1,
+        winnerIndex: 0 as 0 | 1,
       },
     ];
 
@@ -312,9 +312,9 @@ export const ReversedColors: Story = {
     const sampleSetMap = [
       {
         p2sdiff: generateScoreDiffs(70),
-        games_score: [4, 6] as [number, number],
+        gamesScore: [4, 6] as [number, number],
         players: ['Player A', 'Player B'] as [string, string],
-        winner_index: 1 as 0 | 1,
+        winnerIndex: 1 as 0 | 1,
       },
     ];
 

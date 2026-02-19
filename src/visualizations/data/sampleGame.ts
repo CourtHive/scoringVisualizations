@@ -489,7 +489,7 @@ export const tiebreakGameGroup: GameGroup = {
   score: [6, 6],
   complete: true,
   winner: 0,
-  last_game: true,
+  lastGame: true,
 };
 
 /**

@@ -2,18 +2,19 @@
 import { select, scaleLinear, scaleBand, range } from "d3";
 import { extractGamePoints } from "../engine/feedMatchUp";
 import { keyWalk } from "./utils/keyWalk";
+import { generateId } from "./utils/generateId";
 
 export function gameFish() {
   let data: any;
-  let fish_width;
-  let fish_height;
+  let fishWidth;
+  let fishHeight;
   let coords = [0, 0];
-  let last_coords: any;
+  let lastCoords: any;
   let update: any;
   const images: any = { left: undefined, right: undefined };
 
   const options: any = {
-    id: "gf1",
+    id: generateId(),
     score: [0, 0],
     width: 600,
     height: 600,
@@ -26,23 +27,23 @@ export function gameFish() {
     fish: {
       school: false,
       gridcells: ["0", "15", "30", "40", "G"],
-      max_rally: undefined,
-      cell_size: undefined,
-      min_cell_size: 5,
-      max_cell_size: 20,
+      maxRally: undefined,
+      cellSize: undefined,
+      minCellSize: 5,
+      maxCellSize: 20,
     },
     set: {
-      tiebreak_to: 7,
+      tiebreakTo: 7,
     },
     display: {
       orientation: "vertical",
-      transition_time: 0,
+      transitionTime: 0,
       sizeToFit: false,
       leftImg: false,
       rightImg: false,
-      show_images: undefined,
+      showImages: undefined,
       reverse: false,
-      point_score: true,
+      pointScore: true,
       service: true,
       player: true,
       rally: true,
@@ -103,9 +104,9 @@ export function gameFish() {
   }
 
   function chart(selection: any) {
-    const parent_type = selection._groups[0][0].tagName.toLowerCase();
+    const parentType = selection._groups[0][0].tagName.toLowerCase();
 
-    if (parent_type !== "svg") {
+    if (parentType !== "svg") {
       root = selection.append("div").attr("class", "fishRoot");
 
       fishFrame = root
@@ -128,34 +129,34 @@ export function gameFish() {
         options.height = Math.max(dims.height, 100);
       }
 
-      if (options.fish.cell_size && !options.fish.school) {
+      if (options.fish.cellSize && !options.fish.school) {
         const multiplier = Math.max(10, data.length + 2);
-        options.height = options.fish.cell_size * multiplier * 0.9;
+        options.height = options.fish.cellSize * multiplier * 0.9;
       }
 
       let tiebreak = false;
-      let max_rally = 0;
+      let maxRally = 0;
       data.forEach((e: any) => {
         const rlen = e.rallyLength;
-        if (rlen > max_rally) max_rally = rlen;
+        if (rlen > maxRally) maxRally = rlen;
         if (e.score && e.score.indexOf("T") > 0) tiebreak = true;
       });
 
-      if (options.fish.max_rally && options.fish.max_rally > max_rally)
-        max_rally = options.fish.max_rally;
+      if (options.fish.maxRally && options.fish.maxRally > maxRally)
+        maxRally = options.fish.maxRally;
 
-      fish_width =
+      fishWidth =
         options.width - (options.margins.left + options.margins.right);
-      fish_height =
+      fishHeight =
         options.height - (options.margins.top + options.margins.bottom);
 
       // Ensure dimensions are valid
-      if (Number.isNaN(fish_width) || fish_width <= 0) fish_width = 100;
-      if (Number.isNaN(fish_height) || fish_height <= 0) fish_height = 100;
+      if (Number.isNaN(fishWidth) || fishWidth <= 0) fishWidth = 100;
+      if (Number.isNaN(fishHeight) || fishHeight <= 0) fishHeight = 100;
 
       const vert = options.display.orientation === "vertical" ? 1 : 0;
-      const fish_offset = vert ? fish_width : fish_height;
-      const fish_length = vert ? fish_height : fish_width;
+      const fish_offset = vert ? fishWidth : fishHeight;
+      const fish_length = vert ? fishHeight : fishWidth;
       const midpoint =
         (vert ? options.margins.left : options.margins.top) + fish_offset / 2;
       const sw = 1; // service box % offset
@@ -172,29 +173,29 @@ export function gameFish() {
       fish.attr("transform", "translate(" + coords[0] + "," + coords[1] + ")");
       game.attr("transform", "translate(" + coords[0] + "," + coords[1] + ")");
 
-      let cell_size;
-      if (options.fish.cell_size) {
-        cell_size = options.fish.cell_size;
+      let cellSize;
+      if (options.fish.cellSize) {
+        cellSize = options.fish.cellSize;
       } else {
         const offset_divisor = tiebreak
-          ? options.set.tiebreak_to + 4
+          ? options.set.tiebreakTo + 4
           : options.fish.gridcells.length + 2;
         const cell_offset =
           fish_offset /
           (options.fish.gridcells.length +
             (options.display.service ? offset_divisor : 0));
         const cell_length = fish_length / (data.length + 2);
-        cell_size = Math.min(cell_offset, cell_length);
-        cell_size = Math.max(options.fish.min_cell_size, cell_size);
-        cell_size = Math.min(options.fish.max_cell_size, cell_size);
+        cellSize = Math.min(cell_offset, cell_length);
+        cellSize = Math.max(options.fish.minCellSize, cellSize);
+        cellSize = Math.min(options.fish.maxCellSize, cellSize);
       }
 
-      // Ensure cell_size is valid
-      if (!cell_size || Number.isNaN(cell_size) || cell_size <= 0) {
-        cell_size = options.fish.min_cell_size || 5;
+      // Ensure cellSize is valid
+      if (!cellSize || Number.isNaN(cellSize) || cellSize <= 0) {
+        cellSize = options.fish.minCellSize || 5;
       }
 
-      const diag = Math.sqrt(2 * Math.pow(cell_size, 2));
+      const diag = Math.sqrt(2 * Math.pow(cellSize, 2));
       const radius = diag / 2;
 
       // In school mode (momentum chart), compute the lateral offset for the grid
@@ -216,7 +217,7 @@ export function gameFish() {
       const grid_data = [];
       const grid_labels = [];
       const grid_side = tiebreak
-        ? options.set.tiebreak_to
+        ? options.set.tiebreakTo
         : options.fish.gridcells.length - 1;
       for (let g = 0; g < grid_side; g++) {
         const label = tiebreak ? g : options.fish.gridcells[g];
@@ -249,20 +250,11 @@ export function gameFish() {
           .attr("height", options.height + "px");
       }
 
-      if (options.display.point_score) {
-        const game_score = fish
+      if (options.display.pointScore) {
+        fish
           .selectAll(".game_score" + options.id)
-          .data(grid_labels);
-
-        game_score.exit().remove();
-
-        game_score
-          .enter()
-          .append("text")
-          .attr("font-size", radius * 0.8 + "px")
-          .attr("transform", gscoreT)
-          .attr("text-anchor", "middle")
-          .merge(game_score)
+          .data(grid_labels)
+          .join("text")
           .attr("class", "game_score" + options.id)
           .attr("font-size", radius * 0.8 + "px")
           .attr("transform", gscoreT)
@@ -275,51 +267,31 @@ export function gameFish() {
       }
 
       if (options.display.grid) {
-        const gridcells = fish
+        fish
           .selectAll(".gridcell" + options.id)
-          .data(grid_data);
-
-        gridcells.exit().remove();
-
-        gridcells
-          .enter()
-          .append("rect")
+          .data(grid_data)
+          .join("rect")
+          .attr("class", "gridcell" + options.id)
           .attr("stroke", "#ccccdd")
           .attr("stroke-width", lineWidth)
           .attr("transform", gridCT)
-          .attr("width", cell_size)
-          .attr("height", cell_size)
-          .merge(gridcells)
-          .attr("class", "gridcell" + options.id)
-          .attr("stroke-width", lineWidth)
-          .attr("width", cell_size)
-          .attr("height", cell_size)
-          .attr("transform", gridCT)
+          .attr("width", cellSize)
+          .attr("height", cellSize)
           .attr("fill-opacity", 0);
       } else {
         fish.selectAll(".gridcell" + options.id).remove();
       }
 
-      const gamecells = game.selectAll(".gamecell" + options.id).data(data);
-
-      gamecells.exit().remove();
-
-      gamecells
-        .enter()
-        .append("rect")
-        .attr("opacity", 0)
-        .attr("width", cell_size)
-        .attr("height", cell_size)
-        .attr("transform", gameCT)
-        .attr("stroke", "#ccccdd")
-        .attr("stroke-width", lineWidth)
-        .merge(gamecells)
+      game
+        .selectAll(".gamecell" + options.id)
+        .data(data)
+        .join("rect")
         .attr("id", (d: any, i: number) => {
           return options.id + "Gs" + d.set + "g" + d.game + "p" + i;
         })
         .attr("class", "gamecell" + options.id)
-        .attr("width", cell_size)
-        .attr("height", cell_size)
+        .attr("width", cellSize)
+        .attr("height", cellSize)
         .attr("transform", gameCT)
         .attr("stroke", "#ccccdd")
         .attr("stroke-width", lineWidth)
@@ -328,31 +300,16 @@ export function gameFish() {
           return options.colors.players[d.winner];
         });
 
-      const results = game.selectAll(".result" + options.id).data(data);
-
-      results.exit().remove();
-
-      results
-        .enter()
-        .append("circle")
+      game
+        .selectAll(".result" + options.id)
+        .data(data)
+        .join("circle")
+        .attr("id", function (d: any, i: number) {
+          return options.id + "Rs" + d.set + "g" + d.game + "p" + i;
+        })
+        .attr("class", "result" + options.id)
         .attr("stroke", "black")
-        .attr("id", function (d: any, i: number) {
-          return options.id + "Rs" + d.set + "g" + d.game + "p" + i;
-        })
-        .attr("class", "result" + options.id)
         .attr("opacity", 1)
-        .attr("stroke-width", lineWidth)
-        .attr("cx", zX)
-        .attr("cy", zY)
-        .attr("r", circleRadius)
-        .style("fill", function (d: any) {
-          return options.colors.results[d.result];
-        })
-        .merge(results)
-        .attr("id", function (d: any, i: number) {
-          return options.id + "Rs" + d.set + "g" + d.game + "p" + i;
-        })
-        .attr("class", "result" + options.id)
         .attr("stroke-width", lineWidth)
         .attr("cx", zX)
         .attr("cy", zY)
@@ -364,7 +321,7 @@ export function gameFish() {
       // offset Scale
       const oScale = scaleLinear()
         .range([0, fish_offset * rw])
-        .domain([0, max_rally]);
+        .domain([0, maxRally]);
 
       // lengthScale
       const lScale = scaleBand()
@@ -373,15 +330,24 @@ export function gameFish() {
         .round(true);
 
       if (options.display.rally) {
-        const rally_bars = bars.selectAll(".rally_bar" + options.id).data(data);
-
-        rally_bars.exit().remove();
-
-        // D3 v7: Simplified without transitions for debugging
-        rally_bars
-          .enter()
-          .append("rect")
-          .merge(rally_bars)
+        bars
+          .selectAll(".rally_bar" + options.id)
+          .data(data)
+          .join((enter: any) =>
+            enter
+              .append("rect")
+              .on("mouseover", function (event: any, d: any) {
+                select(this).attr("fill", "yellow");
+                if (events.point.mouseover) events.point.mouseover(d, event);
+              })
+              .on("mouseout", function (event: any, d: any) {
+                select(this).attr("fill", "#eeeeff");
+                if (events.point.mouseout) events.point.mouseout(d, event);
+              })
+              .on("click", function (event: any, d: any) {
+                if (events.point.click) events.point.click(d, event);
+              }),
+          )
           .attr("class", "rally_bar" + options.id)
           .attr("id", function (d: any, i: number) {
             return options.id + "Bs" + d.set + "g" + d.game + "p" + i;
@@ -392,18 +358,7 @@ export function gameFish() {
           .attr("fill", "#eeeeff")
           .attr("transform", rallyT)
           .attr("height", vert ? lScale.bandwidth() : rallyCalc)
-          .attr("width", vert ? rallyCalc : lScale.bandwidth())
-          .on("mouseover", function (event: any, d: any) {
-            select(this).attr("fill", "yellow");
-            if (events.point.mouseover) events.point.mouseover(d, event);
-          })
-          .on("mouseout", function (event: any, d: any) {
-            select(this).attr("fill", "#eeeeff");
-            if (events.point.mouseout) events.point.mouseout(d, event);
-          })
-          .on("click", function (event: any, d: any) {
-            if (events.point.click) events.point.click(d, event);
-          });
+          .attr("width", vert ? rallyCalc : lScale.bandwidth());
       } else {
         bars.selectAll(".rally_bar" + options.id).remove();
       }
@@ -411,21 +366,10 @@ export function gameFish() {
       if (options.display.score) {
         const score = options.score.slice();
         if (options.display.reverse) score.reverse();
-        const set_score = bars.selectAll(".set_score" + options.id).data(score);
-
-        set_score.exit().remove();
-
-        set_score
-          .enter()
-          .append("text")
-          .attr("class", "set_score" + options.id)
-          .attr("transform", sscoreT)
-          .attr("font-size", radius * 0.8 + "px")
-          .attr("text-anchor", "middle")
-          .text(function (d: any) {
-            return d;
-          })
-          .merge(set_score)
+        bars
+          .selectAll(".set_score" + options.id)
+          .data(score)
+          .join("text")
           .attr("class", "set_score" + options.id)
           .attr("transform", sscoreT)
           .attr("font-size", radius * 0.8 + "px")
@@ -434,14 +378,10 @@ export function gameFish() {
             return d;
           });
 
-        const ssb = bars.selectAll(".ssb" + options.id).data(options.score);
-
-        ssb.exit().remove();
-
-        ssb
-          .enter()
-          .append("rect")
-          .merge(ssb)
+        bars
+          .selectAll(".ssb" + options.id)
+          .data(options.score)
+          .join("rect")
           .attr("class", "ssb" + options.id)
           .attr("transform", ssbT)
           .attr("stroke", "black")
@@ -477,21 +417,10 @@ export function gameFish() {
           });
         });
 
-        const service = bars.selectAll(".serve" + options.id).data(serves);
-
-        service.exit().remove();
-
-        service
-          .enter()
-          .append("circle")
-          .attr("class", "serve" + options.id)
-          .attr("cx", sX)
-          .attr("cy", sY)
-          .attr("r", circleRadius)
-          .attr("stroke", colorShot)
-          .attr("stroke-width", lineWidth)
-          .attr("fill", colorShot)
-          .merge(service)
+        bars
+          .selectAll(".serve" + options.id)
+          .data(serves)
+          .join("circle")
           .attr("class", "serve" + options.id)
           .attr("cx", sX)
           .attr("cy", sY)
@@ -500,42 +429,22 @@ export function gameFish() {
           .attr("stroke-width", lineWidth)
           .attr("fill", colorShot);
 
-        const service_box = bars.selectAll(".sbox" + options.id).data(data);
-
-        service_box.exit().remove();
-
-        service_box
-          .enter()
-          .append("rect")
+        bars
+          .selectAll(".sbox" + options.id)
+          .data(data)
+          .join("rect")
+          .attr("class", "sbox" + options.id)
           .attr("stroke", "#ccccdd")
           .attr("fill-opacity", 0)
           .attr("transform", sBoxT)
-          .attr("class", "sbox" + options.id)
-          .attr("stroke-width", lineWidth)
-          .attr("height", vert ? lScale.bandwidth() : 1.5 * radius)
-          .attr("width", vert ? 1.5 * radius : lScale.bandwidth())
-          .merge(service_box)
-          .attr("transform", sBoxT)
-          .attr("class", "sbox" + options.id)
           .attr("stroke-width", lineWidth)
           .attr("height", vert ? lScale.bandwidth() : 1.5 * radius)
           .attr("width", vert ? 1.5 * radius : lScale.bandwidth());
 
-        const returns = bars.selectAll(".return" + options.id).data(data);
-
-        returns.exit().remove();
-
-        returns
-          .enter()
-          .append("circle")
-          .attr("class", "return" + options.id)
-          .attr("cx", rX)
-          .attr("cy", rY)
-          .attr("r", circleRadius)
-          .attr("stroke", colorReturn)
-          .attr("stroke-width", lineWidth)
-          .attr("fill", colorReturn)
-          .merge(returns)
+        bars
+          .selectAll(".return" + options.id)
+          .data(data)
+          .join("circle")
           .attr("class", "return" + options.id)
           .attr("cx", rX)
           .attr("cy", rY)
@@ -550,56 +459,47 @@ export function gameFish() {
       }
 
       if (options.display.rightImg) {
-        images.right = fishFrame.selectAll("image.rightImage").data([0]);
-
-        images.right.exit().remove();
-
-        images.right
-          .enter()
-          .append("image")
-          .attr("class", "rightImage")
-          .attr("xlink:href", options.display.rightImg)
+        images.right = fishFrame
+          .selectAll("image.rightImage")
+          .data([0])
+          .join((enter: any) =>
+            enter
+              .append("image")
+              .attr("class", "rightImage")
+              .attr("y", 5)
+              .attr("height", "20px")
+              .attr("width", "20px")
+              .attr("opacity", options.display.showImages ? 1 : 0)
+              .on("click", function () {
+                if (events.rightImage.click)
+                  events.rightImage.click(options.id);
+              }),
+          )
           .attr("x", options.width - 30)
-          .attr("y", 5)
-          .attr("height", "20px")
-          .attr("width", "20px")
-          .attr("opacity", options.display.show_images ? 1 : 0)
-          .on("click", function () {
-            if (events.rightImage.click) events.rightImage.click(options.id);
-          })
-          .merge(images.right)
-          .attr("x", options.width - 30)
-          .attr("xlink:href", options.display.rightImg)
-          .on("click", function () {
-            if (events.rightImage.click) events.rightImage.click(options.id);
-          });
+          .attr("xlink:href", options.display.rightImg);
       } else if (fishFrame) {
         fishFrame.selectAll("image.rightImage").remove();
       }
 
       if (options.display.leftImg) {
-        images.left = fishFrame.selectAll("image.leftImage").data([0]);
-
-        images.left
-          .enter()
-          .append("image")
-          .attr("class", "leftImage")
-          .attr("xlink:href", options.display.leftImg)
-          .attr("x", 10)
-          .attr("y", 5)
-          .attr("height", "20px")
-          .attr("width", "20px")
-          .attr("opacity", options.display.show_images ? 1 : 0)
-          .on("click", function () {
-            if (events.leftImage.click) events.leftImage.click();
-          })
-          .merge(images.left)
-          .attr("xlink:href", options.display.leftImg)
-          .on("click", function () {
-            if (events.leftImage.click) events.leftImage.click(options.id);
-          });
-
-        images.left.exit().remove();
+        images.left = fishFrame
+          .selectAll("image.leftImage")
+          .data([0])
+          .join((enter: any) =>
+            enter
+              .append("image")
+              .attr("class", "leftImage")
+              .attr("x", 10)
+              .attr("y", 5)
+              .attr("height", "20px")
+              .attr("width", "20px")
+              .attr("opacity", options.display.showImages ? 1 : 0)
+              .on("click", function () {
+                if (events.leftImage.click)
+                  events.leftImage.click(options.id);
+              }),
+          )
+          .attr("xlink:href", options.display.leftImg);
       } else if (fishFrame) {
         fishFrame.selectAll("image.leftImage").remove();
       }
@@ -658,7 +558,7 @@ export function gameFish() {
       function gameCT(d: any, i: number) {
         const o = midpoint + (findOffset(d) + vert - 1) * radius;
         const l = (i + 4 - vert) * radius;
-        last_coords = [o - midpoint, l - diag, diag];
+        lastCoords = [o - midpoint, l - diag, diag];
         return translate(o, l, 45);
       }
 
@@ -781,7 +681,7 @@ export function gameFish() {
   };
 
   chart.coords = function (value: any) {
-    if (!arguments.length) return last_coords;
+    if (!arguments.length) return lastCoords;
     coords = value;
     return chart;
   };
@@ -819,7 +719,7 @@ export function gameFish() {
     if (typeof update === "function" && data) update(opts);
     setTimeout(function () {
       if (events.update.end) events.update.end();
-    }, options.display.transition_time);
+    }, options.display.transitionTime);
   };
 
   chart.colors = function (color3s: any) {

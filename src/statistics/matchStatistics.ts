@@ -8,14 +8,11 @@
  * Flow: episodes → PointWithMetadata[] → factory.calculateMatchStatistics → toStatObjects
  */
 
-import type { Episode } from "../episodes/types";
-import { buildEpisodes } from "../episodes/buildEpisodes";
-import {
-  calculateMatchStatistics,
-  toStatObjects,
-} from "tods-competition-factory";
+import type { Episode } from '../episodes/types';
+import { buildEpisodes } from '../episodes/buildEpisodes';
+import { calculateMatchStatistics, toStatObjects } from 'tods-competition-factory';
 
-export type { StatObject } from "tods-competition-factory";
+export type { StatObject } from 'tods-competition-factory';
 
 // ── Helpers ────────────────────────────────────────────────────
 
@@ -33,7 +30,7 @@ function episodesToPoints(episodes: Episode[]) {
     // Second serve detection: prefer ScoringEngine's serve field,
     // fall back to notation prefix for legacy MCP data
     const serve: 1 | 2 | undefined =
-      pt.serve ?? (pt.notation?.startsWith("2") ? 2 : undefined);
+      pt.serve ?? (pt.notation?.startsWith('2') ? 2 : undefined);
 
     return {
       winner: pt.winner as 0 | 1,

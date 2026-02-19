@@ -7,7 +7,9 @@
  */
 
 import { max, scaleLinear, area, curveLinear, curveBasis } from 'd3';
+import tippy, { Instance as TippyInstance, followCursor as followCursorPlugin } from 'tippy.js';
 import { buildEpisodes } from '../episodes/buildEpisodes';
+import { generateId } from './utils/generateId';
 
 interface Point {
   winner: 0 | 1;
@@ -20,6 +22,7 @@ interface Point {
 }
 
 interface RallyTreeOptions {
+  id: string;
   width: number;
   height: number;
   margins: {
@@ -42,6 +45,7 @@ interface RallyTreeOptions {
   points: {
     colors: { [key: string]: string };
   };
+  players?: [string, string];
 }
 
 export function rallyTree() {
@@ -53,9 +57,16 @@ export function rallyTree() {
   let displayPct = true;
   let barPadding = 1;
   let cellPadding = 1;
-  const transition_time = 1000;
+  const transitionTime = 1000;
+  let tippyInstances: TippyInstance[] = [];
+
+  function destroyTooltips() {
+    tippyInstances.forEach((t) => t.destroy());
+    tippyInstances = [];
+  }
 
   const options: RallyTreeOptions = {
+    id: generateId(),
     width: 100,
     height: 100,
     margins: {
@@ -110,6 +121,8 @@ export function rallyTree() {
   }
 
   function update(opts?: { sizeToFit?: boolean }) {
+    destroyTooltips();
+
     // Calculate max rally length using D3 v7 max
     maxRally = max(points, (point) => {
       if (point.rallyLength != null) return point.rallyLength;
@@ -156,7 +169,7 @@ export function rallyTree() {
 
     rtroot
       .transition()
-      .duration(transition_time)
+      .duration(transitionTime)
       .attr('width', options.width)
       .attr('height', options.height);
 
@@ -177,7 +190,7 @@ export function rallyTree() {
         // Enter
         enter => enter
           .append('rect')
-          .attr('id', (d, i) => 'cell' + i)
+          .attr('id', (d, i) => `cell_${options.id}_${i}`)
           .attr('class', 'point-bar')
           .attr('x', () => Math.random() * options.width)
           .attr('y', () => Math.random() * options.height)
@@ -188,7 +201,7 @@ export function rallyTree() {
           .on('mouseout', events.pointbar.mouseout as any)
           .on('click', events.pointbar.click as any)
           .call(enter => enter.transition()
-            .duration(transition_time)
+            .duration(transitionTime)
             .style('opacity', 1)
             .attr('x', (d) => calcX(d))
             .attr('y', (d) => calcY(d))
@@ -196,7 +209,7 @@ export function rallyTree() {
         // Update
         update => update
           .call(update => update.transition()
-            .duration(transition_time)
+            .duration(transitionTime)
             .attr('fill', (d) => options.points.colors[d.result || ''] || '#ccc')
             .style('opacity', (d) => (d.hide ? 0 : 1))
             .attr('x', (d) => calcX(d))
@@ -206,21 +219,39 @@ export function rallyTree() {
           )
       );
 
+    // Point bar tooltips
+    rttree.selectAll('rect.point-bar').each(function (d: Point) {
+      const el = this as SVGRectElement;
+      const name = options.players?.[d.winner] ?? (d.winner === 0 ? 'Player 1' : 'Player 2');
+      const result = d.result || '';
+      const rally = d.rallyLength ?? 0;
+      tippyInstances.push(
+        tippy(el, {
+          content: `${name}: ${result} (rally: ${rally})`,
+          allowHTML: false,
+          delay: [200, 0],
+          placement: 'top',
+          appendTo: document.body,
+        }),
+      );
+    });
+
     // Win percentage areas
     rtarea.selectAll('.pct-area')
       .data([0, 1])
       .join(
         enter => enter
           .append('path')
-          .attr('id', (d) => 'player' + d + 'pctarea')
+          .attr('id', (d) => `player${d}pctarea_${options.id}`)
           .attr('class', 'pct-area')
-          .attr('opacity', 0),
+          .attr('opacity', 0)
+          .style('pointer-events', 'none'),
         update => update
       )
       .attr('fill', (d) => options.areas.colors[d as 0 | 1])
       .attr('display', displayPct ? 'inline' : 'none')
       .transition()
-      .delay(transition_time)
+      .delay(transitionTime)
       .attr('opacity', displayPct ? 0.2 : 0)
       .attr('d', (d) => calcArea(d as 0 | 1));
 
@@ -236,12 +267,39 @@ export function rallyTree() {
       )
       .on('click', events.statbar.click as any)
       .transition()
-      .duration(transition_time)
+      .duration(transitionTime)
       .style('opacity', 0.2)
       .attr('x', statbarX())
       .attr('y', statbarY())
       .attr('width', statbarWidth())
       .attr('height', statbarHeight());
+
+    // Stat bar tooltip — shows rally length based on mouse position
+    const statBarEl = rtarea.select('rect.stat-bar').node() as SVGRectElement;
+    if (statBarEl) {
+      const statTip = tippy(statBarEl, {
+        content: '',
+        followCursor: true,
+        plugins: [followCursorPlugin],
+        allowHTML: false,
+        placement: 'right',
+        appendTo: document.body,
+      });
+      tippyInstances.push(statTip);
+      statBarEl.addEventListener('mousemove', (event: MouseEvent) => {
+        const rect = statBarEl.getBoundingClientRect();
+        let rallyLen: number;
+        if (options.orientation === 'horizontal') {
+          const relY = event.clientY - rect.top;
+          rallyLen = Math.floor((relY / rect.height) * (maxRally + 1));
+        } else {
+          const relX = event.clientX - rect.left;
+          rallyLen = Math.floor((relX / rect.width) * (maxRally + 1));
+        }
+        rallyLen = Math.max(0, Math.min(rallyLen, maxRally));
+        statTip.setContent(`Rally length: ${rallyLen}`);
+      });
+    }
   }
 
   function rallyWinPct(player: 0 | 1): number[] {
@@ -382,6 +440,20 @@ export function rallyTree() {
       result: ep.point.result,
       rallyLength: ep.point.rallyLength ?? 2,
     }));
+    // Extract player names if available
+    const sides = matchUpState?.sides;
+    if (Array.isArray(sides) && sides.length === 2) {
+      const getName = (side: any) => {
+        const participant = side?.participant;
+        if (participant?.participantName) return participant.participantName;
+        const person = participant?.person;
+        if (person) return [person.standardGivenName, person.standardFamilyName].filter(Boolean).join(' ');
+        return undefined;
+      };
+      const n0 = getName(sides[0]);
+      const n1 = getName(sides[1]);
+      if (n0 && n1) options.players = [n0, n1];
+    }
     chart.data(pts);
     return chart;
   };

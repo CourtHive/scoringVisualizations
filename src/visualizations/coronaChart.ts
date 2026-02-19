@@ -7,51 +7,15 @@
 
 import { scaleLinear, radialArea, curveBasis, select } from "d3";
 import { buildSetMap } from "../engine/buildSetMap";
+import { sum, createRanges, sliceData, indicesOf } from "./utils/arrays";
+import { generateId } from "./utils/generateId";
 
 type Selection<A, B, C, D> = import("d3").Selection<A, B, C, D>;
-
-function sum(arr: number[]): number {
-  return arr.reduce((sum, val) => sum + Number.parseFloat(val.toString()), 0);
-}
-
-/**
- * Helper to create ranges from indices.
- */
-function createRanges(indices: number[], someArray: number[]): number[][] {
-  const ranges: number[][] = [];
-  for (let r = 0; r < indices.length - 1; r++) {
-    ranges.push([indices[r], indices[r + 1]]);
-  }
-  const lastIndex = indices.at(-1) ?? 0;
-  ranges.push([lastIndex, someArray.length]);
-  return ranges;
-}
-
-function sliceData(ranges: number[][], data: number[]): number[][] {
-  const slices: number[][] = [];
-  for (const range of ranges) {
-    const slice = data.slice(range[0], range[1] + 1);
-    slices.push(slice);
-  }
-  return slices;
-}
-
-function indicesOf(_something: number, data: number[]): number[] {
-  let next = 0;
-  let position = -1;
-  const indices: number[] = [];
-  while (next >= 0) {
-    next = data.slice(position + 1).indexOf(0);
-    position += next + 1;
-    if (next >= 0) indices.push(position);
-  }
-  return indices;
-}
 interface SetMap {
   p2sdiff: number[];
-  games_score?: [number, number];
+  gamesScore?: [number, number];
   players?: [string, string];
-  winner_index?: 0 | 1;
+  winnerIndex?: 0 | 1;
 }
 
 interface CoronaPrefs {
@@ -70,8 +34,8 @@ interface CoronaPrefs {
   muid?: string;
   functions?: {
     mouseover?: (d: any) => void;
-    click_name?: (name: string) => void;
-    click_score?: (name: string) => void;
+    clickName?: (name: string) => void;
+    clickScore?: (name: string) => void;
   };
 }
 
@@ -86,6 +50,8 @@ export function coronaChart(
   x: number = 0,
   y: number = 0,
 ): void {
+  const instanceId = generateId();
+
   // Handle color configuration
   let colors: { 0: string; 1: string };
   if (Array.isArray(prefs.colors)) {
@@ -130,7 +96,7 @@ export function coronaChart(
   // Create clip path
   pts_corona
     .append("clipPath")
-    .attr("id", "clip")
+    .attr("id", "clip_" + instanceId)
     .append("circle")
     .attr("cx", 0)
     .attr("cy", 0)
@@ -196,7 +162,7 @@ export function coronaChart(
     svg
       .append("path")
       .attr("class", "area")
-      .attr("clip-path", "url(#clip)")
+      .attr("clip-path", `url(#clip_${instanceId})`)
       .attr("fill", player_color)
       .attr("opacity", opacity)
       .attr("d", area);
@@ -219,7 +185,7 @@ export function coronaChart(
       })
       .append("text")
       .attr("font-size", "14px")
-      .attr("fill", colors[lastSet?.winner_index || 0])
+      .attr("fill", colors[lastSet?.winnerIndex || 0])
       .attr(FONT_WEIGHT, FONT_WEIGHT_BOLD)
       .attr(TEXT_ANCHOR, "middle")
       .attr("x", 0)
@@ -235,9 +201,9 @@ export function coronaChart(
     // Build game score strings for each player
     const score_string: { 0: string; 1: string } = { 0: "", 1: "" };
     for (const set of set_map) {
-      if (set.games_score) {
-        score_string[0] += set.games_score[0] + " ";
-        score_string[1] += set.games_score[1] + " ";
+      if (set.gamesScore) {
+        score_string[0] += set.gamesScore[0] + " ";
+        score_string[1] += set.gamesScore[1] + " ";
       }
     }
     score_string[0] = score_string[0].trim();
@@ -261,8 +227,8 @@ export function coronaChart(
         `translate(${prefs.width / 2},${prefs.height / 2 - 35})`,
       )
       .on("click", function (_event: any) {
-        if (prefs.functions?.click_name) {
-          prefs.functions.click_name(players[0]);
+        if (prefs.functions?.clickName) {
+          prefs.functions.clickName(players[0]);
         }
       });
 
@@ -280,8 +246,8 @@ export function coronaChart(
         `translate(${prefs.width / 2},${prefs.height / 2 - 8})`,
       )
       .on("click", function (_event: any) {
-        if (prefs.functions?.click_score) {
-          prefs.functions.click_score(players[0]);
+        if (prefs.functions?.clickScore) {
+          prefs.functions.clickScore(players[0]);
         }
       });
 
@@ -299,8 +265,8 @@ export function coronaChart(
         `translate(${prefs.width / 2},${prefs.height / 2 + 45})`,
       )
       .on("click", function (_event: any) {
-        if (prefs.functions?.click_name) {
-          prefs.functions.click_name(players[1]);
+        if (prefs.functions?.clickName) {
+          prefs.functions.clickName(players[1]);
         }
       });
 
@@ -318,8 +284,8 @@ export function coronaChart(
         `translate(${prefs.width / 2},${prefs.height / 2 + 13})`,
       )
       .on("click", function (_event: any) {
-        if (prefs.functions?.click_score) {
-          prefs.functions.click_score(players[1]);
+        if (prefs.functions?.clickScore) {
+          prefs.functions.clickScore(players[1]);
         }
       });
   }

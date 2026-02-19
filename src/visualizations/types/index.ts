@@ -56,7 +56,7 @@ export interface GameGroup {
   score: [number, number]; // Game score [player0, player1]
   complete: boolean;
   winner?: 0 | 1;
-  last_game?: boolean;
+  lastGame?: boolean;
 }
 
 /**

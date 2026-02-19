@@ -11,6 +11,7 @@
 
 import { select, scaleLinear, area, curveBasis, curveLinear, range as d3Range } from 'd3';
 import { keyWalk } from './utils/keyWalk';
+import { generateId } from './utils/generateId';
 
 type CurveInterpolation = 'basis' | 'linear';
 
@@ -24,7 +25,7 @@ interface HorizonChartOptions {
     bands: number;
     mode: 'mirror' | 'offset';
     orientation: 'horizontal' | 'vertical';
-    transition_time: number;
+    transitionTime: number;
     interpolate: CurveInterpolation;
   };
   bounds: { vRangeMax: number | undefined };
@@ -42,7 +43,7 @@ export function horizonChart() {
   let sdata: [number, number][] = [];
 
   const options: HorizonChartOptions = {
-    id: 0,
+    id: generateId(),
     width: 960,
     height: 100,
     position: { x: 0, y: 0 },
@@ -51,7 +52,7 @@ export function horizonChart() {
       bands: 1,
       mode: 'mirror',
       orientation: 'horizontal',
-      transition_time: 0,
+      transitionTime: 0,
       interpolate: 'basis',
     },
     bounds: { vRangeMax: undefined },
@@ -116,9 +117,13 @@ export function horizonChart() {
         }
 
         // Clip path
-        const defs = root.selectAll('defs').data([null]);
-        const defsEnter = defs.enter().append('defs');
-        defsEnter.append('clipPath').attr('id', `horizon_clip${options.id}`).append('rect');
+        root.selectAll('defs').data([null]).join(
+          (enter) => {
+            const d = enter.append('defs');
+            d.append('clipPath').attr('id', `horizon_clip${options.id}`).append('rect');
+            return d;
+          },
+        );
 
         root
           .selectAll('defs')
@@ -128,12 +133,11 @@ export function horizonChart() {
           .attr('height', zheight);
 
         // Clip group
-        const clipGroup = root.selectAll('g.horizon-clip').data([null]);
-        clipGroup
-          .enter()
-          .append('g')
-          .attr('class', 'horizon-clip')
-          .attr('clip-path', `url(#horizon_clip${options.id})`);
+        root.selectAll('g.horizon-clip').data([null]).join(
+          (enter) => enter.append('g')
+            .attr('class', 'horizon-clip')
+            .attr('clip-path', `url(#horizon_clip${options.id})`),
+        );
 
         // Area generator
         const horizonArea = horizontal
@@ -153,14 +157,8 @@ export function horizonChart() {
         // Band indices: [-1, -2, ..., -bands, 1, 2, ..., bands]
         const bandIndices = d3Range(-1, -bands - 1, -1).concat(d3Range(1, bands + 1));
 
-        const path = root.select('g.horizon-clip').selectAll<SVGPathElement, number>('path').data(bandIndices, Number);
-
-        path.exit().remove();
-
-        path
-          .enter()
-          .append('path')
-          .merge(path)
+        root.select('g.horizon-clip').selectAll<SVGPathElement, number>('path').data(bandIndices, Number)
+          .join('path')
           .on('mouseover', function () {
             if (events.path.mouseover) events.path.mouseover(data);
           })
@@ -168,7 +166,7 @@ export function horizonChart() {
             if (events.path.mouseout) events.path.mouseout(d, 0, this);
           })
           .transition()
-          .duration(options.display.transition_time)
+          .duration(options.display.transitionTime)
           .style('fill', (d: number) => colorScale(d))
           .attr('transform', (d: number) => transform(d))
           .attr('d', areaPath);
@@ -219,7 +217,7 @@ export function horizonChart() {
     if (typeof updateFn === 'function') updateFn();
     setTimeout(function () {
       if (events.update.end) events.update.end();
-    }, options.display.transition_time);
+    }, options.display.transitionTime);
   };
 
   chart.bands = function (value?: number) {
@@ -236,8 +234,8 @@ export function horizonChart() {
   };
 
   chart.duration = function (value?: number) {
-    if (!arguments.length) return options.display.transition_time;
-    options.display.transition_time = +value!;
+    if (!arguments.length) return options.display.transitionTime;
+    options.display.transitionTime = +value!;
     return chart;
   };
 
