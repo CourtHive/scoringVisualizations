@@ -1,6 +1,6 @@
 {
   "name": "@tennisvisuals/scoring-visualizations",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Standalone scoring visualizations for tennis match data — episode transforms, D3 charts (GameTree, Momentum, PTS, GameFish, Corona)",
   "type": "module",
   "main": "dist/index.js",
