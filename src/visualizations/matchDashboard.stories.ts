@@ -4,6 +4,8 @@ import { feedMatchUp, getMcpFixture } from '../engine/feedMatchUp';
 import { createPlaybackEngine } from '../engine/createPlaybackEngine';
 import { createPlaybackControlsUI } from './helpers/PlaybackControls';
 
+const FULL_WIDTH = 'width:100%;';
+
 interface MatchDashboardArgs {
   matchIndex: number;
   delayMs: number;
@@ -48,7 +50,7 @@ export const Default: Story = {
     container.style.cssText = 'width:100%; min-height:600px; padding:12px;';
 
     const dashboardDiv = document.createElement('div');
-    dashboardDiv.style.cssText = 'width:100%;';
+    dashboardDiv.style.cssText = FULL_WIDTH;
     container.appendChild(dashboardDiv);
 
     const idx = args.matchIndex ?? 0;
@@ -81,7 +83,7 @@ export const LivePlayback: Story = {
     container.style.cssText = 'width:100%; min-height:650px; padding:12px;';
 
     const dashboardDiv = document.createElement('div');
-    dashboardDiv.style.cssText = 'width:100%;';
+    dashboardDiv.style.cssText = FULL_WIDTH;
 
     const playback = createPlaybackEngine({
       matchIndex: args.matchIndex,
@@ -125,7 +127,7 @@ export const UndoRedo: Story = {
     container.style.cssText = 'width:100%; min-height:650px; padding:12px;';
 
     const dashboardDiv = document.createElement('div');
-    dashboardDiv.style.cssText = 'width:100%;';
+    dashboardDiv.style.cssText = FULL_WIDTH;
 
     const playback = createPlaybackEngine({ matchIndex: args.matchIndex });
     const fixture = playback.getFixture();

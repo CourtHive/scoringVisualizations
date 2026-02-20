@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { select, scaleLinear, scaleBand, range } from "d3";
 import { extractGamePoints } from "../engine/feedMatchUp";
 import { keyWalk } from "./utils/keyWalk";
@@ -75,6 +74,8 @@ export function gameFish() {
     },
   };
 
+  const STROKE_WIDTH = "stroke-width";
+  const FILL_OPACITY = "fill-opacity";
   const default_colors = { default: "#235dba" };
   let colors = structuredClone(default_colors);
 
@@ -164,14 +165,10 @@ export function gameFish() {
 
       bars.attr(
         "transform",
-        "translate(" +
-          (vert ? 0 : coords[0]) +
-          "," +
-          (vert ? coords[1] : 0) +
-          ")",
+        translate(vert ? 0 : coords[0], vert ? coords[1] : 0, 0),
       );
-      fish.attr("transform", "translate(" + coords[0] + "," + coords[1] + ")");
-      game.attr("transform", "translate(" + coords[0] + "," + coords[1] + ")");
+      fish.attr("transform", translate(coords[0], coords[1], 0));
+      game.attr("transform", translate(coords[0], coords[1], 0));
 
       let cellSize;
       if (options.fish.cellSize) {
@@ -273,11 +270,11 @@ export function gameFish() {
           .join("rect")
           .attr("class", "gridcell" + options.id)
           .attr("stroke", "#ccccdd")
-          .attr("stroke-width", lineWidth)
+          .attr(STROKE_WIDTH, lineWidth)
           .attr("transform", gridCT)
           .attr("width", cellSize)
           .attr("height", cellSize)
-          .attr("fill-opacity", 0);
+          .attr(FILL_OPACITY, 0);
       } else {
         fish.selectAll(".gridcell" + options.id).remove();
       }
@@ -294,7 +291,7 @@ export function gameFish() {
         .attr("height", cellSize)
         .attr("transform", gameCT)
         .attr("stroke", "#ccccdd")
-        .attr("stroke-width", lineWidth)
+        .attr(STROKE_WIDTH, lineWidth)
         .attr("opacity", options.display.player ? 1 : 0)
         .style("fill", function (d: any) {
           return options.colors.players[d.winner];
@@ -310,7 +307,7 @@ export function gameFish() {
         .attr("class", "result" + options.id)
         .attr("stroke", "black")
         .attr("opacity", 1)
-        .attr("stroke-width", lineWidth)
+        .attr(STROKE_WIDTH, lineWidth)
         .attr("cx", zX)
         .attr("cy", zY)
         .attr("r", circleRadius)
@@ -325,7 +322,7 @@ export function gameFish() {
 
       // lengthScale
       const lScale = scaleBand()
-        .domain(range(data.length))
+        .domain(range(data.length).map(String))
         .range([0, data.length * radius])
         .round(true);
 
@@ -336,11 +333,11 @@ export function gameFish() {
           .join((enter: any) =>
             enter
               .append("rect")
-              .on("mouseover", function (event: any, d: any) {
+              .on("mouseover", function (this: SVGRectElement, event: any, d: any) {
                 select(this).attr("fill", "yellow");
                 if (events.point.mouseover) events.point.mouseover(d, event);
               })
-              .on("mouseout", function (event: any, d: any) {
+              .on("mouseout", function (this: SVGRectElement, event: any, d: any) {
                 select(this).attr("fill", "#eeeeff");
                 if (events.point.mouseout) events.point.mouseout(d, event);
               })
@@ -354,7 +351,7 @@ export function gameFish() {
           })
           .attr("opacity", 1)
           .attr("stroke", "white")
-          .attr("stroke-width", lineWidth)
+          .attr(STROKE_WIDTH, lineWidth)
           .attr("fill", "#eeeeff")
           .attr("transform", rallyT)
           .attr("height", vert ? lScale.bandwidth() : rallyCalc)
@@ -385,8 +382,8 @@ export function gameFish() {
           .attr("class", "ssb" + options.id)
           .attr("transform", ssbT)
           .attr("stroke", "black")
-          .attr("stroke-width", lineWidth)
-          .attr("fill-opacity", 0)
+          .attr(STROKE_WIDTH, lineWidth)
+          .attr(FILL_OPACITY, 0)
           .attr("height", radius + "px")
           .attr("width", radius + "px");
       } else {
@@ -426,7 +423,7 @@ export function gameFish() {
           .attr("cy", sY)
           .attr("r", circleRadius)
           .attr("stroke", colorShot)
-          .attr("stroke-width", lineWidth)
+          .attr(STROKE_WIDTH, lineWidth)
           .attr("fill", colorShot);
 
         bars
@@ -435,9 +432,9 @@ export function gameFish() {
           .join("rect")
           .attr("class", "sbox" + options.id)
           .attr("stroke", "#ccccdd")
-          .attr("fill-opacity", 0)
+          .attr(FILL_OPACITY, 0)
           .attr("transform", sBoxT)
-          .attr("stroke-width", lineWidth)
+          .attr(STROKE_WIDTH, lineWidth)
           .attr("height", vert ? lScale.bandwidth() : 1.5 * radius)
           .attr("width", vert ? 1.5 * radius : lScale.bandwidth());
 
@@ -450,7 +447,7 @@ export function gameFish() {
           .attr("cy", rY)
           .attr("r", circleRadius)
           .attr("stroke", colorReturn)
-          .attr("stroke-width", lineWidth)
+          .attr(STROKE_WIDTH, lineWidth)
           .attr("fill", colorReturn);
       } else {
         bars.selectAll(".sbox" + options.id).remove();
@@ -631,10 +628,10 @@ export function gameFish() {
       function zX(d: any, i: number) {
         return vert ? zO(d) : zL(d, i);
       }
-      function zY(d, i: number) {
+      function zY(d: any, i: number) {
         return vert ? zL(d, i) : zO(d);
       }
-      function zL(_, i: number) {
+      function zL(_: any, i: number) {
         return radius + (i + 3) * radius;
       }
       function zO(d: any) {
