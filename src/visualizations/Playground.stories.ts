@@ -79,7 +79,7 @@ export const MultiViz: Story = {
     // ── Charts ─────────────────────────────────────────────────
     const gtChart = gameTree();
     gtChart.options({
-      display: { sizeToFit: true, showEmpty: false, noAd: false, show_images: false },
+      display: { sizeToFit: true, showEmpty: false, noAd: false, showImages: false },
       lines: {
         points: { winners: 'green', errors: '#BA1212', unknown: '#2ed2db' },
         colors: { underlines: 'black' },
@@ -92,7 +92,7 @@ export const MultiViz: Story = {
       display: {
         sizeToFit: true, continuous: false, orientation: 'vertical',
         service: false, rally: true, grid: false, score: true,
-        momentum_score: true, transition_time: 0,
+        momentumScore: true, transitionTime: 0,
       },
       colors: { players: { 0: '#a55194', 1: '#6b6ecf' } },
     });
@@ -100,7 +100,7 @@ export const MultiViz: Story = {
     const ptChart = ptsMatch();
     ptChart.options({
       margins: { top: 40, bottom: 20 },
-      display: { sizeToFit: true, win_err_highlight: false },
+      display: { sizeToFit: true, winErrHighlight: false },
     });
 
     // ── Subscribe all to same engine ───────────────────────────
@@ -189,7 +189,7 @@ export const UndoRedoDemo: Story = {
     // ── Charts ─────────────────────────────────────────────────
     const gtChart = gameTree();
     gtChart.options({
-      display: { sizeToFit: true, showEmpty: false, noAd: false, show_images: false },
+      display: { sizeToFit: true, showEmpty: false, noAd: false, showImages: false },
       lines: {
         points: { winners: 'green', errors: '#BA1212', unknown: '#2ed2db' },
         colors: { underlines: 'black' },
@@ -202,7 +202,7 @@ export const UndoRedoDemo: Story = {
       display: {
         sizeToFit: true, continuous: false, orientation: 'vertical',
         service: false, rally: true, grid: false, score: true,
-        momentum_score: true, transition_time: 0,
+        momentumScore: true, transitionTime: 0,
       },
       colors: { players: { 0: '#a55194', 1: '#6b6ecf' } },
     });
@@ -210,7 +210,7 @@ export const UndoRedoDemo: Story = {
     const ptChart = ptsMatch();
     ptChart.options({
       margins: { top: 40, bottom: 20 },
-      display: { sizeToFit: true, win_err_highlight: false },
+      display: { sizeToFit: true, winErrHighlight: false },
     });
 
     let mounted = false;

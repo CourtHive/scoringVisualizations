@@ -2,14 +2,14 @@
  * Build a SetMap from ScoringEngine MatchUp state for coronaChart.
  *
  * For each set, computes cumulative point differential (p2sdiff)
- * and extracts games_score and winner_index.
+ * and extracts gamesScore and winnerIndex.
  */
 
 export interface SetMap {
   p2sdiff: number[];
-  games_score: [number, number];
+  gamesScore: [number, number];
   players: [string, string];
-  winner_index: 0 | 1;
+  winnerIndex: 0 | 1;
 }
 
 export function buildSetMap(matchUp: any, players: [string, string] = ['Player 1', 'Player 2']): SetMap[] {
@@ -44,9 +44,9 @@ export function buildSetMap(matchUp: any, players: [string, string] = ['Player 1
 
     result.push({
       p2sdiff: diffs,
-      games_score: gamesScore,
+      gamesScore: gamesScore,
       players,
-      winner_index: winnerIdx,
+      winnerIndex: winnerIdx,
     });
   }
 

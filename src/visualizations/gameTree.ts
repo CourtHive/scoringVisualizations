@@ -7,124 +7,9 @@
 import { select, scaleLinear } from 'd3';
 import { buildEpisodes } from '../episodes/buildEpisodes';
 import { keyWalk } from './utils/keyWalk';
-
-// Helper Functions
-// ----------------
-
-// http://stackoverflow.com/questions/5560248/programmatically-lighten-or-darken-a-hex-color-or-rgb-and-blend-colors
-function shadeColor2(color, percent) {
-  const f = Number.parseInt(color.slice(1), 16),
-    t = percent < 0 ? 0 : 255,
-    p = percent < 0 ? percent * -1 : percent,
-    R = f >> 16,
-    G = (f >> 8) & 0x00ff,
-    B = f & 0x0000ff;
-  return (
-    '#' +
-    (
-      0x1000000 +
-      (Math.round((t - R) * p) + R) * 0x10000 +
-      (Math.round((t - G) * p) + G) * 0x100 +
-      (Math.round((t - B) * p) + B)
-    )
-      .toString(16)
-      .slice(1)
-  );
-}
-
-// not used
-export function blendColors(c0, c1, p) {
-  const f = Number.parseInt(c0.slice(1), 16),
-    t = Number.parseInt(c1.slice(1), 16),
-    R1 = f >> 16,
-    G1 = (f >> 8) & 0x00ff,
-    B1 = f & 0x0000ff,
-    R2 = t >> 16,
-    G2 = (t >> 8) & 0x00ff,
-    B2 = t & 0x0000ff;
-  return (
-    '#' +
-    (
-      0x1000000 +
-      (Math.round((R2 - R1) * p) + R1) * 0x10000 +
-      (Math.round((G2 - G1) * p) + G1) * 0x100 +
-      (Math.round((B2 - B1) * p) + B1)
-    )
-      .toString(16)
-      .slice(1)
-  );
-}
-
-function shadeRGBColor(color, percent) {
-  const f = color.split(','),
-    t = percent < 0 ? 0 : 255,
-    p = percent < 0 ? percent * -1 : percent,
-    R = Number.parseInt(f[0].slice(4)),
-    G = Number.parseInt(f[1]),
-    B = Number.parseInt(f[2]);
-  return (
-    'rgb(' +
-    (Math.round((t - R) * p) + R) +
-    ',' +
-    (Math.round((t - G) * p) + G) +
-    ',' +
-    (Math.round((t - B) * p) + B) +
-    ')'
-  );
-}
-
-// not used
-export function blendRGBColors(c0, c1, p) {
-  const f = c0.split(','),
-    t = c1.split(','),
-    R = Number.parseInt(f[0].slice(4)),
-    G = Number.parseInt(f[1]),
-    B = Number.parseInt(f[2]);
-  return (
-    'rgb(' +
-    (Math.round((Number.parseInt(t[0].slice(4)) - R) * p) + R) +
-    ',' +
-    (Math.round((Number.parseInt(t[1]) - G) * p) + G) +
-    ',' +
-    (Math.round((Number.parseInt(t[2]) - B) * p) + B) +
-    ')'
-  );
-}
-
-function colorShade(color, percent) {
-  if (color.length > 7) return shadeRGBColor(color, percent);
-  else return shadeColor2(color, percent);
-}
-
-// not used
-export function colorBlend(color1, color2, percent) {
-  if (color1.length > 7) return blendRGBColors(color1, color2, percent);
-  else return blendColors(color1, color2, percent);
-}
-
-// http://stackoverflow.com/questions/1573053/javascript-function-to-convert-color-names-to-hex-codes
-function getHexColor(colorStr) {
-  const a = document.createElement('div');
-  a.style.color = colorStr;
-  const colors = window
-    .getComputedStyle(document.body.appendChild(a))
-    .color.match(/\d+/g)
-    .map(function (a) {
-      return Number.parseInt(a, 10);
-    });
-  document.body.removeChild(a);
-  return colors.length >= 3
-    ? '#' + ((1 << 24) + (colors[0] << 16) + (colors[1] << 8) + colors[2]).toString(16).substr(1)
-    : false;
-}
-
-function applyMax(arr: any) {
-  return Math.max.apply(null, arr);
-}
-
-function applyMin(arr: any) {
-  return Math.min.apply(null, arr);
-}
+import { generateId } from './utils/generateId';
+import { colorShade, getHexColor } from './utils/colorUtils';
+import { applyMax, applyMin } from './utils/math';
 
 function get_id(d: any) {
   return d?.id;
@@ -143,9 +28,10 @@ export function gameTree() {
   // All options that should be accessible to caller
   let data: any[] = [];
   const options: any = {
+    id: generateId(),
     width: 150,
     height: 150,
-    min_max: 20, // scaling factor for line widths
+    minMax: 20, // scaling factor for line widths
 
     // Margins for the SVG
     margins: {
@@ -159,7 +45,7 @@ export function gameTree() {
       noAd: false,
       leftImg: false,
       rightImg: false,
-      show_images: false,
+      showImages: false,
       sizeToFit: true,
       showEmpty: false, // display even if no data
     },
@@ -217,10 +103,14 @@ export function gameTree() {
   // ------------
   let canvas: any;
   let radius: any;
-  const transition_time: number = 0;
-  const point_connector: string = 'x';
+  const transitionTime: number = 0;
+  const pointConnector: string = 'x';
   let counters: any = { w: {}, e: {}, p: {}, n: {} };
   let activeNodeName: string | null = null;
+
+  function nsId(base: string) {
+    return `${base}_${options.id}`;
+  }
 
   // DEFINABLE EVENTS
   // Define with ACCESSOR function chart.events()
@@ -253,9 +143,9 @@ export function gameTree() {
         options.width = Math.min(dims.width, dims.height);
       }
 
-      const tree_width = options.width - (options.margins.left + options.margins.right);
-      const tree_height = options.width * 0.9;
-      radius = ((tree_height + tree_width) / 2) * 0.03;
+      const treeWidth = options.width - (options.margins.left + options.margins.right);
+      const treeHeight = options.width * 0.9;
+      radius = ((treeHeight + treeWidth) / 2) * 0.03;
 
       const keys = point_lines.map(function (m) {
         return m.id;
@@ -272,14 +162,14 @@ export function gameTree() {
             return isNaN(counters.p[k]) ? 0 : counters.p[k];
           }),
         ),
-        options.min_max,
+        options.minMax,
       ]);
 
       const scale = scaleLinear()
         .domain([point_min, point_max])
         .range([0, radius * 2]);
 
-      canvas.transition().duration(transition_time).attr('width', tree_width).attr('height', tree_height);
+      canvas.transition().duration(transitionTime).attr('width', treeWidth).attr('height', treeHeight);
 
       // D3 v7: Use .join() pattern and save merged selection
       const gradientsMerged = canvas
@@ -287,21 +177,21 @@ export function gameTree() {
         .data(point_lines, get_id)
         .join('linearGradient')
         .attr('id', (d: any) => {
-          return 'gradient' + d.id;
+          return 'gradient' + nsId(d.id);
         })
         .attr('class', 'gradient')
         .attr('gradientUnits', 'userSpaceOnUse')
         .attr('x1', (d: any) => {
-          return d.start.x * tree_width;
+          return d.start.x * treeWidth;
         })
         .attr('y1', (d: any) => {
-          return d.start.y * tree_height;
+          return d.start.y * treeHeight;
         })
         .attr('x2', (d: any) => {
-          return d.end.x * tree_width;
+          return d.end.x * treeWidth;
         })
         .attr('y2', (d: any) => {
-          return d.end.y * tree_height;
+          return d.end.y * treeHeight;
         });
 
       // D3 v7: Use .join() for stops and operate on saved merged selection
@@ -328,13 +218,13 @@ export function gameTree() {
             enter
               .append('line')
               .attr('class', 'line')
-              .attr('id', (d: any) => d.id)
-              .attr('x1', (d: any) => d.start.x * tree_width)
-              .attr('y1', (d: any) => d.start.y * tree_height)
-              .attr('x2', (d: any) => d.end.x * tree_width)
-              .attr('y2', (d: any) => d.end.y * tree_height)
+              .attr('id', (d: any) => nsId(d.id))
+              .attr('x1', (d: any) => d.start.x * treeWidth)
+              .attr('y1', (d: any) => d.start.y * treeHeight)
+              .attr('x2', (d: any) => d.end.x * treeWidth)
+              .attr('y2', (d: any) => d.end.y * treeHeight)
               .attr('stroke-width', (d: any) => (d.width ? d.width : 0))
-              .attr('stroke', (d: any) => 'url(#gradient' + d.id + ')')
+              .attr('stroke', (d: any) => 'url(#gradient' + nsId(d.id) + ')')
               .on('mousemove', function (event, d) {
                 if (events.point.mousemove) events.point.mousemove(d, event);
               })
@@ -348,107 +238,80 @@ export function gameTree() {
         )
         .transition()
         .duration(options.lines.easing || (opts && opts.easing) ? options.lines.duration : 0)
-        .attr('x1', (d: any) => d.start.x * tree_width)
-        .attr('y1', (d: any) => d.start.y * tree_height)
-        .attr('x2', (d: any) => d.end.x * tree_width)
-        .attr('y2', (d: any) => d.end.y * tree_height)
+        .attr('x1', (d: any) => d.start.x * treeWidth)
+        .attr('y1', (d: any) => d.start.y * treeHeight)
+        .attr('x2', (d: any) => d.end.x * treeWidth)
+        .attr('y2', (d: any) => d.end.y * treeHeight)
         .attr('stroke-width', (d: any) => (counters.p[d.id] ? scale(counters.p[d.id]) : 0));
 
-      const ulines = canvas.selectAll('.uline').data(under_lines);
-
-      ulines.exit().remove();
-
-      ulines
-        .enter()
-        .append('line')
-        .attr('class', 'uline')
-        .attr('id', function (d: any) {
-          return d.id;
-        })
-        .attr('x1', function (d: any) {
-          return d.start.x * tree_width;
-        })
-        .attr('y1', function (d: any) {
-          return d.start.y * tree_height;
-        })
-        .attr('x2', function (d: any) {
-          return d.end.x * tree_width;
-        })
-        .attr('y2', function (d: any) {
-          return d.end.y * tree_height;
-        })
-        .attr('stroke-width', function (d: any) {
-          return d.width ? d.width : 0;
-        })
-        .attr('stroke', function () {
-          return options.lines.colors.underlines;
-        })
-        .merge(ulines)
+      canvas
+        .selectAll('.uline')
+        .data(under_lines)
+        .join(
+          (enter) =>
+            enter
+              .append('line')
+              .attr('class', 'uline')
+              .attr('stroke', function () {
+                return options.lines.colors.underlines;
+              }),
+        )
         .transition()
-        .duration(transition_time)
+        .duration(transitionTime)
         .attr('id', function (d: any) {
-          return d.id;
+          return nsId(d.id);
         })
         .attr('x1', function (d: any) {
-          return d.start.x * tree_width;
+          return d.start.x * treeWidth;
         })
         .attr('y1', function (d: any) {
-          return d.start.y * tree_height;
+          return d.start.y * treeHeight;
         })
         .attr('x2', function (d: any) {
-          return d.end.x * tree_width;
+          return d.end.x * treeWidth;
         })
         .attr('y2', function (d: any) {
-          return d.end.y * tree_height;
+          return d.end.y * treeHeight;
         })
         .attr('stroke-width', (d: any) => {
           return d.width ? d.width : 0;
         });
 
-      const nodes = canvas.selectAll('.node').data(point_circles);
-
-      nodes.exit().remove();
-
-      nodes
-        .enter()
-        .append('circle')
-        .attr('class', 'node')
-        .attr('cx', function (d: any) {
-          return d.pos.x * tree_width;
-        })
-        .attr('cy', function (d: any) {
-          return d.pos.y * tree_height;
-        })
-        .attr('r', function () {
-          return radius;
-        })
-        .attr('stroke', function (d: any) {
-          return d.color_pct != undefined
-            ? colorShade(getHexColor(options.nodes.colors[d.player]), d.color_pct)
-            : options.nodes.colors.neutral;
-        })
-        .attr('fill', function (d: any) {
-          return d.color_pct != undefined
-            ? colorShade(getHexColor(options.nodes.colors[d.player]), d.color_pct)
-            : options.nodes.colors.neutral;
-        })
-        .on('mousemove', function (d: any, i: number) {
-          if (events.node.mousemove) events.node.mousemove(d, i);
-        })
-        .on('mouseout', function (d: any, i: number) {
-          if (events.node.mouseout) events.node.mouseout(d, i);
-        })
-        .on('click', function (d: any, i: number) {
-          if (events.node.click) events.node.click(d, i);
-        })
-        .merge(nodes)
+      canvas
+        .selectAll('.node')
+        .data(point_circles)
+        .join(
+          (enter) =>
+            enter
+              .append('circle')
+              .attr('class', 'node')
+              .attr('stroke', function (d: any) {
+                return d.color_pct != undefined
+                  ? colorShade(getHexColor(options.nodes.colors[d.player]), d.color_pct)
+                  : options.nodes.colors.neutral;
+              })
+              .attr('fill', function (d: any) {
+                return d.color_pct != undefined
+                  ? colorShade(getHexColor(options.nodes.colors[d.player]), d.color_pct)
+                  : options.nodes.colors.neutral;
+              })
+              .on('mousemove', function (d: any, i: number) {
+                if (events.node.mousemove) events.node.mousemove(d, i);
+              })
+              .on('mouseout', function (d: any, i: number) {
+                if (events.node.mouseout) events.node.mouseout(d, i);
+              })
+              .on('click', function (d: any, i: number) {
+                if (events.node.click) events.node.click(d, i);
+              }),
+        )
         .transition()
-        .duration(transition_time)
+        .duration(transitionTime)
         .attr('cx', function (d: any) {
-          return d.pos.x * tree_width;
+          return d.pos.x * treeWidth;
         })
         .attr('cy', function (d: any) {
-          return d.pos.y * tree_height;
+          return d.pos.y * treeHeight;
         })
         .attr('r', function () {
           return radius;
@@ -471,52 +334,40 @@ export function gameTree() {
           .attr('r', radius);
       }
 
-      const scores = canvas.selectAll('.score').data(point_text);
-
-      scores.exit().remove();
-
-      scores
-        .enter()
-        .append('text')
-        .attr('class', 'score')
-        .attr('x', (d: any) => {
-          return d.pos.x * tree_width;
-        })
-        .attr('y', (d: any) => {
-          return d.pos.y * tree_height;
-        })
-        .attr('font-size', (d: any) => {
-          return radius * d.fontsize + 'px';
-        })
-        .attr('font-family', 'Lato, Arial, sans-serif')
-        .attr('text-anchor', 'middle')
-        .attr('alignment-baseline', 'central')
-        .attr('stroke', (d: any) => {
-          return d.stroke;
-        })
-        .attr('fill', (d: any) => {
-          return d.fill;
-        })
-        .text((d: any) => {
-          if (radius * d.fontsize > 7) return d.text;
-        })
-        .on('mousemove', function (d, i) {
-          if (events.score.mousemove) events.score.mousemove(d, i);
-        })
-        .on('mouseout', function (d, i) {
-          if (events.score.mouseout) events.score.mouseout(d, i);
-        })
-        .on('click', function (d, i) {
-          if (events.score.click) events.score.click(d, i);
-        })
-        .merge(scores)
+      canvas
+        .selectAll('.score')
+        .data(point_text)
+        .join(
+          (enter) =>
+            enter
+              .append('text')
+              .attr('class', 'score')
+              .attr('font-family', 'Lato, Arial, sans-serif')
+              .attr('text-anchor', 'middle')
+              .attr('alignment-baseline', 'central')
+              .attr('stroke', (d: any) => {
+                return d.stroke;
+              })
+              .attr('fill', (d: any) => {
+                return d.fill;
+              })
+              .on('mousemove', function (d, i) {
+                if (events.score.mousemove) events.score.mousemove(d, i);
+              })
+              .on('mouseout', function (d, i) {
+                if (events.score.mouseout) events.score.mouseout(d, i);
+              })
+              .on('click', function (d, i) {
+                if (events.score.click) events.score.click(d, i);
+              }),
+        )
         .transition()
-        .duration(transition_time)
+        .duration(transitionTime)
         .attr('x', (d: any) => {
-          return d.pos.x * tree_width;
+          return d.pos.x * treeWidth;
         })
         .attr('y', (d: any) => {
-          return d.pos.y * tree_height;
+          return d.pos.y * treeHeight;
         })
         .attr('font-size', (d: any) => {
           return radius * d.fontsize + 'px';
@@ -525,53 +376,41 @@ export function gameTree() {
           if (radius * d.fontsize > 5) return d.text;
         });
 
-      const labels = canvas.selectAll('.gt_label').data(label_text);
-
-      labels.exit().remove();
-
-      labels
-        .enter()
-        .append('text')
-        .attr('class', 'gt_label')
-        .attr('x', (d: any) => {
-          return d.pos.x * tree_width;
-        })
-        .attr('y', (d: any) => {
-          return d.pos.y * tree_height;
-        })
-        .attr('alignment-baseline', (d: any) => {
-          return d.baseline ? d.baseline : undefined;
-        })
-        .attr('font-size', (d: any) => {
-          return radius * d.fontsize + 'px';
-        })
-        .attr('text-anchor', (d: any) => {
-          return d.anchor ? d.anchor : undefined;
-        })
-        .attr('font-family', 'Lato, Arial, sans-serif')
-        .attr('stroke', (d: any) => {
-          return d.stroke;
-        })
-        .attr('fill', (d: any) => {
-          return d.fill;
-        })
-        .text((d: any) => {
-          if (radius * d.fontsize > 5) return d.id;
-        })
-        .attr('selector', (d: any) => {
-          return d.id;
-        })
-        .on('click', function (event: any, d: any) {
-          if (events.label.click) events.label.click(event, d, this);
-        })
-        .merge(labels)
+      canvas
+        .selectAll('.gt_label')
+        .data(label_text)
+        .join(
+          (enter) =>
+            enter
+              .append('text')
+              .attr('class', 'gt_label')
+              .attr('alignment-baseline', (d: any) => {
+                return d.baseline ? d.baseline : undefined;
+              })
+              .attr('text-anchor', (d: any) => {
+                return d.anchor ? d.anchor : undefined;
+              })
+              .attr('font-family', 'Lato, Arial, sans-serif')
+              .attr('stroke', (d: any) => {
+                return d.stroke;
+              })
+              .attr('fill', (d: any) => {
+                return d.fill;
+              })
+              .attr('selector', (d: any) => {
+                return d.id;
+              })
+              .on('click', function (event: any, d: any) {
+                if (events.label.click) events.label.click(event, d, this);
+              }),
+        )
         .transition()
-        .duration(transition_time)
+        .duration(transitionTime)
         .attr('x', (d: any) => {
-          return d.pos.x * tree_width;
+          return d.pos.x * treeWidth;
         })
         .attr('y', (d: any) => {
-          return d.pos.y * tree_height;
+          return d.pos.y * treeHeight;
         })
         .attr('font-size', (d: any) => {
           return radius * d.fontsize + 'px';
@@ -580,64 +419,46 @@ export function gameTree() {
           if (radius * d.fontsize > 5) return options.labels[d.id];
         });
 
-      const select = canvas.selectAll('.selector').data(selectors);
-
-      select.exit();
-
-      select
-        .enter()
-        .append('circle')
-        .attr('class', 'selector')
-        .attr('status', function (d: any) {
-          return d.status;
-        })
-        .attr('id', function (d: any) {
-          return d.id;
-        })
-        .attr('selector', function (d: any) {
-          return d.id;
-        })
-        .attr('cx', function (d: any) {
-          return d.pos.x * tree_width;
-        })
-        .attr('cy', function (d: any) {
-          return d.pos.y * tree_height + 4;
-        })
-        .attr('r', function (d: any) {
-          return radius * d.r_pct;
-        })
-        .attr('stroke', function (_, i: number) {
-          return options.nodes.colors[i];
-        })
-        .attr('stroke-width', function () {
-          return radius * 0.25;
-        })
-        .attr('fill', function (_, i: number) {
-          const neitherSelected = !options.selectors.selected[0] && !options.selectors.selected[1];
-          return !options.selectors.enabled || neitherSelected || options.selectors.selected[i]
-            ? options.nodes.colors[i]
-            : options.nodes.colors.neutral;
-        })
-        .attr('opacity', function (d: any) {
-          return d.opacity;
-        })
-        .on('mousemove', function (event: any, d: any) {
-          if (events.selector.mousemove) events.selector.mousemove(event, d);
-        })
-        .on('mouseout', function (event: any, d: any) {
-          if (events.selector.mouseout) events.selector.mouseout(event, d);
-        })
-        .on('click', function (event: any, d: any) {
-          if (events.selector.click) events.selector.click(event, d, this);
-        })
-        .merge(select)
+      canvas
+        .selectAll('.selector')
+        .data(selectors)
+        .join(
+          (enter) =>
+            enter
+              .append('circle')
+              .attr('class', 'selector')
+              .attr('status', function (d: any) {
+                return d.status;
+              })
+              .attr('id', function (d: any) {
+                return nsId(d.id);
+              })
+              .attr('selector', function (d: any) {
+                return d.id;
+              })
+              .attr('stroke', function (_, i: number) {
+                return options.nodes.colors[i];
+              })
+              .attr('opacity', function (d: any) {
+                return d.opacity;
+              })
+              .on('mousemove', function (event: any, d: any) {
+                if (events.selector.mousemove) events.selector.mousemove(event, d);
+              })
+              .on('mouseout', function (event: any, d: any) {
+                if (events.selector.mouseout) events.selector.mouseout(event, d);
+              })
+              .on('click', function (event: any, d: any) {
+                if (events.selector.click) events.selector.click(event, d, this);
+              }),
+        )
         .transition()
-        .duration(transition_time)
+        .duration(transitionTime)
         .attr('cx', function (d: any) {
-          return d.pos.x * tree_width;
+          return d.pos.x * treeWidth;
         })
         .attr('cy', function (d: any) {
-          return d.pos.y * tree_height + 4;
+          return d.pos.y * treeHeight + 4;
         })
         .attr('r', function (d: any) {
           return radius * d.r_pct;
@@ -653,24 +474,19 @@ export function gameTree() {
         });
 
       if (options.display.rightImg) {
-        images.right = canvas.selectAll('image.rightImage').data([0]);
-
-        images.right.exit().remove();
-
-        images.right
-          .enter()
-          .append('image')
-          .attr('class', 'rightImage')
-          .attr('xlink:href', options.display.rightImg)
-          .attr('x', options.width - (options.margins.right + 30))
-          .attr('y', 5)
-          .attr('height', '20px')
-          .attr('width', '20px')
-          .attr('opacity', options.display.show_images ? 1 : 0)
-          .on('click', function () {
-            if (events.rightImage.click) events.rightImage.click(options.id);
-          })
-          .merge(images.right)
+        images.right = canvas
+          .selectAll('image.rightImage')
+          .data([0])
+          .join(
+            (enter) =>
+              enter
+                .append('image')
+                .attr('class', 'rightImage')
+                .attr('y', 5)
+                .attr('height', '20px')
+                .attr('width', '20px')
+                .attr('opacity', options.display.showImages ? 1 : 0),
+          )
           .attr('x', options.width - (options.margins.right + 30))
           .attr('xlink:href', options.display.rightImg)
           .on('click', function () {
@@ -681,42 +497,37 @@ export function gameTree() {
       }
 
       if (options.display.leftImg) {
-        images.left = canvas.selectAll('image.leftImage').data([0]);
-
-        images.left
-          .enter()
-          .append('image')
-          .attr('class', 'leftImage')
-          .attr('xlink:href', options.display.leftImg)
-          .attr('x', 10 + options.margins.left)
-          .attr('y', 5)
-          .attr('height', '20px')
-          .attr('width', '20px')
-          .attr('opacity', options.display.show_images ? 1 : 0)
-          .on('click', function () {
-            if (events.leftImage.click) events.leftImage.click();
-          })
-          .merge(images.left)
+        images.left = canvas
+          .selectAll('image.leftImage')
+          .data([0])
+          .join(
+            (enter) =>
+              enter
+                .append('image')
+                .attr('class', 'leftImage')
+                .attr('y', 5)
+                .attr('height', '20px')
+                .attr('width', '20px')
+                .attr('opacity', options.display.showImages ? 1 : 0),
+          )
           .attr('x', 10 + options.margins.left)
           .attr('xlink:href', options.display.leftImg)
           .on('click', function () {
             if (events.leftImage.click) events.leftImage.click(options.id);
           });
-
-        images.left.exit().remove();
       } else {
         root.selectAll('image.leftImage').remove();
       }
 
       /*
       function showImages() {
-        if (options.display.show_images == false) return;
+        if (options.display.showImages == false) return;
         if (options.display.leftImg) images.left.attr('opacity', 1);
         if (options.display.rightImg) images.right.attr('opacity', 1);
       }
 
       function hideImages() {
-        if (options.display.show_images) return;
+        if (options.display.showImages) return;
         if (options.display.leftImg) images.left.attr('opacity', 0);
         if (options.display.rightImg) images.right.attr('opacity', 0);
       }
@@ -797,7 +608,7 @@ export function gameTree() {
     if (typeof update === 'function') update(opts);
     setTimeout(function () {
       if (events.update.end) events.update.end();
-    }, transition_time);
+    }, transitionTime);
   };
 
   // REUSABLE FUNCTIONS
@@ -824,7 +635,7 @@ export function gameTree() {
       const previous_episode = _data[d - 1];
       const previous =
         d == 0 || previous_episode.game.complete ? calcPosition([0, 0]) : calcPosition(previous_episode.point.points);
-      const progression = 'L' + previous + point_connector + calcPosition(_data[d].point.points);
+      const progression = 'L' + previous + pointConnector + calcPosition(_data[d].point.points);
       if (options.points.highlight.length && !options.points.highlight.includes(d)) {
         continue;
       }
@@ -861,8 +672,10 @@ export function gameTree() {
   }
 
   function clearView() {
-    select('[id=Player]').attr('opacity', 0.4).attr('status', 'none').attr('fill', options.nodes.colors.neutral);
-    select('[id=Opponent]').attr('opacity', 0.4).attr('status', 'none').attr('fill', options.nodes.colors.neutral);
+    if (canvas) {
+      canvas.select(`[id=${nsId('Player')}]`).attr('opacity', 0.4).attr('status', 'none').attr('fill', options.nodes.colors.neutral);
+      canvas.select(`[id=${nsId('Opponent')}]`).attr('opacity', 0.4).attr('status', 'none').attr('fill', options.nodes.colors.neutral);
+    }
     options.selectors.selected[1] = false;
     options.selectors.selected[0] = false;
   }
@@ -873,15 +686,15 @@ export function gameTree() {
     const isOpponent = selector === 'Opponent';
     const playerIdx = isOpponent ? 1 : 0;
 
-    if (select('[id=' + selector + ']').attr('status') == 'none') {
+    if (canvas.select(`[id=${nsId(selector)}]`).attr('status') == 'none') {
       if (isOpponent) {
-        select('[id=Player]').attr('opacity', 0.4).attr('status', 'none').attr('fill', options.nodes.colors.neutral);
-        select('[id=Opponent]').attr('opacity', 1).attr('status', 'selected').attr('fill', options.nodes.colors[playerIdx]);
+        canvas.select(`[id=${nsId('Player')}]`).attr('opacity', 0.4).attr('status', 'none').attr('fill', options.nodes.colors.neutral);
+        canvas.select(`[id=${nsId('Opponent')}]`).attr('opacity', 1).attr('status', 'selected').attr('fill', options.nodes.colors[playerIdx]);
         options.selectors.selected[1] = true;
         options.selectors.selected[0] = false;
       } else {
-        select('[id=Opponent]').attr('opacity', 0.4).attr('status', 'none').attr('fill', options.nodes.colors.neutral);
-        select('[id=Player]').attr('opacity', 1).attr('status', 'selected').attr('fill', options.nodes.colors[playerIdx]);
+        canvas.select(`[id=${nsId('Opponent')}]`).attr('opacity', 0.4).attr('status', 'none').attr('fill', options.nodes.colors.neutral);
+        canvas.select(`[id=${nsId('Player')}]`).attr('opacity', 1).attr('status', 'selected').attr('fill', options.nodes.colors[playerIdx]);
         options.selectors.selected[0] = true;
         options.selectors.selected[1] = false;
       }
@@ -889,8 +702,8 @@ export function gameTree() {
       // Clicking already-selected player removes all filters
       options.selectors.selected[0] = false;
       options.selectors.selected[1] = false;
-      select('[id=Player]').attr('opacity', 1).attr('status', 'none').attr('fill', options.nodes.colors[0]);
-      select('[id=Opponent]').attr('opacity', 1).attr('status', 'none').attr('fill', options.nodes.colors[1]);
+      canvas.select(`[id=${nsId('Player')}]`).attr('opacity', 1).attr('status', 'none').attr('fill', options.nodes.colors[0]);
+      canvas.select(`[id=${nsId('Opponent')}]`).attr('opacity', 1).attr('status', 'none').attr('fill', options.nodes.colors[1]);
     }
     update();
   }

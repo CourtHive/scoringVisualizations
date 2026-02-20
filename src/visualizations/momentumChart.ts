@@ -7,6 +7,7 @@ import { select, selectAll } from 'd3';
 import { rallyCount } from './legacyRally';
 import { buildEpisodes } from '../episodes/buildEpisodes';
 import { keyWalk } from './utils/keyWalk';
+import { generateId } from './utils/generateId';
 
 export function momentumChart() {
   let data: any;
@@ -15,7 +16,7 @@ export function momentumChart() {
   const images = { left: undefined, right: undefined };
 
   const options: any = {
-    id: 'm1',
+    id: generateId(),
     fullWidth: 600,
     fullHeight: 800,
     margins: {
@@ -26,9 +27,9 @@ export function momentumChart() {
     },
     fish: {
       gridcells: ['0', '15', '30', '40', 'G'],
-      cell_size: undefined,
-      min_cell_size: 5,
-      max_cell_size: 10,
+      cellSize: undefined,
+      minCellSize: 5,
+      maxCellSize: 10,
     },
     display: {
       continuous: false,
@@ -36,14 +37,14 @@ export function momentumChart() {
       orientation: 'vertical',
       leftImg: false,
       rightImg: false,
-      show_images: undefined,
-      transition_time: 0,
+      showImages: undefined,
+      transitionTime: 0,
       sizeToFit: true,
       service: true,
       player: true,
       rally: true,
       score: false,
-      momentum_score: true,
+      momentumScore: true,
       grid: true,
     },
     colors: {
@@ -105,9 +106,9 @@ export function momentumChart() {
         .node()
         .setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xlink', 'http://www.w3.org/1999/xlink');
 
-      const bars = momentumFrame.append('g').attr('id', 'momentumBars');
-      const fish = momentumFrame.append('g').attr('id', 'momentumFish');
-      const game = momentumFrame.append('g').attr('id', 'momentumGame');
+      const bars = momentumFrame.append('g').attr('id', 'momentumBars' + options.id);
+      const fish = momentumFrame.append('g').attr('id', 'momentumFish' + options.id);
+      const game = momentumFrame.append('g').attr('id', 'momentumGame' + options.id);
 
       update = function (opts: any) {
         if (options.display.sizeToFit || (opts && opts.sizeToFit)) {
@@ -119,7 +120,7 @@ export function momentumChart() {
             options.fullHeight = Math.max(dims.height, 100);
             /**
             options.fullWidth = Math.max(dims.width, 100);
-            options.fullHeight = cellSize() * maxDiff() * 2;
+            options.fullHeight = computeCellSize() * maxDiff() * 2;
             */
           }
         }
@@ -133,12 +134,12 @@ export function momentumChart() {
         const midpoint = fish_offset / 2;
 
         const all_games = groupGames(data);
-        let max_rally = 0;
+        let maxRally = 0;
         data.forEach(function (point) {
-          if (point.rally != undefined && rallyCount(point.rally) > max_rally) max_rally = rallyCount(point.rally);
+          if (point.rally != undefined && rallyCount(point.rally) > maxRally) maxRally = rallyCount(point.rally);
         });
 
-        const cell_size = cellSize();
+        const cellSize = computeCellSize();
 
         // remove extraneous fish instances
         const old_fish = fish_school.slice(all_games.length);
@@ -163,14 +164,14 @@ export function momentumChart() {
             });
             fish_school[i].options({
               id: 'GF' + i,
-              display: { score: false, point_score: false },
+              display: { score: false, pointScore: false },
               fish: { school: true },
             });
           }
           fish_school[i].width(fish_offset).height(fish_offset);
           fish_school[i].options({
             score: g.score,
-            fish: { cell_size: cell_size, max_rally: max_rally },
+            fish: { cellSize: cellSize, maxRally: maxRally },
             display: {
               orientation: options.display.orientation,
               service: options.display.service,
@@ -201,9 +202,9 @@ export function momentumChart() {
             index: g.index,
             l: coords[1] + new_coords?.[2] * 1.75,
             o: coords[0] + new_coords?.[2] * 1.75,
-            set_end: g.last_game,
+            set_end: g.lastGame,
           });
-          if (g.last_game && !options.display.continuous) {
+          if (g.lastGame && !options.display.continuous) {
             coords[vert ? 0 : 1] = 0;
           }
           radius = new_coords?.[2] / 2;
@@ -225,24 +226,12 @@ export function momentumChart() {
           .style('max-width', '100%');
         // ---------------------------------------------------------------------
 
-        const midline = fish.selectAll('.midline' + options.id).data([0]);
-
-        midline
-          .enter()
-          .append('line')
-          .attr('class', 'midline' + options.id)
-          .attr('x1', vert ? midpoint : radius)
-          .attr('x2', vert ? midpoint : coords[0] + 5 * (radius || 0))
-          .attr('y1', vert ? radius : midpoint)
-          .attr('y2', vert ? coords[1] + 5 * radius : midpoint)
-          .attr('stroke-width', lineWidth)
-          .attr('stroke', '#ccccdd');
-
-        midline.exit().remove();
-
-        midline
+        fish
+          .selectAll('.midline' + options.id)
+          .data([0])
+          .join((enter) => enter.append('line').attr('class', 'midline' + options.id))
           .transition()
-          .duration(options.display.transition_time)
+          .duration(options.display.transitionTime)
           .attr('x1', vert ? midpoint : radius)
           .attr('x2', vert ? midpoint : coords[0] + 5 * (radius || 0))
           .attr('y1', vert ? radius : midpoint)
@@ -250,23 +239,23 @@ export function momentumChart() {
           .attr('stroke-width', lineWidth)
           .attr('stroke', '#ccccdd');
 
-        const scoreLines = fish.selectAll('.score_line' + options.id).data(score_lines);
-
-        scoreLines
-          .enter()
-          .append('line')
-          .attr('class', 'score_line' + options.id)
+        fish
+          .selectAll('.score_line' + options.id)
+          .data(score_lines)
+          .join((enter) => enter.append('line').attr('class', 'score_line' + options.id))
+          .transition()
+          .duration(options.display.transitionTime)
           .attr('x1', function (d) {
-            return vert ? cell_size * 2 : d.o;
+            return vert ? cellSize * 2 : d.o;
           })
           .attr('x2', function (d) {
-            return vert ? fish_offset - cell_size * 2 : d.o;
+            return vert ? fish_offset - cellSize * 2 : d.o;
           })
           .attr('y1', function (d) {
-            return vert ? d.l : cell_size * 3;
+            return vert ? d.l : cellSize * 3;
           })
           .attr('y2', function (d) {
-            return vert ? d.l : fish_offset - cell_size * 3;
+            return vert ? d.l : fish_offset - cellSize * 3;
           })
           .attr('stroke-width', lineWidth)
           .attr('stroke-dasharray', function (d) {
@@ -276,72 +265,28 @@ export function momentumChart() {
             return d.set_end ? '#000000' : '#ccccdd';
           });
 
-        scoreLines.exit().remove();
-
-        scoreLines
-          .transition()
-          .duration(options.display.transition_time)
-          .attr('x1', function (d) {
-            return vert ? cell_size * 2 : d.o;
-          })
-          .attr('x2', function (d) {
-            return vert ? fish_offset - cell_size * 2 : d.o;
-          })
-          .attr('y1', function (d) {
-            return vert ? d.l : cell_size * 3;
-          })
-          .attr('y2', function (d) {
-            return vert ? d.l : fish_offset - cell_size * 3;
-          })
-          .attr('stroke-width', lineWidth)
-          .attr('stroke-dasharray', function (d) {
-            return d.set_end ? '0' : '5,5';
-          })
-          .attr('stroke', function (d) {
-            return d.set_end ? '#000000' : '#ccccdd';
-          });
-
-        if (options.display.momentum_score) {
-          const score_text = fish.selectAll('.score_text' + options.id).data(score_lines);
-
-          score_text.exit().remove();
+        if (options.display.momentumScore) {
+          const score_text = fish
+            .selectAll('.score_text' + options.id)
+            .data(score_lines)
+            .join((enter) =>
+              enter
+                .append('g')
+                .attr('class', 'score_text' + options.id)
+                .on('click', function (d) {
+                  if (events.score.click) events.score.click(d);
+                }),
+            )
+            .attr('transform', scoreText);
 
           score_text
-            .enter()
-            .append('g')
-            .attr('class', 'score_text' + options.id)
-            .attr('transform', scoreText)
-            .on('click', function (d) {
-              if (events.score.click) events.score.click(d);
+            .selectAll('.score' + options.id)
+            .data(function (d) {
+              return d.score;
             })
-            .merge(score_text)
-            .attr('class', 'score_text' + options.id)
-            .attr('transform', scoreText)
-            .on('click', function (d) {
-              if (events.score.click) events.score.click(d);
-            });
-
-          const scores = score_text.selectAll('.score' + options.id).data(function (d) {
-            return d.score;
-          });
-
-          scores.exit().remove();
-
-          scores
-            .enter()
-            .append('text')
-            .attr('class', 'score' + options.id)
-            .attr('transform', scoreT)
-            .attr('font-size', radius * 4.0 + 'px')
-            .attr('opacity', 0.1)
-            .attr('text-anchor', 'middle')
-            .text(function (d) {
-              return d;
-            })
-            .merge(scores)
-            .attr('class', 'score' + options.id)
+            .join((enter) => enter.append('text').attr('class', 'score' + options.id))
             .transition()
-            .duration(options.display.transition_time)
+            .duration(options.display.transitionTime)
             .attr('transform', scoreT)
             .attr('font-size', radius * 4.0 + 'px')
             .attr('opacity', 0.1)
@@ -373,19 +318,19 @@ export function momentumChart() {
           return radius > 20 ? 2 : 1;
         }
 
-        function cellSize() {
-          let cell_size;
+        function computeCellSize() {
+          let cellSize;
 
           if (options.display.orientation == 'vertical') {
             // if the display is vertical use the width divided by maxDiff
-            cell_size = options.width / 2 / (maxDiff() + 1);
+            cellSize = options.width / 2 / (maxDiff() + 1);
           } else {
             // if the display is horizontal use the width divided by # points
             // var radius = options.width / (data.points().length + 4);
             const radius = options.width / (data.length + 4);
-            cell_size = Math.sqrt(2 * radius * radius);
+            cellSize = Math.sqrt(2 * radius * radius);
           }
-          return Math.min(options.fish.max_cell_size, cell_size);
+          return Math.min(options.fish.maxCellSize, cellSize);
         }
 
         function maxDiff() {
@@ -402,68 +347,57 @@ export function momentumChart() {
         }
 
         if (options.display.rightImg) {
-          images.right = momentumFrame.selectAll('image.rightImage').data([0]);
-
-          images.right.exit().remove();
-
-          images.right
-            .enter()
-            .append('image')
-            .attr('class', 'rightImage')
-            .attr('xlink:href', options.display.rightImg)
+          images.right = momentumFrame
+            .selectAll('image.rightImage')
+            .data([0])
+            .join((enter) =>
+              enter
+                .append('image')
+                .attr('class', 'rightImage')
+                .attr('y', 5)
+                .attr('height', '20px')
+                .attr('width', '20px')
+                .attr('opacity', options.display.showImages ? 1 : 0)
+                .on('click', function () {
+                  if (events.rightImage.click) events.rightImage.click(options.id);
+                }),
+            )
             .attr('x', options.width - 20)
-            .attr('y', 5)
-            .attr('height', '20px')
-            .attr('width', '20px')
-            .attr('opacity', options.display.show_images ? 1 : 0)
-            .on('click', function () {
-              if (events.rightImage.click) events.rightImage.click(options.id);
-            })
-            .merge(images.right)
-            .attr('x', options.width - 20)
-            .attr('xlink:href', options.display.rightImg)
-            .on('click', function () {
-              if (events.rightImage.click) events.rightImage.click(options.id);
-            });
+            .attr('xlink:href', options.display.rightImg);
         } else {
           momentumFrame.selectAll('image.rightImage').remove();
         }
 
         if (options.display.leftImg) {
-          images.left = momentumFrame.selectAll('image.leftImage').data([0]);
-
-          images.left
-            .enter()
-            .append('image')
-            .attr('class', 'leftImage')
-            .attr('xlink:href', options.display.leftImg)
-            .attr('x', 10)
-            .attr('y', 5)
-            .attr('height', '20px')
-            .attr('width', '20px')
-            .attr('opacity', options.display.show_images ? 1 : 0)
-            .on('click', function () {
-              if (events.leftImage.click) events.leftImage.click();
-            })
-            .merge(images.left)
-            .attr('xlink:href', options.display.leftImg)
-            .on('click', function () {
-              if (events.leftImage.click) events.leftImage.click(options.id);
-            });
-
-          images.left.exit().remove();
+          images.left = momentumFrame
+            .selectAll('image.leftImage')
+            .data([0])
+            .join((enter) =>
+              enter
+                .append('image')
+                .attr('class', 'leftImage')
+                .attr('x', 10)
+                .attr('y', 5)
+                .attr('height', '20px')
+                .attr('width', '20px')
+                .attr('opacity', options.display.showImages ? 1 : 0)
+                .on('click', function () {
+                  if (events.leftImage.click) events.leftImage.click(options.id);
+                }),
+            )
+            .attr('xlink:href', options.display.leftImg);
         } else {
           momentumFrame.selectAll('image.leftImage').remove();
         }
 
         function showImages() {
-          if (options.display.show_images == false) return;
+          if (options.display.showImages == false) return;
           if (options.display.leftImg) images.left.attr('opacity', 1);
           if (options.display.rightImg) images.right.attr('opacity', 1);
         }
 
         function hideImages() {
-          if (options.display.show_images) return;
+          if (options.display.showImages) return;
           if (options.display.leftImg) images.left.attr('opacity', 0);
           if (options.display.rightImg) images.right.attr('opacity', 0);
         }
@@ -517,7 +451,7 @@ export function momentumChart() {
     if (typeof update === 'function' && data) update(opts);
     setTimeout(function () {
       if (events.update.end) events.update.end();
-    }, options.display.transition_time);
+    }, options.display.transitionTime);
   };
 
   chart.colors = function (color3s) {

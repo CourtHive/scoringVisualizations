@@ -5,6 +5,7 @@ import { extractRallyLengths } from '../engine/feedMatchUp';
 
 export function simpleChart(target: any, data: any, playerNames?: [string, string]) {
   const dom_parent = select('#' + target);
+  if (!dom_parent.node()) return; // Element not yet in DOM
   // let dims = dom_parent.node().getBoundingClientRect();
   //   let screen_width = dims.width;
   //   let screen_height = screen_width / 2;
@@ -134,6 +135,8 @@ export function simpleChart(target: any, data: any, playerNames?: [string, strin
  * Companion function: render simpleChart directly from a ScoringEngine MatchUp.
  */
 export function simpleChartFromMatchUp(target: any, matchUp: any, playerNames?: [string, string]): void {
+  const dom_parent = select('#' + target);
+  if (!dom_parent.node()) return; // Element not yet in DOM
   const data = extractRallyLengths(matchUp);
   simpleChart(target, data, playerNames);
 }

@@ -69,7 +69,7 @@ const meta: Meta<GameTreeArgs> = {
         sizeToFit: args.sizeToFit,
         showEmpty: args.showEmpty,
         noAd: args.noAd,
-        show_images: args.showImages,
+        showImages: args.showImages,
       },
       lines: {
         points: { winners: "green", errors: "#BA1212", unknown: "#2ed2db" },
@@ -140,7 +140,7 @@ export const MultipleGames: Story = {
         sizeToFit: args.sizeToFit,
         showEmpty: args.showEmpty,
         noAd: args.noAd,
-        show_images: args.showImages,
+        showImages: args.showImages,
       },
       lines: {
         points: { winners: "green", errors: "#BA1212", unknown: "#2ed2db" },
@@ -207,7 +207,7 @@ export const DeuceGame: Story = {
         sizeToFit: args.sizeToFit,
         showEmpty: args.showEmpty,
         noAd: args.noAd,
-        show_images: args.showImages,
+        showImages: args.showImages,
       },
       lines: {
         points: { winners: "green", errors: "#BA1212", unknown: "#2ed2db" },
@@ -252,7 +252,7 @@ export const NoAdScoring: Story = {
         sizeToFit: true,
         showEmpty: false,
         noAd: true, // Enable No-Ad mode
-        show_images: false,
+        showImages: false,
       },
       lines: {
         points: { winners: "green", errors: "#BA1212", unknown: "#2ed2db" },
@@ -305,7 +305,7 @@ export const ColorCodedResults: Story = {
         sizeToFit: args.sizeToFit,
         showEmpty: args.showEmpty,
         noAd: args.noAd,
-        show_images: args.showImages,
+        showImages: args.showImages,
       },
       lines: {
         points: { winners: "#2ecc71", errors: "#e74c3c", unknown: "#3498db" },
@@ -356,7 +356,7 @@ export const EmptyState: Story = {
         sizeToFit: args.sizeToFit,
         showEmpty: args.showEmpty,
         noAd: args.noAd,
-        show_images: args.showImages,
+        showImages: args.showImages,
       },
     });
 
@@ -393,7 +393,7 @@ export const LivePlayback: Story = {
         sizeToFit: args.sizeToFit,
         showEmpty: args.showEmpty,
         noAd: args.noAd,
-        show_images: args.showImages,
+        showImages: args.showImages,
       },
       lines: {
         points: { winners: "green", errors: "#BA1212", unknown: "#2ed2db" },
@@ -459,7 +459,7 @@ export const UndoRedo: Story = {
         sizeToFit: args.sizeToFit,
         showEmpty: args.showEmpty,
         noAd: args.noAd,
-        show_images: args.showImages,
+        showImages: args.showImages,
       },
       lines: {
         points: { winners: "green", errors: "#BA1212", unknown: "#2ed2db" },

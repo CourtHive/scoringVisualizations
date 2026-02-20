@@ -60,8 +60,8 @@ const meta: Meta<MomentumChartArgs> = {
         rally: args.showRally,
         grid: args.showGrid,
         score: args.showScore,
-        momentum_score: true,
-        transition_time: 0,
+        momentumScore: true,
+        transitionTime: 0,
       },
       colors: {
         players: { 0: '#a55194', 1: '#6b6ecf' },
@@ -200,8 +200,8 @@ export const CompactHorizontal: Story = {
         rally: args.showRally,
         grid: args.showGrid,
         score: args.showScore,
-        momentum_score: true,
-        transition_time: 0,
+        momentumScore: true,
+        transitionTime: 0,
       },
       colors: {
         players: { 0: '#e74c3c', 1: '#3498db' },
@@ -249,8 +249,8 @@ export const LivePlayback: Story = {
         rally: args.showRally,
         grid: args.showGrid,
         score: args.showScore,
-        momentum_score: true,
-        transition_time: 0,
+        momentumScore: true,
+        transitionTime: 0,
       },
       colors: {
         players: { 0: '#a55194', 1: '#6b6ecf' },
@@ -307,7 +307,7 @@ export const UndoRedo: Story = {
       display: {
         sizeToFit: true, continuous: args.continuous, orientation: args.orientation,
         service: args.showService, rally: args.showRally, grid: args.showGrid,
-        score: args.showScore, momentum_score: true, transition_time: 0,
+        score: args.showScore, momentumScore: true, transitionTime: 0,
       },
       colors: { players: { 0: '#a55194', 1: '#6b6ecf' } },
     });

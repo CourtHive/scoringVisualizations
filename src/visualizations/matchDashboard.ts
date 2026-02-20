@@ -125,7 +125,7 @@ export function matchDashboard() {
         sizeToFit: true,
         bands: 3,
         mode: "mirror",
-        transition_time: 0,
+        transitionTime: 0,
       },
       elements: { brush: true },
     });
@@ -141,7 +141,7 @@ export function matchDashboard() {
 
     // gameTree
     charts.gameTreeChart.options({
-      display: { sizeToFit: true, showEmpty: false, noAd: false, show_images: false },
+      display: { sizeToFit: true, showEmpty: false, noAd: false, showImages: false },
       lines: {
         points: { winners: 'green', errors: '#BA1212', unknown: '#2ed2db' },
         colors: { underlines: 'black' },
@@ -229,9 +229,9 @@ export function matchDashboard() {
       [
         {
           p2sdiff: diffs,
-          games_score: [0, 0],
+          gamesScore: [0, 0],
           players: options.players,
-          winner_index: 0,
+          winnerIndex: 0,
         },
       ],
       {

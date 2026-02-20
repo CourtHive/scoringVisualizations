@@ -11,9 +11,9 @@ importers:
       d3:
         specifier: ^7.9.0
         version: 7.9.0
-      tods-competition-factory:
-        specifier: '>=2.0.0'
-        version: 2.3.18
+      tippy.js:
+        specifier: ^6.3.7
+        version: 6.3.7
     devDependencies:
       '@eslint/js':
         specifier: ^10.0.1
@@ -320,6 +320,9 @@ packages:
     peerDependencies:
       '@types/react': '>=16'
       react: '>=16'
+
+  '@popperjs/core@2.11.8':
+    resolution: {integrity: sha512-P1st0aksCrn9sGZhp8GMYwBnQsbvAWsZAX44oXNNvLHGqAOcoVxmjZiohstwQ7SqKnbR47akdNi+uleWD8+g6A==}
 
   '@rollup/rollup-android-arm-eabi@4.57.1':
     resolution: {integrity: sha512-A6ehUVSiSaaliTxai040ZpZ2zTevHYbvu/lDoeAteHI8QnaosIzm4qwtezfRg1jOYaUmnzLX1AOD6Z+UJjtifg==}
@@ -1470,9 +1473,8 @@ packages:
     resolution: {integrity: sha512-azl+t0z7pw/z958Gy9svOTuzqIk6xq+NSheJzn5MMWtWTFywIacg2wUlzKFGtt3cthx0r2SxMK0yzJOR0IES7Q==}
     engines: {node: '>=14.0.0'}
 
-  tods-competition-factory@2.3.18:
-    resolution: {integrity: sha512-gMiE0FWUaqMN3lPCmCsUC4V8zzRVbmGyJbQF8T78p/jrBpDNQ92KXTufWqAJQxdUvZPPZEJgbfTuU8uZ2CbPvA==}
-    engines: {node: '>=20'}
+  tippy.js@6.3.7:
+    resolution: {integrity: sha512-E1d3oP2emgJ9dRQZdf3Kkn0qJgI6ZLpyS5z6ZkY1DF3kaQaBsGZsndEpHwx+eC+tYM41HaSNvNtLx8tU57FzTQ==}
 
   ts-api-utils@2.4.0:
     resolution: {integrity: sha512-3TaVTaAv2gTiMB35i3FiGJaRfwb3Pyn/j3m/bfAvGe8FB7CF6u+LMYqYlDh7reQf7UNvoTvdfAqHGmPGOSsPmA==}
@@ -1801,6 +1803,8 @@ snapshots:
       '@types/mdx': 2.0.13
       '@types/react': 19.2.14
       react: 19.2.4
+
+  '@popperjs/core@2.11.8': {}
 
   '@rollup/rollup-android-arm-eabi@4.57.1':
     optional: true
@@ -2984,7 +2988,9 @@ snapshots:
 
   tinyspy@4.0.4: {}
 
-  tods-competition-factory@2.3.18: {}
+  tippy.js@6.3.7:
+    dependencies:
+      '@popperjs/core': 2.11.8
 
   ts-api-utils@2.4.0(typescript@5.9.3):
     dependencies:

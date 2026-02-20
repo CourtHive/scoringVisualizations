@@ -1,20 +1,20 @@
-/* eslint-disable */
 // @ts-nocheck
-import { select, scaleLinear, scaleBand, range } from 'd3';
-import { extractGamePoints } from '../engine/feedMatchUp';
-import { keyWalk } from './utils/keyWalk';
+import { select, scaleLinear, scaleBand, range } from "d3";
+import { extractGamePoints } from "../engine/feedMatchUp";
+import { keyWalk } from "./utils/keyWalk";
+import { generateId } from "./utils/generateId";
 
 export function gameFish() {
   let data: any;
-  let fish_width;
-  let fish_height;
+  let fishWidth;
+  let fishHeight;
   let coords = [0, 0];
-  let last_coords: any;
+  let lastCoords: any;
   let update: any;
   const images: any = { left: undefined, right: undefined };
 
   const options: any = {
-    id: 'gf1',
+    id: generateId(),
     score: [0, 0],
     width: 600,
     height: 600,
@@ -26,24 +26,24 @@ export function gameFish() {
     },
     fish: {
       school: false,
-      gridcells: ['0', '15', '30', '40', 'G'],
-      max_rally: undefined,
-      cell_size: undefined,
-      min_cell_size: 5,
-      max_cell_size: 20,
+      gridcells: ["0", "15", "30", "40", "G"],
+      maxRally: undefined,
+      cellSize: undefined,
+      minCellSize: 5,
+      maxCellSize: 20,
     },
     set: {
-      tiebreak_to: 7,
+      tiebreakTo: 7,
     },
     display: {
-      orientation: 'vertical',
-      transition_time: 0,
+      orientation: "vertical",
+      transitionTime: 0,
       sizeToFit: false,
       leftImg: false,
       rightImg: false,
-      show_images: undefined,
+      showImages: undefined,
       reverse: false,
-      point_score: true,
+      pointScore: true,
       service: true,
       player: true,
       rally: true,
@@ -51,32 +51,32 @@ export function gameFish() {
       grid: true,
     },
     colors: {
-      players: { 0: 'red', 1: 'black' },
+      players: { 0: "red", 1: "black" },
       results: {
-        Out: 'red',
-        Net: 'coral',
-        'Unforced Error': 'red',
-        Forced: 'orange',
-        Ace: 'lightgreen',
-        'Serve Winner': 'lightgreen',
-        Winner: 'lightgreen',
-        'Forced Volley Error': 'orange',
-        'Forced Error': 'orange',
-        In: 'yellow',
-        'Passing Shot': 'lightgreen',
-        'Out Passing Shot': 'red',
-        'Net Cord': 'yellow',
-        'Out Wide': 'red',
-        'Out Long': 'red',
-        'Double Fault': 'red',
-        Unknown: 'blue',
-        Error: 'red',
+        Out: "red",
+        Net: "coral",
+        "Unforced Error": "red",
+        Forced: "orange",
+        Ace: "lightgreen",
+        "Serve Winner": "lightgreen",
+        Winner: "lightgreen",
+        "Forced Volley Error": "orange",
+        "Forced Error": "orange",
+        In: "yellow",
+        "Passing Shot": "lightgreen",
+        "Out Passing Shot": "red",
+        "Net Cord": "yellow",
+        "Out Wide": "red",
+        "Out Long": "red",
+        "Double Fault": "red",
+        Unknown: "blue",
+        Error: "red",
       },
     },
   };
 
-  const default_colors = { default: '#235dba' };
-  let colors = JSON.parse(JSON.stringify(default_colors));
+  const default_colors = { default: "#235dba" };
+  let colors = structuredClone(default_colors);
 
   const events: any = {
     leftImage: { click: null },
@@ -91,24 +91,37 @@ export function gameFish() {
   let fish: any;
   let game: any;
 
-  function chart(selection: any) {
-    const parent_type = selection._groups[0][0].tagName.toLowerCase();
+  function findOffset(point: any) {
+    // In school mode (momentum chart), use cumulative set points for nose-to-tail alignment.
+    // In standalone mode, use game-level points so the grid stays centered.
+    const pts =
+      (options.fish.school && point.setCumulativePoints) || point.points;
+    if (!pts || pts.length < 2) return 0;
+    return (
+      pts[options.display.reverse ? 0 : 1] -
+      pts[options.display.reverse ? 1 : 0]
+    );
+  }
 
-    if (parent_type != 'svg') {
-      root = selection.append('div').attr('class', 'fishRoot');
+  function chart(selection: any) {
+    const parentType = selection._groups[0][0].tagName.toLowerCase();
+
+    if (parentType !== "svg") {
+      root = selection.append("div").attr("class", "fishRoot");
 
       fishFrame = root
-        .append('svg')
-        .attr('id', 'gameFish' + options.id)
-        .attr('class', 'fishFrame');
+        .append("svg")
+        .attr("id", "gameFish" + options.id)
+        .attr("class", "fishFrame");
 
-      bars = fishFrame.append('g');
-      fish = fishFrame.append('g');
-      game = fishFrame.append('g');
+      bars = fishFrame.append("g");
+      fish = fishFrame.append("g");
+      game = fishFrame.append("g");
     }
 
     update = function (opts: any) {
-      if (bars == undefined || fish == undefined || game == undefined) return;
+      if (bars === undefined || fish === undefined || game === undefined)
+        return;
 
       if (options.display.sizeToFit || opts?.sizeToFit) {
         const dims = selection.node().getBoundingClientRect();
@@ -116,58 +129,73 @@ export function gameFish() {
         options.height = Math.max(dims.height, 100);
       }
 
-      if (options.fish.cell_size && !options.fish.school) {
+      if (options.fish.cellSize && !options.fish.school) {
         const multiplier = Math.max(10, data.length + 2);
-        options.height = options.fish.cell_size * multiplier * 0.9;
+        options.height = options.fish.cellSize * multiplier * 0.9;
       }
 
       let tiebreak = false;
-      let max_rally = 0;
+      let maxRally = 0;
       data.forEach((e: any) => {
         const rlen = e.rallyLength;
-        if (rlen > max_rally) max_rally = rlen;
-        if (e.score && e.score.indexOf('T') > 0) tiebreak = true;
+        if (rlen > maxRally) maxRally = rlen;
+        if (e.score && e.score.indexOf("T") > 0) tiebreak = true;
       });
 
-      if (options.fish.max_rally && options.fish.max_rally > max_rally) max_rally = options.fish.max_rally;
+      if (options.fish.maxRally && options.fish.maxRally > maxRally)
+        maxRally = options.fish.maxRally;
 
-      fish_width = options.width - (options.margins.left + options.margins.right);
-      fish_height = options.height - (options.margins.top + options.margins.bottom);
+      fishWidth =
+        options.width - (options.margins.left + options.margins.right);
+      fishHeight =
+        options.height - (options.margins.top + options.margins.bottom);
 
       // Ensure dimensions are valid
-      if (Number.isNaN(fish_width) || fish_width <= 0) fish_width = 100;
-      if (Number.isNaN(fish_height) || fish_height <= 0) fish_height = 100;
+      if (Number.isNaN(fishWidth) || fishWidth <= 0) fishWidth = 100;
+      if (Number.isNaN(fishHeight) || fishHeight <= 0) fishHeight = 100;
 
-      const vert = options.display.orientation == 'vertical' ? 1 : 0;
-      const fish_offset = vert ? fish_width : fish_height;
-      const fish_length = vert ? fish_height : fish_width;
-      const midpoint = (vert ? options.margins.left : options.margins.top) + fish_offset / 2;
+      const vert = options.display.orientation === "vertical" ? 1 : 0;
+      const fish_offset = vert ? fishWidth : fishHeight;
+      const fish_length = vert ? fishHeight : fishWidth;
+      const midpoint =
+        (vert ? options.margins.left : options.margins.top) + fish_offset / 2;
       const sw = 1; // service box % offset
       const rw = 0.9; // rally_width % offset
 
-      bars.attr('transform', 'translate(' + (vert ? 0 : coords[0]) + ',' + (vert ? coords[1] : 0) + ')');
-      fish.attr('transform', 'translate(' + coords[0] + ',' + coords[1] + ')');
-      game.attr('transform', 'translate(' + coords[0] + ',' + coords[1] + ')');
+      bars.attr(
+        "transform",
+        "translate(" +
+          (vert ? 0 : coords[0]) +
+          "," +
+          (vert ? coords[1] : 0) +
+          ")",
+      );
+      fish.attr("transform", "translate(" + coords[0] + "," + coords[1] + ")");
+      game.attr("transform", "translate(" + coords[0] + "," + coords[1] + ")");
 
-      let cell_size;
-      if (options.fish.cell_size) {
-        cell_size = options.fish.cell_size;
+      let cellSize;
+      if (options.fish.cellSize) {
+        cellSize = options.fish.cellSize;
       } else {
-        const offset_divisor = tiebreak ? options.set.tiebreak_to + 4 : options.fish.gridcells.length + 2;
+        const offset_divisor = tiebreak
+          ? options.set.tiebreakTo + 4
+          : options.fish.gridcells.length + 2;
         const cell_offset =
-          fish_offset / (options.fish.gridcells.length + (options.display.service ? offset_divisor : 0));
+          fish_offset /
+          (options.fish.gridcells.length +
+            (options.display.service ? offset_divisor : 0));
         const cell_length = fish_length / (data.length + 2);
-        cell_size = Math.min(cell_offset, cell_length);
-        cell_size = Math.max(options.fish.min_cell_size, cell_size);
-        cell_size = Math.min(options.fish.max_cell_size, cell_size);
+        cellSize = Math.min(cell_offset, cell_length);
+        cellSize = Math.max(options.fish.minCellSize, cellSize);
+        cellSize = Math.min(options.fish.maxCellSize, cellSize);
       }
 
-      // Ensure cell_size is valid
-      if (!cell_size || Number.isNaN(cell_size) || cell_size <= 0) {
-        cell_size = options.fish.min_cell_size || 5;
+      // Ensure cellSize is valid
+      if (!cellSize || Number.isNaN(cellSize) || cellSize <= 0) {
+        cellSize = options.fish.minCellSize || 5;
       }
 
-      const diag = Math.sqrt(2 * Math.pow(cell_size, 2));
+      const diag = Math.sqrt(2 * Math.pow(cellSize, 2));
       const radius = diag / 2;
 
       // In school mode (momentum chart), compute the lateral offset for the grid
@@ -188,7 +216,9 @@ export function gameFish() {
 
       const grid_data = [];
       const grid_labels = [];
-      const grid_side = tiebreak ? options.set.tiebreak_to : options.fish.gridcells.length - 1;
+      const grid_side = tiebreak
+        ? options.set.tiebreakTo
+        : options.fish.gridcells.length - 1;
       for (let g = 0; g < grid_side; g++) {
         const label = tiebreak ? g : options.fish.gridcells[g];
         // l = length, o = offset
@@ -198,7 +228,12 @@ export function gameFish() {
           o: (g + (vert ? 0.75 : 1.25)) * radius,
           rotate: 45,
         });
-        grid_labels.push({ label: label, l: (g + 1.25) * radius, o: -1 * (g + 0.75) * radius, rotate: -45 });
+        grid_labels.push({
+          label: label,
+          l: (g + 1.25) * radius,
+          o: -1 * (g + 0.75) * radius,
+          rotate: -45,
+        });
         for (let c = 0; c < grid_side; c++) {
           grid_data.push([g, c]);
         }
@@ -206,123 +241,87 @@ export function gameFish() {
 
       // check if this is a standalone SVG or part of larger SVG
       if (root) {
-        root.attr('width', options.width + 'px').attr('height', options.height + 'px');
+        root
+          .attr("width", options.width + "px")
+          .attr("height", options.height + "px");
 
-        fishFrame.attr('width', options.width + 'px').attr('height', options.height + 'px');
+        fishFrame
+          .attr("width", options.width + "px")
+          .attr("height", options.height + "px");
       }
 
-      if (options.display.point_score) {
-        const game_score = fish.selectAll('.game_score' + options.id).data(grid_labels);
-
-        game_score.exit().remove();
-
-        game_score
-          .enter()
-          .append('text')
-          .attr('font-size', radius * 0.8 + 'px')
-          .attr('transform', gscoreT)
-          .attr('text-anchor', 'middle')
-          .merge(game_score)
-          .attr('class', 'game_score' + options.id)
-          .attr('font-size', radius * 0.8 + 'px')
-          .attr('transform', gscoreT)
-          .attr('text-anchor', 'middle')
+      if (options.display.pointScore) {
+        fish
+          .selectAll(".game_score" + options.id)
+          .data(grid_labels)
+          .join("text")
+          .attr("class", "game_score" + options.id)
+          .attr("font-size", radius * 0.8 + "px")
+          .attr("transform", gscoreT)
+          .attr("text-anchor", "middle")
           .text(function (d: any) {
             return d.label;
           });
       } else {
-        fish.selectAll('.game_score' + options.id).remove();
+        fish.selectAll(".game_score" + options.id).remove();
       }
 
       if (options.display.grid) {
-        const gridcells = fish.selectAll('.gridcell' + options.id).data(grid_data);
-
-        gridcells.exit().remove();
-
-        gridcells
-          .enter()
-          .append('rect')
-          .attr('stroke', '#ccccdd')
-          .attr('stroke-width', lineWidth)
-          .attr('transform', gridCT)
-          .attr('width', cell_size)
-          .attr('height', cell_size)
-          .merge(gridcells)
-          .attr('class', 'gridcell' + options.id)
-          .attr('stroke-width', lineWidth)
-          .attr('width', cell_size)
-          .attr('height', cell_size)
-          .attr('transform', gridCT)
-          .attr('fill-opacity', 0);
+        fish
+          .selectAll(".gridcell" + options.id)
+          .data(grid_data)
+          .join("rect")
+          .attr("class", "gridcell" + options.id)
+          .attr("stroke", "#ccccdd")
+          .attr("stroke-width", lineWidth)
+          .attr("transform", gridCT)
+          .attr("width", cellSize)
+          .attr("height", cellSize)
+          .attr("fill-opacity", 0);
       } else {
-        fish.selectAll('.gridcell' + options.id).remove();
+        fish.selectAll(".gridcell" + options.id).remove();
       }
 
-      const gamecells = game.selectAll('.gamecell' + options.id).data(data);
-
-      gamecells.exit().remove();
-
-      gamecells
-        .enter()
-        .append('rect')
-        .attr('opacity', 0)
-        .attr('width', cell_size)
-        .attr('height', cell_size)
-        .attr('transform', gameCT)
-        .attr('stroke', '#ccccdd')
-        .attr('stroke-width', lineWidth)
-        .merge(gamecells)
-        .attr('id', (d: any, i: number) => {
-          return options.id + 'Gs' + d.set + 'g' + d.game + 'p' + i;
+      game
+        .selectAll(".gamecell" + options.id)
+        .data(data)
+        .join("rect")
+        .attr("id", (d: any, i: number) => {
+          return options.id + "Gs" + d.set + "g" + d.game + "p" + i;
         })
-        .attr('class', 'gamecell' + options.id)
-        .attr('width', cell_size)
-        .attr('height', cell_size)
-        .attr('transform', gameCT)
-        .attr('stroke', '#ccccdd')
-        .attr('stroke-width', lineWidth)
-        .attr('opacity', options.display.player ? 1 : 0)
-        .style('fill', function (d: any) {
+        .attr("class", "gamecell" + options.id)
+        .attr("width", cellSize)
+        .attr("height", cellSize)
+        .attr("transform", gameCT)
+        .attr("stroke", "#ccccdd")
+        .attr("stroke-width", lineWidth)
+        .attr("opacity", options.display.player ? 1 : 0)
+        .style("fill", function (d: any) {
           return options.colors.players[d.winner];
         });
 
-      const results = game.selectAll('.result' + options.id).data(data);
-
-      results.exit().remove();
-
-      results
-        .enter()
-        .append('circle')
-        .attr('stroke', 'black')
-        .attr('id', function (d: any, i: number) {
-          return options.id + 'Rs' + d.set + 'g' + d.game + 'p' + i;
+      game
+        .selectAll(".result" + options.id)
+        .data(data)
+        .join("circle")
+        .attr("id", function (d: any, i: number) {
+          return options.id + "Rs" + d.set + "g" + d.game + "p" + i;
         })
-        .attr('class', 'result' + options.id)
-        .attr('opacity', 1)
-        .attr('stroke-width', lineWidth)
-        .attr('cx', zX)
-        .attr('cy', zY)
-        .attr('r', circleRadius)
-        .style('fill', function (d: any) {
-          return options.colors.results[d.result];
-        })
-        .merge(results)
-        .attr('id', function (d: any, i: number) {
-          return options.id + 'Rs' + d.set + 'g' + d.game + 'p' + i;
-        })
-        .attr('class', 'result' + options.id)
-        .attr('stroke-width', lineWidth)
-        .attr('cx', zX)
-        .attr('cy', zY)
-        .attr('r', circleRadius)
-        .style('fill', function (d: any) {
+        .attr("class", "result" + options.id)
+        .attr("stroke", "black")
+        .attr("opacity", 1)
+        .attr("stroke-width", lineWidth)
+        .attr("cx", zX)
+        .attr("cy", zY)
+        .attr("r", circleRadius)
+        .style("fill", function (d: any) {
           return options.colors.results[d.result];
         });
 
       // offset Scale
       const oScale = scaleLinear()
         .range([0, fish_offset * rw])
-        .domain([0, max_rally]);
+        .domain([0, maxRally]);
 
       // lengthScale
       const lScale = scaleBand()
@@ -331,235 +330,185 @@ export function gameFish() {
         .round(true);
 
       if (options.display.rally) {
-        const rally_bars = bars.selectAll('.rally_bar' + options.id).data(data);
-
-        rally_bars.exit().remove();
-
-        // D3 v7: Simplified without transitions for debugging
-        rally_bars
-          .enter()
-          .append('rect')
-          .merge(rally_bars)
-          .attr('class', 'rally_bar' + options.id)
-          .attr('id', function (d: any, i: number) {
-            return options.id + 'Bs' + d.set + 'g' + d.game + 'p' + i;
+        bars
+          .selectAll(".rally_bar" + options.id)
+          .data(data)
+          .join((enter: any) =>
+            enter
+              .append("rect")
+              .on("mouseover", function (event: any, d: any) {
+                select(this).attr("fill", "yellow");
+                if (events.point.mouseover) events.point.mouseover(d, event);
+              })
+              .on("mouseout", function (event: any, d: any) {
+                select(this).attr("fill", "#eeeeff");
+                if (events.point.mouseout) events.point.mouseout(d, event);
+              })
+              .on("click", function (event: any, d: any) {
+                if (events.point.click) events.point.click(d, event);
+              }),
+          )
+          .attr("class", "rally_bar" + options.id)
+          .attr("id", function (d: any, i: number) {
+            return options.id + "Bs" + d.set + "g" + d.game + "p" + i;
           })
-          .attr('opacity', 1)
-          .attr('stroke', 'white')
-          .attr('stroke-width', lineWidth)
-          .attr('fill', '#eeeeff')
-          .attr('transform', rallyT)
-          .attr('height', vert ? lScale.bandwidth() : rallyCalc)
-          .attr('width', vert ? rallyCalc : lScale.bandwidth())
-          .on('mouseover', function (event: any, d: any) {
-            select(this).attr('fill', 'yellow');
-            if (events.point.mouseover) events.point.mouseover(d, event);
-          })
-          .on('mouseout', function (event: any, d: any) {
-            select(this).attr('fill', '#eeeeff');
-            if (events.point.mouseout) events.point.mouseout(d, event);
-          })
-          .on('click', function (event: any, d: any) {
-            if (events.point.click) events.point.click(d, event);
-          });
+          .attr("opacity", 1)
+          .attr("stroke", "white")
+          .attr("stroke-width", lineWidth)
+          .attr("fill", "#eeeeff")
+          .attr("transform", rallyT)
+          .attr("height", vert ? lScale.bandwidth() : rallyCalc)
+          .attr("width", vert ? rallyCalc : lScale.bandwidth());
       } else {
-        bars.selectAll('.rally_bar' + options.id).remove();
+        bars.selectAll(".rally_bar" + options.id).remove();
       }
 
       if (options.display.score) {
         const score = options.score.slice();
         if (options.display.reverse) score.reverse();
-        const set_score = bars.selectAll('.set_score' + options.id).data(score);
-
-        set_score.exit().remove();
-
-        set_score
-          .enter()
-          .append('text')
-          .attr('class', 'set_score' + options.id)
-          .attr('transform', sscoreT)
-          .attr('font-size', radius * 0.8 + 'px')
-          .attr('text-anchor', 'middle')
-          .text(function (d: any) {
-            return d;
-          })
-          .merge(set_score)
-          .attr('class', 'set_score' + options.id)
-          .attr('transform', sscoreT)
-          .attr('font-size', radius * 0.8 + 'px')
-          .attr('text-anchor', 'middle')
+        bars
+          .selectAll(".set_score" + options.id)
+          .data(score)
+          .join("text")
+          .attr("class", "set_score" + options.id)
+          .attr("transform", sscoreT)
+          .attr("font-size", radius * 0.8 + "px")
+          .attr("text-anchor", "middle")
           .text(function (d: any) {
             return d;
           });
 
-        const ssb = bars.selectAll('.ssb' + options.id).data(options.score);
-
-        ssb.exit().remove();
-
-        ssb
-          .enter()
-          .append('rect')
-          .merge(ssb)
-          .attr('class', 'ssb' + options.id)
-          .attr('transform', ssbT)
-          .attr('stroke', 'black')
-          .attr('stroke-width', lineWidth)
-          .attr('fill-opacity', 0)
-          .attr('height', radius + 'px')
-          .attr('width', radius + 'px');
+        bars
+          .selectAll(".ssb" + options.id)
+          .data(options.score)
+          .join("rect")
+          .attr("class", "ssb" + options.id)
+          .attr("transform", ssbT)
+          .attr("stroke", "black")
+          .attr("stroke-width", lineWidth)
+          .attr("fill-opacity", 0)
+          .attr("height", radius + "px")
+          .attr("width", radius + "px");
       } else {
-        bars.selectAll('.set_score' + options.id).remove();
-        bars.selectAll('.ssb' + options.id).remove();
+        bars.selectAll(".set_score" + options.id).remove();
+        bars.selectAll(".ssb" + options.id).remove();
       }
 
       if (options.display.service) {
         const serves: any = [];
         data.forEach(function (s: any, i: number) {
           let first_serve = false;
-          const serve_outcomes = ['Ace', 'Serve Winner', 'Double Fault'];
+          const serve_outcomes = ["Ace", "Serve Winner", "Double Fault"];
           if (s.first_serve) {
             first_serve = true;
-            serves.push({ point: i, serve: 'first', server: s.server, result: s.first_serve.error });
+            serves.push({
+              point: i,
+              serve: "first",
+              server: s.server,
+              result: s.first_serve.error,
+            });
           }
 
           serves.push({
             point: i,
-            serve: first_serve ? 'second' : 'first',
+            serve: first_serve ? "second" : "first",
             server: s.server,
-            result: serve_outcomes.indexOf(s.result) >= 0 ? s.result : 'In',
+            result: serve_outcomes.includes(s.result) ? s.result : "In",
           });
         });
 
-        const service = bars.selectAll('.serve' + options.id).data(serves);
+        bars
+          .selectAll(".serve" + options.id)
+          .data(serves)
+          .join("circle")
+          .attr("class", "serve" + options.id)
+          .attr("cx", sX)
+          .attr("cy", sY)
+          .attr("r", circleRadius)
+          .attr("stroke", colorShot)
+          .attr("stroke-width", lineWidth)
+          .attr("fill", colorShot);
 
-        service.exit().remove();
+        bars
+          .selectAll(".sbox" + options.id)
+          .data(data)
+          .join("rect")
+          .attr("class", "sbox" + options.id)
+          .attr("stroke", "#ccccdd")
+          .attr("fill-opacity", 0)
+          .attr("transform", sBoxT)
+          .attr("stroke-width", lineWidth)
+          .attr("height", vert ? lScale.bandwidth() : 1.5 * radius)
+          .attr("width", vert ? 1.5 * radius : lScale.bandwidth());
 
-        service
-          .enter()
-          .append('circle')
-          .attr('class', 'serve' + options.id)
-          .attr('cx', sX)
-          .attr('cy', sY)
-          .attr('r', circleRadius)
-          .attr('stroke', colorShot)
-          .attr('stroke-width', lineWidth)
-          .attr('fill', colorShot)
-          .merge(service)
-          .attr('class', 'serve' + options.id)
-          .attr('cx', sX)
-          .attr('cy', sY)
-          .attr('r', circleRadius)
-          .attr('stroke', colorShot)
-          .attr('stroke-width', lineWidth)
-          .attr('fill', colorShot);
-
-        const service_box = bars.selectAll('.sbox' + options.id).data(data);
-
-        service_box.exit().remove();
-
-        service_box
-          .enter()
-          .append('rect')
-          .attr('stroke', '#ccccdd')
-          .attr('fill-opacity', 0)
-          .attr('transform', sBoxT)
-          .attr('class', 'sbox' + options.id)
-          .attr('stroke-width', lineWidth)
-          .attr('height', vert ? lScale.bandwidth() : 1.5 * radius)
-          .attr('width', vert ? 1.5 * radius : lScale.bandwidth())
-          .merge(service_box)
-          .attr('transform', sBoxT)
-          .attr('class', 'sbox' + options.id)
-          .attr('stroke-width', lineWidth)
-          .attr('height', vert ? lScale.bandwidth() : 1.5 * radius)
-          .attr('width', vert ? 1.5 * radius : lScale.bandwidth());
-
-        const returns = bars.selectAll('.return' + options.id).data(data);
-
-        returns.exit().remove();
-
-        returns
-          .enter()
-          .append('circle')
-          .attr('class', 'return' + options.id)
-          .attr('cx', rX)
-          .attr('cy', rY)
-          .attr('r', circleRadius)
-          .attr('stroke', colorReturn)
-          .attr('stroke-width', lineWidth)
-          .attr('fill', colorReturn)
-          .merge(returns)
-          .attr('class', 'return' + options.id)
-          .attr('cx', rX)
-          .attr('cy', rY)
-          .attr('r', circleRadius)
-          .attr('stroke', colorReturn)
-          .attr('stroke-width', lineWidth)
-          .attr('fill', colorReturn);
+        bars
+          .selectAll(".return" + options.id)
+          .data(data)
+          .join("circle")
+          .attr("class", "return" + options.id)
+          .attr("cx", rX)
+          .attr("cy", rY)
+          .attr("r", circleRadius)
+          .attr("stroke", colorReturn)
+          .attr("stroke-width", lineWidth)
+          .attr("fill", colorReturn);
       } else {
-        bars.selectAll('.sbox' + options.id).remove();
-        bars.selectAll('.return' + options.id).remove();
-        bars.selectAll('.serve' + options.id).remove();
+        bars.selectAll(".sbox" + options.id).remove();
+        bars.selectAll(".return" + options.id).remove();
+        bars.selectAll(".serve" + options.id).remove();
       }
 
       if (options.display.rightImg) {
-        images.right = fishFrame.selectAll('image.rightImage').data([0]);
-
-        images.right.exit().remove();
-
-        images.right
-          .enter()
-          .append('image')
-          .attr('class', 'rightImage')
-          .attr('xlink:href', options.display.rightImg)
-          .attr('x', options.width - 30)
-          .attr('y', 5)
-          .attr('height', '20px')
-          .attr('width', '20px')
-          .attr('opacity', options.display.show_images ? 1 : 0)
-          .on('click', function () {
-            if (events.rightImage.click) events.rightImage.click(options.id);
-          })
-          .merge(images.right)
-          .attr('x', options.width - 30)
-          .attr('xlink:href', options.display.rightImg)
-          .on('click', function () {
-            if (events.rightImage.click) events.rightImage.click(options.id);
-          });
-      } else {
-        if (fishFrame) fishFrame.selectAll('image.rightImage').remove();
+        images.right = fishFrame
+          .selectAll("image.rightImage")
+          .data([0])
+          .join((enter: any) =>
+            enter
+              .append("image")
+              .attr("class", "rightImage")
+              .attr("y", 5)
+              .attr("height", "20px")
+              .attr("width", "20px")
+              .attr("opacity", options.display.showImages ? 1 : 0)
+              .on("click", function () {
+                if (events.rightImage.click)
+                  events.rightImage.click(options.id);
+              }),
+          )
+          .attr("x", options.width - 30)
+          .attr("xlink:href", options.display.rightImg);
+      } else if (fishFrame) {
+        fishFrame.selectAll("image.rightImage").remove();
       }
 
       if (options.display.leftImg) {
-        images.left = fishFrame.selectAll('image.leftImage').data([0]);
-
-        images.left
-          .enter()
-          .append('image')
-          .attr('class', 'leftImage')
-          .attr('xlink:href', options.display.leftImg)
-          .attr('x', 10)
-          .attr('y', 5)
-          .attr('height', '20px')
-          .attr('width', '20px')
-          .attr('opacity', options.display.show_images ? 1 : 0)
-          .on('click', function () {
-            if (events.leftImage.click) events.leftImage.click();
-          })
-          .merge(images.left)
-          .attr('xlink:href', options.display.leftImg)
-          .on('click', function () {
-            if (events.leftImage.click) events.leftImage.click(options.id);
-          });
-
-        images.left.exit().remove();
-      } else {
-        if (fishFrame) fishFrame.selectAll('image.leftImage').remove();
+        images.left = fishFrame
+          .selectAll("image.leftImage")
+          .data([0])
+          .join((enter: any) =>
+            enter
+              .append("image")
+              .attr("class", "leftImage")
+              .attr("x", 10)
+              .attr("y", 5)
+              .attr("height", "20px")
+              .attr("width", "20px")
+              .attr("opacity", options.display.showImages ? 1 : 0)
+              .on("click", function () {
+                if (events.leftImage.click)
+                  events.leftImage.click(options.id);
+              }),
+          )
+          .attr("xlink:href", options.display.leftImg);
+      } else if (fishFrame) {
+        fishFrame.selectAll("image.leftImage").remove();
       }
 
       // ancillary functions for update()
       function circleRadius() {
-        return options.display.player || options.display.service ? radius / 3 : radius / 2;
+        return options.display.player || options.display.service
+          ? radius / 3
+          : radius / 2;
       }
       function lineWidth() {
         return radius > 20 ? 1.5 : 0.75;
@@ -569,10 +518,10 @@ export function gameFish() {
       }
       function colorReturn(d: any) {
         const rlen = d.rallyLength;
-        if (!rlen) return 'white';
-        if (rlen > 1) return 'yellow';
-        if (rlen == 1) return options.colors.results[d.result];
-        return 'white';
+        if (!rlen) return "white";
+        if (rlen > 1) return "yellow";
+        if (rlen === 1) return options.colors.results[d.result];
+        return "white";
       }
 
       function rallyCalc(d: any) {
@@ -609,12 +558,15 @@ export function gameFish() {
       function gameCT(d: any, i: number) {
         const o = midpoint + (findOffset(d) + vert - 1) * radius;
         const l = (i + 4 - vert) * radius;
-        last_coords = [o - midpoint, l - diag, diag];
+        lastCoords = [o - midpoint, l - diag, diag];
         return translate(o, l, 45);
       }
 
       function sBoxT(d: any, i: number) {
-        const o = d.server == 0 ? midpoint - (fish_offset / 2) * sw : midpoint + (fish_offset / 2) * sw - 1.5 * radius;
+        const o =
+          d.server === 0
+            ? midpoint - (fish_offset / 2) * sw
+            : midpoint + (fish_offset / 2) * sw - 1.5 * radius;
         const l = radius + cL(d, i);
         return translate(o, l, 0);
       }
@@ -634,7 +586,7 @@ export function gameFish() {
       function translate(o: any, l: any, rotate: any) {
         const x = vert ? o : l;
         const y = vert ? l : o;
-        return 'translate(' + x + ',' + y + ') rotate(' + rotate + ')';
+        return "translate(" + x + "," + y + ") rotate(" + rotate + ")";
       }
 
       function cL(_: any, i: number) {
@@ -651,7 +603,7 @@ export function gameFish() {
         return radius + (i + 3) * radius;
       }
       function rO(d: any) {
-        return d.server == 0
+        return d.server === 0
           ? midpoint + (fish_offset / 2) * sw - 0.75 * radius
           : midpoint - (fish_offset / 2) * sw + 0.75 * radius;
       }
@@ -666,8 +618,12 @@ export function gameFish() {
         return radius + (d.point + 3) * radius;
       }
       function sO(d: any) {
-        const offset = (d.serve == 'first' && d.server == 0) || (d.serve == 'second' && d.server == 1) ? 0.4 : 1.1;
-        return d.server == 0
+        const offset =
+          (d.serve === "first" && d.server === 0) ||
+          (d.serve === "second" && d.server === 1)
+            ? 0.4
+            : 1.1;
+        return d.server === 0
           ? midpoint - (fish_offset / 2) * sw + offset * radius
           : midpoint + (fish_offset / 2) * sw - offset * radius;
       }
@@ -685,21 +641,13 @@ export function gameFish() {
         return +midpoint + findOffset(d) * radius;
       }
     };
-
-    function findOffset(point: any) {
-      // In school mode (momentum chart), use cumulative set points for nose-to-tail alignment.
-      // In standalone mode, use game-level points so the grid stays centered.
-      const pts = (options.fish.school && point.setCumulativePoints) || point.points;
-      if (!pts || pts.length < 2) return 0;
-      return pts[options.display.reverse ? 0 : 1] - pts[options.display.reverse ? 1 : 0];
-    }
   }
 
   // ACCESSORS
 
   chart.g = function (values: any) {
     if (!arguments.length) return chart;
-    if (typeof values != 'object' || values.constructor == Array) return;
+    if (typeof values != "object" || values.constructor === Array) return;
     if (values.bars) bars = values.bars;
     if (values.fish) fish = values.fish;
     if (values.game) game = values.game;
@@ -733,7 +681,7 @@ export function gameFish() {
   };
 
   chart.coords = function (value: any) {
-    if (!arguments.length) return last_coords;
+    if (!arguments.length) return lastCoords;
     coords = value;
     return chart;
   };
@@ -742,17 +690,25 @@ export function gameFish() {
     if (!arguments.length) return data;
     // gameFish receives GameGroup which contains points array
     // If value contains episodes that need normalization, handle it
-    if (value && value.points && Array.isArray(value.points) && value.points.length > 0) {
+    if (
+      value?.points &&
+      Array.isArray(value.points) &&
+      value.points.length > 0
+    ) {
       // This is a GameGroup - points might be UMO v4 Episodes
       // For gameFish, we just need the point data which is already extracted in groupGames
-      data = JSON.parse(JSON.stringify(value));
+      data = structuredClone(value);
     } else {
       data = value;
     }
     return chart;
   };
 
-  chart.matchUp = function (matchUpState: any, setIdx?: number, gameIdx?: number) {
+  chart.matchUp = function (
+    matchUpState: any,
+    setIdx?: number,
+    gameIdx?: number,
+  ) {
     const points = extractGamePoints(matchUpState, setIdx ?? 0, gameIdx ?? 0);
     chart.data(points);
     return chart;
@@ -760,25 +716,26 @@ export function gameFish() {
 
   chart.update = function (opts: any) {
     if (events.update.begin) events.update.begin();
-    if (typeof update === 'function' && data) update(opts);
+    if (typeof update === "function" && data) update(opts);
     setTimeout(function () {
       if (events.update.end) events.update.end();
-    }, options.display.transition_time);
+    }, options.display.transitionTime);
   };
 
   chart.colors = function (color3s: any) {
     if (!arguments.length) return colors;
-    if (typeof color3s !== 'object') return false;
+    if (typeof color3s !== "object") return false;
     const keys = Object.keys(color3s);
     if (!keys.length) return false;
     // remove all properties that are not colors
     keys.forEach(function (f) {
-      if (!/(^#[0-9A-F]{6}$)|(^#[0-9A-F]{3}$)/i.test(color3s[f])) delete color3s[f];
+      if (!/(^#[0-9A-F]{6}$)|(^#[0-9A-F]{3}$)/i.test(color3s[f]))
+        delete color3s[f];
     });
     if (Object.keys(color3s).length) {
       colors = color3s;
     } else {
-      colors = JSON.parse(JSON.stringify(default_colors));
+      colors = structuredClone(default_colors);
     }
     return chart;
   };

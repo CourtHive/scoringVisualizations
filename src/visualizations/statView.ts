@@ -11,6 +11,7 @@ import { computeMatchStats } from "../statistics/matchStatistics";
 import type { StatObject } from "tods-competition-factory";
 import { buildEpisodes } from "../episodes/buildEpisodes";
 import { keyWalk } from "./utils/keyWalk";
+import { generateId } from "./utils/generateId";
 import { select, scaleLinear } from "d3";
 
 interface StatViewOptions {
@@ -21,7 +22,7 @@ interface StatViewOptions {
   margins: { top: number; bottom: number; left: number; right: number };
   display: {
     sizeToFit: { width: boolean; height: boolean };
-    transition_time: number;
+    transitionTime: number;
   };
   colors: { players: { 0: string; 1: string } };
 }
@@ -39,14 +40,14 @@ export function statView() {
   let updateFn: ((opts?: any) => void) | undefined;
 
   const options: StatViewOptions = {
-    id: "sv",
+    id: generateId(),
     width: 400,
     height: 300,
     rowHeight: 30,
     margins: { top: 2, bottom: 2, left: 10, right: 10 },
     display: {
       sizeToFit: { width: true, height: false },
-      transition_time: 300,
+      transitionTime: 300,
     },
     colors: {
       players: { 0: "#a55194", 1: "#6b6ecf" },
@@ -80,27 +81,19 @@ export function statView() {
         const fontSize = rh * 0.5;
 
         // Row containers — one <svg> per stat
-        const itemContainer = root
+        const items = root
           .selectAll<SVGSVGElement, StatObject>("svg")
-          .data(fData, (d: StatObject) => d.name);
-
-        itemContainer.exit().remove();
-
-        const itemEnter = itemContainer.enter().append("svg");
-
-        const items = itemEnter
-          .merge(itemContainer)
+          .data(fData, (d: StatObject) => d.name)
+          .join("svg")
           .attr("width", options.width)
           .attr("height", options.rowHeight);
 
         // Group per row
-        const item = items
+        const itemG = items
           .selectAll<SVGGElement, StatObject>("g.stat-row")
-          .data((d) => [d]);
-
-        const itemGEnter = item.enter().append("g").attr("class", "stat-row");
-        const itemG = itemGEnter
-          .merge(item)
+          .data((d) => [d])
+          .join("g")
+          .attr("class", "stat-row")
           .attr("width", options.width)
           .attr("height", rh)
           .attr(
@@ -137,19 +130,13 @@ export function statView() {
           ];
         }
 
-        const textSel = itemG
+        itemG
           .selectAll<
             SVGTextElement,
             { text: string; anchor: string; x: number }
           >("text")
-          .data(buildTextData);
-
-        textSel.exit().remove();
-
-        textSel
-          .enter()
-          .append("text")
-          .merge(textSel)
+          .data(buildTextData)
+          .join("text")
           .text((d) => d.text)
           .style("text-anchor", (d) => d.anchor)
           .style("dominant-baseline", "middle")
@@ -185,18 +172,12 @@ export function statView() {
           return [];
         }
 
-        const barSel = itemG
+        itemG
           .selectAll<SVGRectElement, number>("rect")
-          .data(calcBarData);
-
-        barSel.exit().remove();
-
-        barSel
-          .enter()
-          .append("rect")
-          .merge(barSel)
+          .data(calcBarData)
+          .join("rect")
           .transition()
-          .duration(options.display.transition_time)
+          .duration(options.display.transitionTime)
           .attr("width", (d) => {
             const s = Number.isNaN(d) ? 0 : barScale(d);
             return s < 0 || Number.isNaN(s) ? 0 : s;
@@ -242,7 +223,7 @@ export function statView() {
     if (typeof updateFn === "function") updateFn(opts);
     setTimeout(() => {
       if (events.update.end) events.update.end();
-    }, options.display.transition_time);
+    }, options.display.transitionTime);
   };
 
   chart.width = function (value?: number) {

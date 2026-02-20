@@ -4,28 +4,29 @@ import { select, scaleLinear, scaleBand, range, line } from 'd3';
 import { rallyCount } from './legacyRally';
 import { buildEpisodes } from '../episodes/buildEpisodes';
 import { keyWalk } from './utils/keyWalk';
+import { generateId } from './utils/generateId';
 
 function groupGames(point_episodes: any[]) {
   const episodes = point_episodes;
 
   const games: any = [{ points: [], range: [0, 0] }];
-  let game_counter = 0;
-  let current_game = 0;
+  let gameCounter = 0;
+  let currentGame = 0;
   episodes.forEach((episode) => {
     const point = episode.point;
-    if (point.game != current_game) {
-      game_counter += 1;
-      current_game = point.game;
-      games[game_counter] = { points: [], range: [point.index, point.index] };
+    if (point.game != currentGame) {
+      gameCounter += 1;
+      currentGame = point.game;
+      games[gameCounter] = { points: [], range: [point.index, point.index] };
     }
-    games[game_counter].points.push(point);
-    games[game_counter].index = game_counter;
-    games[game_counter].set = episode.set.index;
-    games[game_counter].score = episode.game.games;
-    games[game_counter].complete = episode.game.complete;
-    games[game_counter].range[1] = point.index;
+    games[gameCounter].points.push(point);
+    games[gameCounter].index = gameCounter;
+    games[gameCounter].set = episode.set.index;
+    games[gameCounter].score = episode.game.games;
+    games[gameCounter].complete = episode.game.complete;
+    games[gameCounter].range[1] = point.index;
     if (episode.game.complete) {
-      games[game_counter].winner = point.winner;
+      games[gameCounter].winner = point.winner;
     }
   });
   return games;
@@ -43,13 +44,13 @@ export function ptsMatch() {
   let participantNames: [string, string] = ['Player 1', 'Player 2'];
 
   const options: any = {
-    id: 0,
+    id: generateId(),
     class: 'ptsMatch',
 
     resize: true,
     width: 600,
     height: 80,
-    max_height: 100,
+    maxHeight: 100,
 
     margins: {
       top: 0,
@@ -59,7 +60,7 @@ export function ptsMatch() {
     },
 
     set: {
-      average_points: 56,
+      averagePoints: 56,
     },
 
     lines: {
@@ -68,31 +69,31 @@ export function ptsMatch() {
     },
 
     points: {
-      max_width_points: 100,
+      maxWidthPoints: 100,
     },
 
     score: {
       font: 'Arial',
-      font_size: '12px',
-      font_weight: 'bold',
+      fontSize: '12px',
+      fontWeight: 'bold',
       reverse: true,
     },
 
     header: {
       font: 'Arial',
-      font_size: '14px',
-      font_weight: 'bold',
+      fontSize: '14px',
+      fontWeight: 'bold',
     },
 
     display: {
       sizeToFit: true,
-      transition_time: 0,
-      point_highlighting: true,
-      point_opacity: 0.4,
-      win_err_highlight: true,
-      game_highlighting: true,
-      game_opacity: 0.2,
-      game_boundaries: true,
+      transitionTime: 0,
+      pointHighlighting: true,
+      pointOpacity: 0.4,
+      winErrHighlight: true,
+      gameHighlighting: true,
+      gameOpacity: 0.2,
+      gameBoundaries: true,
       gamepoints: false,
       score: true,
       points: true,
@@ -123,8 +124,8 @@ export function ptsMatch() {
   // Define with ACCESSOR function chart.events()
   const events: any = {
     update: { begin: null, end: null },
-    set_box: { mouseover: null, mouseout: null },
-    point_bars: { mouseover: null, mouseout: null, click: null },
+    setBox: { mouseover: null, mouseout: null },
+    pointBars: { mouseover: null, mouseout: null, click: null },
   };
 
   function chart(selection: any) {
@@ -153,8 +154,8 @@ export function ptsMatch() {
       if (options.display.sizeToFit || opts?.sizeToFit) {
         const dims = selection.node().getBoundingClientRect();
         options.width = Math.max(dims.width, 400);
-        options.height = (dims.height - (+options.margins.top + +options.margins.bottom)) / sets.length;
-        if (options.height > options.max_height) options.height = options.max_height;
+        options.height = Math.max((dims.height - (+options.margins.top + +options.margins.bottom)) / sets.length, 20);
+        if (options.height > options.maxHeight) options.height = options.maxHeight;
       }
 
       let true_height = 0;
@@ -218,8 +219,8 @@ export function ptsMatch() {
   };
 
   chart.duration = function (value: any) {
-    if (!arguments.length) return options.display.transition_time;
-    options.display.transition_time = value;
+    if (!arguments.length) return options.display.transitionTime;
+    options.display.transitionTime = value;
     return chart;
   };
 
@@ -236,7 +237,7 @@ export function ptsMatch() {
       return false;
     }
 
-    const max_width_points = Math.max(
+    const maxWidthPoints = Math.max(
       ...sets.map((set: any, index: number) => {
         if (!set?.history?.points) {
           return 0;
@@ -248,11 +249,11 @@ export function ptsMatch() {
       }),
     );
 
-    if (sets.length > 1) chart.options({ points: { max_width_points } });
+    if (sets.length > 1) chart.options({ points: { maxWidthPoints } });
 
     sets.forEach(function (set: any, i: number) {
       pts_charts[i].data(set);
-      pts_charts[i].options({ id: i });
+      pts_charts[i].options({ id: `${options.id}_${i}`, setIndex: i });
       pts_charts[i].options({
         lines: options.lines,
         points: options.points,
@@ -267,7 +268,7 @@ export function ptsMatch() {
     if (typeof update === 'function') update(opts);
     setTimeout(function () {
       if (events.update.end) events.update.end();
-    }, options.display.transition_time);
+    }, options.display.transitionTime);
     return true;
   };
 
@@ -387,25 +388,26 @@ function ptsChart() {
 
   const options: {
     [key: string]: any;
-    id: number;
+    id: string;
+    setIndex: number;
     class: string;
     resize: boolean;
     width: number;
     height: number;
     margins: { top: number; right: number; bottom: number; left: number };
-    set: { average_points: number };
+    set: { averagePoints: number };
     lines: { width: number; interpolation: string };
-    points: { max_width_points: number };
-    score: { font: string; font_size: string; font_weight: string; reverse: boolean };
-    header: { font: string; font_size: string; font_weight: string };
+    points: { maxWidthPoints: number };
+    score: { font: string; fontSize: string; fontWeight: string; reverse: boolean };
+    header: { font: string; fontSize: string; fontWeight: string };
     display: {
-      transition_time: number;
-      point_highlighting: boolean;
-      point_opacity: number;
-      win_err_highlight: boolean;
-      game_highlighting: boolean;
-      game_opacity: number;
-      game_boundaries: boolean;
+      transitionTime: number;
+      pointHighlighting: boolean;
+      pointOpacity: number;
+      winErrHighlight: boolean;
+      gameHighlighting: boolean;
+      gameOpacity: number;
+      gameBoundaries: boolean;
       gamepoints: boolean;
       score: boolean;
       points: boolean;
@@ -417,7 +419,8 @@ function ptsChart() {
       players: { [key: number]: string };
     };
   } = {
-    id: 0,
+    id: generateId(),
+    setIndex: 0,
     class: 'ptsChart',
 
     resize: true,
@@ -432,7 +435,7 @@ function ptsChart() {
     },
 
     set: {
-      average_points: 56,
+      averagePoints: 56,
     },
 
     lines: {
@@ -441,30 +444,30 @@ function ptsChart() {
     },
 
     points: {
-      max_width_points: 100,
+      maxWidthPoints: 100,
     },
 
     score: {
       font: 'Arial',
-      font_size: '12px',
-      font_weight: 'bold',
+      fontSize: '12px',
+      fontWeight: 'bold',
       reverse: true,
     },
 
     header: {
       font: 'Arial',
-      font_size: '14px',
-      font_weight: 'bold',
+      fontSize: '14px',
+      fontWeight: 'bold',
     },
 
     display: {
-      transition_time: 0,
-      point_highlighting: true,
-      point_opacity: 0.4,
-      win_err_highlight: true,
-      game_highlighting: true,
-      game_opacity: 0.2,
-      game_boundaries: false,
+      transitionTime: 0,
+      pointHighlighting: true,
+      pointOpacity: 0.4,
+      winErrHighlight: true,
+      gameHighlighting: true,
+      gameOpacity: 0.2,
+      gameBoundaries: false,
       gamepoints: false,
       score: true,
       points: true,
@@ -487,18 +490,18 @@ function ptsChart() {
   // DEFINABLE EVENTS
   // Define with ACCESSOR function chart.events()
   const events: {
-    set_box: { mouseover: ((d: any, i: number) => void) | null; mouseout: ((d: any, i: number) => void) | null };
+    setBox: { mouseover: ((d: any, i: number) => void) | null; mouseout: ((d: any, i: number) => void) | null };
     update: { begin: (() => void) | null; end: (() => void) | null };
-    point_bars: {
+    pointBars: {
       mouseover: ((d: any, i: number) => void) | null;
       mouseout: ((d: any, i: number) => void) | null;
       click: ((d: any, i: number, n: Node) => void) | null;
     };
     [key: string]: any;
   } = {
-    set_box: { mouseover: null, mouseout: null },
+    setBox: { mouseover: null, mouseout: null },
     update: { begin: null, end: null },
-    point_bars: { mouseover: null, mouseout: null, click: null },
+    pointBars: { mouseover: null, mouseout: null, click: null },
   };
 
   function chart(selection: any) {
@@ -529,8 +532,8 @@ function ptsChart() {
         .append('text')
         .attr('class', options.class + 'Header')
         .attr('opacity', 0)
-        .attr('font-size', options.header.font_size)
-        .attr('font-weight', options.header.font_weight)
+        .attr('font-size', options.header.fontSize)
+        .attr('font-weight', options.header.fontWeight)
         .attr('x', function () {
           return options.margins.left + 'px';
         })
@@ -542,8 +545,8 @@ function ptsChart() {
         .append('text')
         .attr('class', options.class + 'Score')
         .attr('opacity', 0)
-        .attr('font-size', options.score.font_size)
-        .attr('font-weight', options.score.font_weight)
+        .attr('font-size', options.score.fontSize)
+        .attr('font-weight', options.score.fontWeight)
         .attr('x', function () {
           return options.margins.left + 'px';
         })
@@ -559,12 +562,12 @@ function ptsChart() {
 
         root
           .transition()
-          .duration(options.display.transition_time)
+          .duration(options.display.transitionTime)
           .style('width', options.width + 'px')
           .style('height', options.height + 'px');
 
         const allActionPoints = set_data.history.action('addPoint');
-        const points = allActionPoints.filter((f: any) => f.point.set == options.id);
+        const points = allActionPoints.filter((f: any) => f.point.set == options.setIndex);
 
         if (!points || points.length === 0) {
           return false;
@@ -611,31 +614,30 @@ function ptsChart() {
           .domain([-2, pts_max - 1]);
 
         // Set Box
-        const set_box = pts.selectAll('.' + options.class + 'SetBox').data([options.id]); // # of list elements only used for index, data not important
-
-        set_box
-          .enter()
-          .append('rect')
-          .attr('class', options.class + 'SetBox')
-          .style('position', 'relative')
-          .attr('height', () => {
-            return options.height - (options.margins.top + options.margins.bottom);
-          })
-          .attr('width', () => {
-            return xScale(boxWidth() + 1);
-          })
-          .attr('stroke', 'black')
-          .attr('stroke-width', 1)
-          .attr('fill', 'none')
-          .on('mouseover', (d: any, i: number) => {
-            if (events.set_box.mouseover) events.set_box.mouseover(d, i);
-          })
-          .on('mouseout', (d: any, i: number) => {
-            if (events.set_box.mouseout) events.set_box.mouseout(d, i);
-          })
-          .merge(set_box)
+        pts.selectAll('.' + options.class + 'SetBox').data([options.id]) // # of list elements only used for index, data not important
+          .join(
+            enter => enter
+              .append('rect')
+              .attr('class', options.class + 'SetBox')
+              .style('position', 'relative')
+              .attr('stroke', 'black')
+              .attr('stroke-width', 1)
+              .attr('fill', 'none')
+              .on('mouseover', (d: any, i: number) => {
+                if (events.setBox.mouseover) events.setBox.mouseover(d, i);
+              })
+              .on('mouseout', (d: any, i: number) => {
+                if (events.setBox.mouseout) events.setBox.mouseout(d, i);
+              }),
+            update => update,
+            exit => exit
+              .transition()
+              .duration(resize ? 0 : options.display.transitionTime)
+              .style('opacity', 0)
+              .remove()
+          )
           .transition()
-          .duration(resize ? 0 : options.display.transition_time)
+          .duration(resize ? 0 : options.display.transitionTime)
           .attr('height', () => {
             return options.height - (options.margins.top + options.margins.bottom);
           })
@@ -643,30 +645,18 @@ function ptsChart() {
             return xScale(boxWidth() + 1);
           });
 
-        set_box
-          .exit()
-          .transition()
-          .duration(resize ? 0 : options.display.transition_time)
-          .style('opacity', 0)
-          .remove();
-
         // Game Boundaries
-        const game_boundaries = pts.selectAll('.' + options.class + 'GameBoundary').data(game_data);
-
-        game_boundaries.exit().remove();
-
-        game_boundaries
-          .enter()
-          .append('rect')
-          .attr('class', options.class + 'GameBoundary')
-          .merge(game_boundaries)
+        pts.selectAll('.' + options.class + 'GameBoundary').data(game_data)
+          .join(
+            enter => enter.append('rect').attr('class', options.class + 'GameBoundary'),
+          )
           .attr('id', function (_: any, i: number) {
             return options.class + options.id + 'boundary' + i;
           })
           .transition()
-          .duration(resize ? 0 : options.display.transition_time)
+          .duration(resize ? 0 : options.display.transitionTime)
           .attr('opacity', function () {
-            return options.display.game_boundaries ? 0.02 : 0;
+            return options.display.gameBoundaries ? 0.02 : 0;
           })
           .attr('transform', function (d: any) {
             return 'translate(' + pointScale(d, 0, 0) + ', 0)';
@@ -680,22 +670,17 @@ function ptsChart() {
           .attr('fill', 'none');
 
         // Game Boxes
-        const game_boxes = pts.selectAll('.' + options.class + 'Game').data(game_data);
-
-        game_boxes.exit().remove();
-
-        game_boxes
-          .enter()
-          .append('rect')
-          .attr('class', options.class + 'Game')
-          .merge(game_boxes)
+        pts.selectAll('.' + options.class + 'Game').data(game_data)
+          .join(
+            enter => enter.append('rect').attr('class', options.class + 'Game'),
+          )
           .attr('id', (_: any, i: number) => {
             return options.class + options.id + 'game' + i;
           })
           .transition()
-          .duration(resize ? 0 : options.display.transition_time)
+          .duration(resize ? 0 : options.display.transitionTime)
           .attr('opacity', () => {
-            return options.display.game_boundaries ? 0.02 : 0;
+            return options.display.gameBoundaries ? 0.02 : 0;
           })
           .attr('transform', (d: any) => {
             return 'translate(' + pointScale(d, 0, 0) + ', 0)';
@@ -721,24 +706,21 @@ function ptsChart() {
             return yScale(pts_max - d);
           });
 
-        const pts_lines = pts.selectAll('.' + options.class + 'Line').data([0, 1]);
-
-        pts_lines.exit().remove();
-
-        pts_lines
-          .enter()
-          .append('path')
-          .attr('class', options.class + 'Line')
+        pts.selectAll('.' + options.class + 'Line').data([0, 1])
+          .join(
+            enter => enter
+              .append('path')
+              .attr('class', options.class + 'Line')
+              .attr('fill', 'none'),
+          )
           .attr('id', (d: any) => {
             return options.class + options.id + 'player' + d + 'Line';
           })
-          .attr('fill', 'none')
-          .merge(pts_lines)
           .transition()
-          .duration(resize ? 0 : options.display.transition_time / 2)
+          .duration(resize ? 0 : options.display.transitionTime / 2)
           .style('opacity', 0.1)
           .transition()
-          .duration(resize ? 0 : options.display.transition_time / 2)
+          .duration(resize ? 0 : options.display.transitionTime / 2)
           .style('opacity', 1)
           .attr('stroke', (d: any) => {
             return options.colors.players[d];
@@ -759,32 +741,27 @@ function ptsChart() {
             return { pts: p[1] };
           }),
         ];
-        const bp_wrappers = pts.selectAll('.' + options.class + 'BPWrapper').data(bp_data);
+        const bp_wrappers = pts.selectAll('.' + options.class + 'BPWrapper').data(bp_data)
+          .join(
+            enter => enter.append('g').attr('class', options.class + 'BPWrapper'),
+          );
 
-        bp_wrappers
-          .enter()
-          .append('g')
-          .attr('class', options.class + 'BPWrapper');
-
-        bp_wrappers.exit().remove();
-
-        const breakpoints = bp_wrappers.selectAll('.' + options.class + 'Breakpoint').data((d: any, i: number) => {
+        bp_wrappers.selectAll('.' + options.class + 'Breakpoint').data((d: any, i: number) => {
           return add_index(d, i);
-        });
-
-        breakpoints.exit().attr('opacity', '0').remove();
-
-        breakpoints
-          .enter()
-          .append('circle')
-          .attr('class', options.class + 'Breakpoint')
-          .attr('opacity', '0')
-          .merge(breakpoints)
+        })
+          .join(
+            enter => enter
+              .append('circle')
+              .attr('class', options.class + 'Breakpoint')
+              .attr('opacity', '0'),
+            update => update,
+            exit => exit.attr('opacity', '0').remove()
+          )
           .transition()
-          .duration(resize ? 0 : options.display.transition_time / 2)
+          .duration(resize ? 0 : options.display.transitionTime / 2)
           .style('opacity', 0)
           .transition()
-          .duration(resize ? 0 : options.display.transition_time / 2)
+          .duration(resize ? 0 : options.display.transitionTime / 2)
           .attr('fill', (d: any, i: any) => {
             if (points[i - 1] && points[i - 1].point.isBreakpoint != undefined) {
               return options.colors.players[d._i];
@@ -817,54 +794,40 @@ function ptsChart() {
         // gradients cause hover errors when data is replaced
         pts.selectAll('.gradient' + options.id).remove();
 
-        const gradientsData = pts.selectAll('.gradient' + options.id).data(range(points.length)); // data not important, only length of array
-
-        gradientsData.exit().remove();
-
-        const gradients = gradientsData
-          .enter()
-          .append('linearGradient')
-          .attr('id', (_: any, i: number) => {
-            return 'gradient' + options.id + i;
-          })
-          .attr('class', () => {
-            return 'gradient' + options.id;
-          })
-          .attr('gradientUnits', 'userSpaceOnUse')
-          .attr('x1', () => {
-            return barsX.bandwidth() / 2;
-          })
-          .attr('y1', () => {
-            return 0;
-          })
-          .attr('x2', () => {
-            return barsX.bandwidth() / 2;
-          })
-          .attr('y2', () => {
-            return yScale(-2);
-          })
-          .merge(gradientsData)
+        const gradients = pts.selectAll('.gradient' + options.id).data(range(points.length)) // data not important, only length of array
+          .join(
+            enter => enter
+              .append('linearGradient')
+              .attr('id', (_: any, i: number) => {
+                return 'gradient' + options.id + i;
+              })
+              .attr('class', () => {
+                return 'gradient' + options.id;
+              })
+              .attr('gradientUnits', 'userSpaceOnUse')
+              .attr('x1', () => {
+                return barsX.bandwidth() / 2;
+              })
+              .attr('y1', () => {
+                return 0;
+              })
+              .attr('x2', () => {
+                return barsX.bandwidth() / 2;
+              })
+              .attr('y2', () => {
+                return yScale(-2);
+              }),
+          )
           .attr('transform', (_: any, i: number) => {
             return 'translate(' + bX(i) + ', 0)';
           });
 
-        const point_stops = gradients.selectAll('.points_stop').data((d: any) => {
+        gradients.selectAll('.points_stop').data((d: any) => {
           return calcStops(points[d].point);
-        });
-
-        point_stops.exit().remove();
-
-        point_stops
-          .enter()
-          .append('stop')
-          .attr('class', 'points_stop')
-          .attr('offset', (d: any) => {
-            return d.offset;
-          })
-          .attr('stop-color', (d: any) => {
-            return d.color;
-          })
-          .merge(point_stops)
+        })
+          .join(
+            enter => enter.append('stop').attr('class', 'points_stop'),
+          )
           .attr('offset', (d: any) => {
             return d.offset;
           })
@@ -872,24 +835,65 @@ function ptsChart() {
             return d.color;
           });
 
-        const point_bars = ptsHover.selectAll('.' + options.class + 'Bar').data(range(points.length)); // data not important, only length of array
+        // Pre-compute point-index → game-index lookup for O(1) hover
+        const pointToGame: Record<number, number> = {};
+        game_data.forEach((g: any, gi: number) => {
+          g.points.forEach((p: any) => { pointToGame[p.index] = gi; });
+        });
 
-        point_bars
-          .exit()
-          .transition()
-          .duration(resize ? 0 : options.display.transition_time)
-          .attr('opacity', '0')
-          .remove();
-
-        point_bars
-          .enter()
-          .append('line')
-          .attr('class', options.class + 'Bar')
-          .attr('opacity', '0')
-          .style('pointer-events', 'all')
-          .merge(point_bars)
+        ptsHover.selectAll('.' + options.class + 'Bar').data(range(points.length)) // data not important, only length of array
+          .join(
+            enter => enter
+              .append('line')
+              .attr('class', options.class + 'Bar')
+              .attr('opacity', '0')
+              .style('pointer-events', 'all')
+              .on('mouseover', function(event: any, d: any) {
+                const i = d; // In D3 v7, d is the datum (index in this case)
+                if (options.display.pointHighlighting) {
+                  select(this).attr('opacity', options.display.pointOpacity);
+                }
+                if (options.display.gameHighlighting && points[i]) {
+                  const gameIndex = pointToGame[points[i].point.index];
+                  if (gameIndex >= 0) {
+                    pts.select('[id="' + options.class + options.id + 'game' + gameIndex + '"]').attr(
+                      'opacity',
+                      options.display.gameOpacity,
+                    );
+                  }
+                }
+                if (events.pointBars.mouseover) {
+                  events.pointBars.mouseover(points[i], i);
+                }
+                if (i == 0) {
+                  ptsHover.selectAll('.' + options.class + 'Bar').attr('opacity', options.display.pointOpacity);
+                }
+                highlightScore(i);
+              })
+              .on('mouseout', function(event: any, d: any) {
+                const i = d;
+                ptsHover.selectAll('.' + options.class + 'Bar').attr('opacity', 0);
+                pts.selectAll('.' + options.class + 'Game').attr('opacity', '0');
+                if (events.pointBars.mouseout) {
+                  events.pointBars.mouseout(points[i], i);
+                }
+                displayScore();
+              })
+              .on('click', function(event: any, d: any) {
+                const i = d;
+                if (events.pointBars.click) {
+                  events.pointBars.click(points[d], i, (n as any)[i]);
+                }
+              }),
+            update => update,
+            exit => exit
+              .transition()
+              .duration(resize ? 0 : options.display.transitionTime)
+              .attr('opacity', '0')
+              .remove()
+          )
           .attr('opacity', () => {
-            const opacity = options.display.win_err_highlight ? '.4' : '0';
+            const opacity = options.display.winErrHighlight ? '.4' : '0';
             return opacity;
           })
           .attr('transform', (_: any, i: number) => {
@@ -918,46 +922,6 @@ function ptsChart() {
           })
           .attr('uid', (_: any, i: number) => {
             return 'point' + i;
-          })
-          .on('mousemove', function(event: any, d: any) {
-            const i = d; // In D3 v7, d is the datum (index in this case)
-            if (options.display.point_highlighting) {
-              select(this).attr('opacity', options.display.point_opacity);
-            }
-            if (options.display.game_highlighting && points[i]) {
-              // Find which game in game_data contains this point
-              const gameIndex = game_data.findIndex((g: any) =>
-                g.points.some((p: any) => p.index === points[i].point.index),
-              );
-              if (gameIndex >= 0) {
-                select('[id="' + options.class + options.id + 'game' + gameIndex + '"]').attr(
-                  'opacity',
-                  options.display.game_opacity,
-                );
-              }
-            }
-            if (events.point_bars.mouseover) {
-              events.point_bars.mouseover(points[i], i);
-            }
-            if (i == 0) {
-              ptsHover.selectAll('.' + options.class + 'Bar').attr('opacity', options.display.point_opacity);
-            }
-            highlightScore(i);
-          })
-          .on('mouseout', function(event: any, d: any) {
-            const i = d;
-            ptsHover.selectAll('.' + options.class + 'Bar').attr('opacity', 0);
-            pts.selectAll('.' + options.class + 'Game').attr('opacity', '0');
-            if (events.point_bars.mouseout) {
-              events.point_bars.mouseout(points[i], i);
-            }
-            displayScore();
-          })
-          .on('click', function(event: any, d: any) {
-            const i = d;
-            if (events.point_bars.click) {
-              events.point_bars.click(points[d], i, (n as any)[i]);
-            }
           });
 
         function displayScore(resize?: boolean) {
@@ -974,7 +938,7 @@ function ptsChart() {
 
           set_winner
             .transition()
-            .duration(resize ? 0 : options.display.transition_time)
+            .duration(resize ? 0 : options.display.transitionTime)
             .attr('opacity', 1)
             .attr('fill', winner === undefined ? 'black' : options.colors.players[winner])
             .text(legend);
@@ -982,7 +946,7 @@ function ptsChart() {
           const game_score = set_data.scoreboard(winner);
           set_score
             .transition()
-            .duration(resize ? 0 : options.display.transition_time)
+            .duration(resize ? 0 : options.display.transitionTime)
             .attr('opacity', 1)
             .attr('fill', winner === undefined ? 'black' : options.colors.players[winner])
             .text(game_score);
@@ -1012,7 +976,7 @@ function ptsChart() {
           let err_pct = 0;
           let u_pct = 0;
 
-          if (options.display.win_err_highlight) {
+          if (options.display.winErrHighlight) {
             const result = point.result;
             const rallyLength = point.rallyLength || (point.rally ? rallyCount(point.rally) : 0);
             const rally_pct = rallyLength ? 100 - Math.floor((rallyLength / longest_rally) * 100) : 100;
@@ -1045,13 +1009,13 @@ function ptsChart() {
   // ------------------
 
   function boxWidth() {
-    const dl = set_data.history.points().filter((f: any) => f.set == options.id).length - 1;
-    return set_data.complete() ? dl : Math.max(dl, options.set.average_points);
+    const dl = set_data.history.points().filter((f: any) => f.set == options.setIndex).length - 1;
+    return set_data.complete() ? dl : Math.max(dl, options.set.averagePoints);
   }
 
   function calcWidth() {
-    const dl = set_data.history.points().filter((f: any) => f.set == options.id).length - 1;
-    return Math.max(dl, options.points.max_width_points, options.set.average_points);
+    const dl = set_data.history.points().filter((f: any) => f.set == options.setIndex).length - 1;
+    return Math.max(dl, options.points.maxWidthPoints, options.set.averagePoints);
   }
 
   // ACCESSORS
@@ -1114,13 +1078,13 @@ function ptsChart() {
     if (typeof update === 'function') update(opts);
     setTimeout(function () {
       if (events.update.end) events.update.end();
-    }, options.display.transition_time);
+    }, options.display.transitionTime);
     return true;
   };
 
   chart.duration = function (value: any) {
-    if (!arguments.length) return options.display.transition_time;
-    options.display.transition_time = value;
+    if (!arguments.length) return options.display.transitionTime;
+    options.display.transitionTime = value;
     return chart;
   };
 

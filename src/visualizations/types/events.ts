@@ -2,8 +2,8 @@ type Handler<Args extends any[] = []> = ((...args: Args) => void) | null;
 
 export interface PtsChartEvents {
   update: { begin: Handler; end: Handler };
-  set_box: { mouseover: Handler<[any, number]>; mouseout: Handler<[any, number]> };
-  point_bars: {
+  setBox: { mouseover: Handler<[any, number]>; mouseout: Handler<[any, number]> };
+  pointBars: {
     mouseover: Handler<[any, number]>;
     mouseout: Handler<[any, number]>;
     click: Handler<[any, number, Node]>;

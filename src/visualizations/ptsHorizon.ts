@@ -10,6 +10,7 @@ import { select, scaleLinear, brushX } from 'd3';
 import { horizonChart } from './horizonChart';
 import { buildSetMap, type SetMap } from '../engine/buildSetMap';
 import { keyWalk } from './utils/keyWalk';
+import { generateId } from './utils/generateId';
 
 interface PtsHorizonOptions {
   id: string | number;
@@ -23,7 +24,7 @@ interface PtsHorizonOptions {
     bands: number;
     mode: 'mirror' | 'offset';
     orientation: 'horizontal' | 'vertical';
-    transition_time: number;
+    transitionTime: number;
     interpolate: 'basis' | 'linear';
     sizeToFit: boolean;
   };
@@ -50,7 +51,7 @@ export function ptsHorizon() {
   const horizonSets: any[] = [];
 
   const options: PtsHorizonOptions = {
-    id: 0,
+    id: generateId(),
     width: 900,
     height: 80,
     margins: { spacing: 10 },
@@ -61,7 +62,7 @@ export function ptsHorizon() {
       bands: 3,
       mode: 'mirror',
       orientation: 'horizontal',
-      transition_time: 0,
+      transitionTime: 0,
       interpolate: 'basis',
       sizeToFit: true,
     },
@@ -154,7 +155,7 @@ export function ptsHorizon() {
                 mouseout: options.elements.brush ? null : (events.mouseout as any) ?? null,
               },
             });
-            hc.duration(options.display.transition_time);
+            hc.duration(options.display.transitionTime);
             hc.colors(options.color.range);
             hc.mode(options.display.mode);
             hc.data(data);
@@ -262,7 +263,7 @@ export function ptsHorizon() {
     if (typeof updateFn === 'function') updateFn(opts);
     setTimeout(function () {
       if (events.update.end) events.update.end();
-    }, options.display.transition_time);
+    }, options.display.transitionTime);
   };
 
   chart.bands = function (value?: number) {
@@ -278,8 +279,8 @@ export function ptsHorizon() {
   };
 
   chart.duration = function (value?: number) {
-    if (!arguments.length) return options.display.transition_time;
-    options.display.transition_time = +value!;
+    if (!arguments.length) return options.display.transitionTime;
+    options.display.transitionTime = +value!;
     return chart;
   };
 
@@ -329,7 +330,7 @@ export function ptsHorizonFromMatchUp(
       sizeToFit: true,
       bands: options?.bands ?? 3,
       mode: options?.mode ?? 'mirror',
-      transition_time: 0,
+      transitionTime: 0,
     },
     elements: { brush: options?.showBrush ?? false },
   });
