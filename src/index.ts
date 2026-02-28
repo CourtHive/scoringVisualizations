@@ -70,6 +70,9 @@ export type {
   SubstitutionInfo,
 } from './parsers';
 
+// Format utilities
+export { supportsGameVisualizations } from './utils/supportsGameVisualizations';
+
 // Dropzone
 export { createFileDropzone } from './visualizations/helpers/FileDropzone';
 export type { FileDropzoneOptions } from './visualizations/helpers/FileDropzone';
