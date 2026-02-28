@@ -24,7 +24,7 @@ export { momentumChart } from './visualizations/momentumChart';
 export { ptsMatch } from './visualizations/ptsChart';
 export { gameFish } from './visualizations/gameFish';
 export { statView } from './visualizations/statView';
-export { matchDashboard } from './visualizations/matchDashboard';
+export { matchUpDashboard } from './visualizations/matchUpDashboard';
 export { simpleChart } from './visualizations/simpleChart';
 
 // Statistics
@@ -33,3 +33,43 @@ export type { StatObject } from './statistics';
 
 // Visualization event types
 export type { PtsChartEvents, GameFishEvents, GameTreeEvents, MomentumChartEvents } from './visualizations/types/events';
+
+// Parsers & Validators
+export {
+  validateProTrackerMatch,
+  validateProTrackerBuffer,
+  parsePTFContent,
+  parsePTFPoint,
+  mapPTFFormat,
+  classifyResult,
+  mapServeLocation,
+  decodeUTF16LE,
+  splitPTFRows,
+  validateIONSportMatch,
+  parseIONSportMatch,
+  parseIONSportPoint,
+  mapIONSportFormat,
+  isTimedFormat,
+  extractPlayersFromSide,
+  extractPlayers,
+  buildSubstitutionEvents,
+} from './parsers';
+export type {
+  PointResult,
+  StrokeType,
+  ServeLocation,
+  RallyShot,
+  ProTrackerValidationResult,
+  ProTrackerValidationOptions,
+  IONSportValidationResult,
+  IONSportValidationOptions,
+  PTFMatch,
+  ParsedPTFPoint,
+  ParsedIONSportMatch,
+  PlayerInfo,
+  SubstitutionInfo,
+} from './parsers';
+
+// Dropzone
+export { createFileDropzone } from './visualizations/helpers/FileDropzone';
+export type { FileDropzoneOptions } from './visualizations/helpers/FileDropzone';

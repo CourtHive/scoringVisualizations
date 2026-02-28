@@ -37,7 +37,7 @@ interface DashboardCharts {
   rallyTreeChart: ReturnType<typeof rallyTree>;
 }
 
-export function matchDashboard() {
+export function matchUpDashboard() {
   let container: HTMLElement;
   let allEpisodes: Episode[] = [];
   let matchUpState: any;

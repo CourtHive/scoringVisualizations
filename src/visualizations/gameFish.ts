@@ -165,7 +165,7 @@ export function gameFish() {
 
       bars.attr(
         "transform",
-        translate(vert ? 0 : coords[0], vert ? coords[1] : 0, 0),
+        translate(0, coords[1], 0),
       );
       fish.attr("transform", translate(coords[0], coords[1], 0));
       game.attr("transform", translate(coords[0], coords[1], 0));
