@@ -15,7 +15,7 @@ export { ptsHorizon, ptsHorizonFromMatchUp } from './ptsHorizon';
 export { horizonChart } from './horizonChart';
 export { rallyTree } from './rallyTree';
 export { statView } from './statView';
-export { matchDashboard } from './matchDashboard';
+export { matchUpDashboard } from './matchUpDashboard';
 
 // Utilities
 export { groupGames } from './groupGames';

@@ -159,6 +159,55 @@ describe('buildEpisodes', () => {
     expect(completedGames.length).toBeGreaterThan(10);
   });
 
+  it('addGame p1 + addGame p2 + points p1: game.games shows [2,1]', () => {
+    const engine = new ScoringEngine({ matchUpFormat: 'SET3-S:6/TB7' });
+
+    // Two games added directly
+    engine.addGame({ winner: 0 });
+    engine.addGame({ winner: 1 });
+
+    // Play a game via points for player 0
+    for (let i = 0; i < 4; i++) engine.addPoint({ winner: 0, server: 0 });
+
+    const state = engine.getState();
+    const episodes = buildEpisodes(state);
+
+    expect(episodes).toHaveLength(4);
+
+    // Last episode (game complete): game.games should be [2, 1]
+    const lastEpisode = episodes[episodes.length - 1];
+    expect(lastEpisode.game.complete).toBe(true);
+    expect(lastEpisode.game.games).toEqual([2, 1]);
+    expect(lastEpisode.game.winner).toBe(0);
+
+    // Non-completing episodes should show [1, 1] (prior games from addGame)
+    expect(episodes[0].game.games).toEqual([1, 1]);
+    expect(episodes[0].game.complete).toBe(false);
+  });
+
+  it('addGame p1 + addGame p2 + points p1 + first point of game 4: game.games correct for both games', () => {
+    const engine = new ScoringEngine({ matchUpFormat: 'SET3-S:6/TB7' });
+
+    engine.addGame({ winner: 0 });
+    engine.addGame({ winner: 1 });
+
+    // Complete game 3 via points for player 0
+    for (let i = 0; i < 4; i++) engine.addPoint({ winner: 0, server: 0 });
+    // First point of game 4
+    engine.addPoint({ winner: 1, server: 1 });
+
+    const episodes = buildEpisodes(engine.getState());
+    expect(episodes).toHaveLength(5);
+
+    // Game 3 (points 0-3): last point should be game-complete with [2, 1]
+    expect(episodes[3].game.complete).toBe(true);
+    expect(episodes[3].game.games).toEqual([2, 1]);
+
+    // Game 4 (point 4): not complete, score [2, 1]
+    expect(episodes[4].game.complete).toBe(false);
+    expect(episodes[4].game.games).toEqual([2, 1]);
+  });
+
   it('handles undo scenario: feed 10 points then undo 3', () => {
     const engine = new ScoringEngine({ matchUpFormat: 'SET3-S:6/TB7' });
 

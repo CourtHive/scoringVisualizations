@@ -200,9 +200,10 @@ export const UndoRedo: Story = {
   args: { width: 800, height: 400, minPoints: 50, matchIndex: 0 },
   render: (args: any) => {
     const container = document.createElement('div');
+    const chartId = 'simple-chart-undo';
 
     const chartDiv = document.createElement('div');
-    chartDiv.id = 'simple-chart-undo';
+    chartDiv.id = chartId;
     chartDiv.style.cssText = 'width:100%; height:500px; padding:20px;';
 
     const playback = createPlaybackEngine({ matchIndex: args.matchIndex });
@@ -211,7 +212,7 @@ export const UndoRedo: Story = {
     const names = playback.getFixture().players as [string, string];
 
     playback.liveEngine.subscribe((matchUp) => {
-      simpleChartFromMatchUp('simple-chart-undo', matchUp, names);
+      simpleChartFromMatchUp(chartId, matchUp, names);
     });
 
     const controls = createPlaybackControlsUI(playback, { showScoreboard: true });
@@ -219,7 +220,7 @@ export const UndoRedo: Story = {
     container.appendChild(chartDiv);
 
     setTimeout(() => {
-      simpleChartFromMatchUp('simple-chart-undo', playback.liveEngine.getState(), names);
+      simpleChartFromMatchUp(chartId, playback.liveEngine.getState(), names);
     }, 0);
 
     return container;

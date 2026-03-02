@@ -117,11 +117,8 @@ export function momentumChart() {
             options.fullWidth = Math.min(Math.max(dims.width, 100), 800);
             options.fullHeight = Math.max(dims.height, 100);
           } else {
-            options.fullHeight = Math.max(dims.height, 100);
-            /**
             options.fullWidth = Math.max(dims.width, 100);
-            options.fullHeight = computeCellSize() * maxDiff() * 2;
-            */
+            options.fullHeight = Math.max(dims.height, 100);
           }
         }
 
@@ -130,7 +127,7 @@ export function momentumChart() {
 
         const vert = options.display.orientation == 'vertical' ? 1 : 0;
         const fish_offset = vert ? options.width : options.height;
-        /** const fish_length = vert ? options.height : options.width; */
+        const fish_length = vert ? options.height : options.width;
         const midpoint = fish_offset / 2;
 
         const all_games = groupGames(data);
@@ -185,17 +182,16 @@ export function momentumChart() {
           fish_school[i].data(g.points);
           fish_school[i].coords(coords).update();
           const new_coords = fish_school[i].coords();
-          // Mouth-to-tail alignment:
-          // Horizontal: advance right (coords[0]), keep vertical position constant (coords[1])
-          // Vertical: advance down (coords[1]), keep horizontal position constant (coords[0])
+          // new_coords = [offsetFromMidpoint, lengthPosition, diag]
+          // In gameFish, coords are in logical (o, l) space:
+          //   coords[0] → o (cross-axis: x in vert, y in horiz)
+          //   coords[1] → l (progress-axis: y in vert, x in horiz)
           if (vert) {
-            // Vertical mode: keep horizontal position aligned
-            // coords[0] stays the same - mouth-to-tail alignment!
+            // Vertical: advance l (coords[1]) down, keep o (coords[0]) stable
             coords[1] += new_coords?.[1];
           } else {
-            // Horizontal mode: keep vertical position aligned
-            coords[0] += new_coords?.[1] - new_coords?.[2] / 2;
-            // coords[1] stays the same - mouth-to-tail alignment!
+            // Horizontal: advance l (coords[1]) right, keep o (coords[0]) stable
+            coords[1] += new_coords?.[1] - new_coords?.[2] / 2;
           }
           score_lines.push({
             score: g.score,
@@ -205,25 +201,30 @@ export function momentumChart() {
             set_end: g.lastGame,
           });
           if (g.lastGame && !options.display.continuous) {
-            coords[vert ? 0 : 1] = 0;
+            // Reset cross-axis offset at set boundary (coords[0] is always the cross-axis)
+            coords[0] = 0;
           }
           radius = new_coords?.[2] / 2;
         });
 
         // This resize *must* take place after the fishshcool has been generated!
         // ---------------------------------------------------------------------
+        // coords[1] is the progress-axis extent (y in vertical, x in horizontal)
+        const finalWidth = vert ? options.width : Math.max(options.width, coords[1] + 100);
+        const finalHeight = vert ? 100 + coords[1] : options.height;
         root
-          .style('width', options.width + 'px')
+          .style('width', finalWidth + 'px')
           .style('max-width', '100%')
-          .style('overflow', 'hidden')
-          .style('height', (vert ? 100 + coords[1] : options.height) + 'px')
+          .style('overflow-x', vert ? 'hidden' : 'auto')
+          .style('overflow-y', vert ? 'auto' : 'hidden')
+          .style('height', finalHeight + 'px')
           .on('mouseover', showImages)
           .on('mouseout', hideImages);
 
         momentumFrame
-          .attr('width', options.width)
-          .attr('height', (vert ? 100 + coords[1] : options.height))
-          .style('max-width', '100%');
+          .attr('width', finalWidth)
+          .attr('height', finalHeight)
+          .style('max-width', vert ? '100%' : 'none');
         // ---------------------------------------------------------------------
 
         fish
@@ -233,7 +234,7 @@ export function momentumChart() {
           .transition()
           .duration(options.display.transitionTime)
           .attr('x1', vert ? midpoint : radius)
-          .attr('x2', vert ? midpoint : coords[0] + 5 * (radius || 0))
+          .attr('x2', vert ? midpoint : coords[1] + 5 * (radius || 0))
           .attr('y1', vert ? radius : midpoint)
           .attr('y2', vert ? coords[1] + 5 * radius : midpoint)
           .attr('stroke-width', lineWidth)
@@ -246,10 +247,10 @@ export function momentumChart() {
           .transition()
           .duration(options.display.transitionTime)
           .attr('x1', function (d) {
-            return vert ? cellSize * 2 : d.o;
+            return vert ? cellSize * 2 : d.l;
           })
           .attr('x2', function (d) {
-            return vert ? fish_offset - cellSize * 2 : d.o;
+            return vert ? fish_offset - cellSize * 2 : d.l;
           })
           .attr('y1', function (d) {
             return vert ? d.l : cellSize * 3;
@@ -299,7 +300,7 @@ export function momentumChart() {
         }
 
         function scoreText(d: any) {
-          return translate(0, vert ? d.l : d.o - radius, 0);
+          return translate(0, vert ? d.l : d.l - radius, 0);
         }
         function scoreT(_, i: number) {
           const offset = vert ? fish_offset / 3 : options.height / 3;

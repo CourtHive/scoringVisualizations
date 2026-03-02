@@ -51,11 +51,15 @@ function episodesToPoints(episodes: Episode[]) {
 /**
  * Compute match statistics from an Episode array.
  * Returns display-ready StatObject[] suitable for statView.
+ *
+ * @param setFilter - Optional 0-based set index to restrict stats to a single set.
+ *                    When undefined, stats cover the entire match.
  */
-export function computeMatchStats(episodes: Episode[]) {
-  if (!episodes.length) return [];
+export function computeMatchStats(episodes: Episode[], setFilter?: number) {
+  const filtered = setFilter !== undefined ? episodes.filter((ep) => ep.point.set === setFilter) : episodes;
+  if (!filtered.length) return [];
 
-  const points = episodesToPoints(episodes);
+  const points = episodesToPoints(filtered);
   const stats = calculateMatchStatistics({} as any, points);
   return toStatObjects(stats);
 }
@@ -63,8 +67,11 @@ export function computeMatchStats(episodes: Episode[]) {
 /**
  * Compute match statistics directly from a ScoringEngine MatchUp state.
  * Convenience wrapper: buildEpisodes(matchUp) → computeMatchStats(episodes).
+ *
+ * @param setFilter - Optional 0-based set index to restrict stats to a single set.
+ *                    When undefined, stats cover the entire match.
  */
-export function computeMatchStatsFromMatchUp(matchUp: any) {
+export function computeMatchStatsFromMatchUp(matchUp: any, setFilter?: number) {
   const episodes = buildEpisodes(matchUp);
-  return computeMatchStats(episodes);
+  return computeMatchStats(episodes, setFilter);
 }
