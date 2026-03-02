@@ -72,6 +72,7 @@ export type {
 
 // Format utilities
 export { supportsGameVisualizations } from './utils/supportsGameVisualizations';
+export { supportsPointsToVisualization } from './utils/supportsPointsToVisualization';
 
 // Dropzone
 export { createFileDropzone } from './visualizations/helpers/FileDropzone';
