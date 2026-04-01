@@ -43,8 +43,8 @@
   "license": "MIT",
   "dependencies": {
     "d3": "^7.9.0",
-    "tods-competition-factory": "link:../../CourtHive/factory",
-    "tippy.js": "^6.3.7"
+    "tippy.js": "^6.3.7",
+    "tods-competition-factory": "link:../../CourtHive/factory"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -54,6 +54,7 @@
     "@types/d3": "^7.4.3",
     "@typescript-eslint/eslint-plugin": "^8.56.0",
     "@typescript-eslint/parser": "^8.56.0",
+    "@vitest/coverage-v8": "^3.2.4",
     "eslint": "^9.39.2",
     "eslint-plugin-sonarjs": "^3.0.7",
     "globals": "^17.3.0",
