@@ -66,21 +66,12 @@ export function validateProTrackerMatch(options: ProTrackerValidationOptions): P
 
   const errors: string[] = [];
   const warnings: string[] = [];
-  let aces = 0;
-  let doubleFaults = 0;
-  let winners = 0;
-  let unforcedErrors = 0;
-  let forcedErrors = 0;
-  let serveWinners = 0;
-  let pointsProcessed = 0;
 
-  // Split content into CSV rows
   const csvRows = splitPTFRows(content);
   if (csvRows.length === 0) {
     return emptyResult('No content to parse', errors);
   }
 
-  // Parse PTF content
   let ptfMatch: PTFMatch;
   try {
     ptfMatch = parsePTFContent(csvRows);
@@ -95,98 +86,99 @@ export function validateProTrackerMatch(options: ProTrackerValidationOptions): P
     console.log(`Sets: ${ptfMatch.sets.length}`);
   }
 
-  // Map format
   const matchUpFormat = providedFormat || mapPTFFormat(ptfMatch.format);
   if (debug) {
     console.log(`Factory format: ${matchUpFormat}`);
   }
 
-  // Create ScoringEngine
   const engine = new ScoringEngine({
     matchUpFormat,
     matchUpId: `ptf-${ptfMatch.players[0]}-${ptfMatch.players[1]}`.replace(/\s+/g, '_'),
   });
 
-  // Set player names
-  const state = engine.getState();
-  if (state.sides[0]) {
-    state.sides[0].participant = {
-      participantId: 'player1',
-      participantName: ptfMatch.players[0],
-      participantType: 'INDIVIDUAL',
-      participantRole: 'COMPETITOR',
-    };
-  }
-  if (state.sides[1]) {
-    state.sides[1].participant = {
-      participantId: 'player2',
-      participantName: ptfMatch.players[1],
-      participantType: 'INDIVIDUAL',
-      participantRole: 'COMPETITOR',
-    };
+  setPTFPlayerNames(engine, ptfMatch.players);
+
+  const stats = processPTFSets(engine, ptfMatch, debug, errors);
+
+  const matchUp = engine.getState();
+  const actualScore = engine.getScoreboard();
+
+  if (debug) {
+    console.log(`\nFinal score: ${actualScore}`);
+    console.log(`Match status: ${matchUp.matchUpStatus}`);
+    console.log(`Points: ${stats.pointsProcessed}`);
+    console.log(`Stats: ${stats.aces}A ${stats.doubleFaults}DF ${stats.winners}W ${stats.serveWinners}SW ${stats.unforcedErrors}UE ${stats.forcedErrors}FE`);
   }
 
-  // Process points from each set → game → point
+  return {
+    valid: errors.length === 0,
+    errors,
+    warnings,
+    matchUp,
+    pointsProcessed: stats.pointsProcessed,
+    ptfMatch,
+    actualScore,
+    aces: stats.aces,
+    doubleFaults: stats.doubleFaults,
+    winners: stats.winners,
+    unforcedErrors: stats.unforcedErrors,
+    forcedErrors: stats.forcedErrors,
+    serveWinners: stats.serveWinners,
+  };
+}
+
+interface PTFStats {
+  pointsProcessed: number;
+  aces: number;
+  doubleFaults: number;
+  winners: number;
+  unforcedErrors: number;
+  forcedErrors: number;
+  serveWinners: number;
+}
+
+function setPTFPlayerNames(engine: any, players: [string, string]): void {
+  const state = engine.getState();
+  for (let i = 0; i < 2; i++) {
+    if (state.sides[i]) {
+      state.sides[i].participant = {
+        participantId: `player${i + 1}`,
+        participantName: players[i],
+        participantType: 'INDIVIDUAL',
+        participantRole: 'COMPETITOR',
+      };
+    }
+  }
+}
+
+function processPTFSets(
+  engine: any,
+  ptfMatch: PTFMatch,
+  debug: boolean,
+  errors: string[],
+): PTFStats {
+  const stats: PTFStats = {
+    pointsProcessed: 0,
+    aces: 0,
+    doubleFaults: 0,
+    winners: 0,
+    unforcedErrors: 0,
+    forcedErrors: 0,
+    serveWinners: 0,
+  };
+
   for (const set of ptfMatch.sets) {
     for (const game of set.games) {
       for (const point of game.points) {
         try {
-          // Parse point
           const parsed = parsePTFPoint(point, ptfMatch.players);
+          addPTFPoint(engine, parsed);
+          stats.pointsProcessed++;
+          updatePTFStats(stats, parsed.result);
 
-          // Build addPoint options (0-indexed convention for ScoringEngine)
-          const pointOptions = {
-            winner: (parsed.winningSide - 1) as 0 | 1,
-            server: (parsed.serverSideNumber - 1) as 0 | 1,
-          };
-
-          // Add point
-          engine.addPoint(pointOptions);
-
-          // Decorate last history point with parsed metadata
-          const currentState = engine.getState();
-          if (currentState.history?.points && currentState.history.points.length > 0) {
-            const lastPoint = currentState.history.points[currentState.history.points.length - 1];
-            if (lastPoint) {
-              if (parsed.result) lastPoint.result = parsed.result;
-              if (parsed.stroke) lastPoint.stroke = parsed.stroke;
-              if (parsed.hand) lastPoint.hand = parsed.hand;
-              if (parsed.serveLocation) lastPoint.serveLocation = parsed.serveLocation;
-              if (parsed.rally) lastPoint.rally = parsed.rally;
-              if (parsed.rallyLength) lastPoint.rallyLength = parsed.rallyLength;
-              if (parsed.metadata) {
-                (lastPoint as any).metadata = parsed.metadata;
-              }
-            }
-          }
-
-          pointsProcessed++;
-
-          // Update stats
-          switch (parsed.result) {
-            case 'Ace':
-              aces++;
-              break;
-            case 'Double Fault':
-              doubleFaults++;
-              break;
-            case 'Winner':
-              winners++;
-              break;
-            case 'Serve Winner':
-              serveWinners++;
-              break;
-            case 'Unforced Error':
-              unforcedErrors++;
-              break;
-            case 'Forced Error':
-              forcedErrors++;
-              break;
-          }
-
-          if (debug && pointsProcessed <= 5) {
+          if (debug && stats.pointsProcessed <= 5) {
             console.log(
-              `Point ${pointsProcessed}: ${parsed.result || 'Unknown'} → ${engine.getScoreboard()}`,
+              `Point ${stats.pointsProcessed}: ${parsed.result || 'Unknown'} → ${engine.getScoreboard()}`,
             );
           }
         } catch (error) {
@@ -197,31 +189,45 @@ export function validateProTrackerMatch(options: ProTrackerValidationOptions): P
     }
   }
 
-  const matchUp = engine.getState();
-  const actualScore = engine.getScoreboard();
+  return stats;
+}
 
-  if (debug) {
-    console.log(`\nFinal score: ${actualScore}`);
-    console.log(`Match status: ${matchUp.matchUpStatus}`);
-    console.log(`Points: ${pointsProcessed}`);
-    console.log(`Stats: ${aces}A ${doubleFaults}DF ${winners}W ${serveWinners}SW ${unforcedErrors}UE ${forcedErrors}FE`);
+function addPTFPoint(engine: any, parsed: any): void {
+  engine.addPoint({
+    winner: (parsed.winningSide - 1) as 0 | 1,
+    server: (parsed.serverSideNumber - 1) as 0 | 1,
+  });
+
+  const currentState = engine.getState();
+  const lastPoint = currentState.history?.points?.at(-1);
+  if (lastPoint) {
+    if (parsed.result) lastPoint.result = parsed.result;
+    if (parsed.stroke) lastPoint.stroke = parsed.stroke;
+    if (parsed.hand) lastPoint.hand = parsed.hand;
+    if (parsed.serveLocation) lastPoint.serveLocation = parsed.serveLocation;
+    if (parsed.rally) lastPoint.rally = parsed.rally;
+    if (parsed.rallyLength) lastPoint.rallyLength = parsed.rallyLength;
+    if (parsed.metadata) {
+      (lastPoint as any).metadata = parsed.metadata;
+    }
   }
+}
 
-  return {
-    valid: errors.length === 0,
-    errors,
-    warnings,
-    matchUp,
-    pointsProcessed,
-    ptfMatch,
-    actualScore,
-    aces,
-    doubleFaults,
-    winners,
-    unforcedErrors,
-    forcedErrors,
-    serveWinners,
-  };
+const ptfStatMap: Record<string, keyof PTFStats> = {
+  'Ace': 'aces',
+  'Double Fault': 'doubleFaults',
+  'Winner': 'winners',
+  'Serve Winner': 'serveWinners',
+  'Unforced Error': 'unforcedErrors',
+  'Forced Error': 'forcedErrors',
+};
+
+function updatePTFStats(stats: PTFStats, result: string | undefined): void {
+  if (!result) return;
+  const key = ptfStatMap[result];
+  if (key) {
+    (stats[key] as number)++;
+  }
 }
 
 /**

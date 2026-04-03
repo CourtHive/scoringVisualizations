@@ -3,6 +3,9 @@ import { extractGamePoints } from "../engine/feedMatchUp";
 import { keyWalk } from "./utils/keyWalk";
 import { generateId } from "./utils/generateId";
 
+const STROKE_WIDTH = "stroke-width";
+const FILL_OPACITY = "fill-opacity";
+
 export function gameFish() {
   let data: any;
   let fishWidth;
@@ -74,8 +77,6 @@ export function gameFish() {
     },
   };
 
-  const STROKE_WIDTH = "stroke-width";
-  const FILL_OPACITY = "fill-opacity";
   const default_colors = { default: "#235dba" };
   let colors = structuredClone(default_colors);
 
@@ -151,7 +152,6 @@ export function gameFish() {
       fishHeight =
         options.height - (options.margins.top + options.margins.bottom);
 
-      // Ensure dimensions are valid
       if (Number.isNaN(fishWidth) || fishWidth <= 0) fishWidth = 100;
       if (Number.isNaN(fishHeight) || fishHeight <= 0) fishHeight = 100;
 
@@ -160,348 +160,45 @@ export function gameFish() {
       const fish_length = vert ? fishHeight : fishWidth;
       const midpoint =
         (vert ? options.margins.left : options.margins.top) + fish_offset / 2;
-      const sw = 1; // service box % offset
-      const rw = 0.9; // rally_width % offset
+      const sw = 1;
+      const rw = 0.9;
 
-      bars.attr(
-        "transform",
-        translate(0, coords[1], 0),
-      );
+      bars.attr("transform", translate(0, coords[1], 0));
       fish.attr("transform", translate(coords[0], coords[1], 0));
       game.attr("transform", translate(coords[0], coords[1], 0));
 
-      let cellSize;
-      if (options.fish.cellSize) {
-        cellSize = options.fish.cellSize;
-      } else {
-        const offset_divisor = tiebreak
-          ? options.set.tiebreakTo + 4
-          : options.fish.gridcells.length + 2;
-        const cell_offset =
-          fish_offset /
-          (options.fish.gridcells.length +
-            (options.display.service ? offset_divisor : 0));
-        const cell_length = fish_length / (data.length + 2);
-        cellSize = Math.min(cell_offset, cell_length);
-        cellSize = Math.max(options.fish.minCellSize, cellSize);
-        cellSize = Math.min(options.fish.maxCellSize, cellSize);
-      }
-
-      // Ensure cellSize is valid
-      if (!cellSize || Number.isNaN(cellSize) || cellSize <= 0) {
-        cellSize = options.fish.minCellSize || 5;
-      }
-
+      const cellSize = computeCellSize(options, tiebreak, fish_offset, fish_length, data.length);
       const diag = Math.sqrt(2 * Math.pow(cellSize, 2));
       const radius = diag / 2;
 
-      // In school mode (momentum chart), compute the lateral offset for the grid
-      // so it aligns with the fish body's starting position.
-      // gridBaseOffset = cumulative set differential BEFORE the first point of this game.
-      let gridBaseOffset = 0;
-      if (data.length > 0 && options.fish.school) {
-        const firstPt = data[0];
-        const cumPts = firstPt.setCumulativePoints;
-        const gamePts = firstPt.points;
-        if (cumPts && gamePts) {
-          const rev = options.display.reverse;
-          const cumDiff = cumPts[rev ? 0 : 1] - cumPts[rev ? 1 : 0];
-          const gameDiff = gamePts[rev ? 0 : 1] - gamePts[rev ? 1 : 0];
-          gridBaseOffset = cumDiff - gameDiff;
-        }
-      }
+      const gridBaseOffset = computeGridBaseOffset(data, options);
 
-      const grid_data = [];
-      const grid_labels = [];
-      const grid_side = tiebreak
-        ? options.set.tiebreakTo
-        : options.fish.gridcells.length - 1;
-      for (let g = 0; g < grid_side; g++) {
-        const label = tiebreak ? g : options.fish.gridcells[g];
-        // l = length, o = offset
-        grid_labels.push({
-          label: label,
-          l: (g + (vert ? 1.25 : 0.75)) * radius,
-          o: (g + (vert ? 0.75 : 1.25)) * radius,
-          rotate: 45,
-        });
-        grid_labels.push({
-          label: label,
-          l: (g + 1.25) * radius,
-          o: -1 * (g + 0.75) * radius,
-          rotate: -45,
-        });
-        for (let c = 0; c < grid_side; c++) {
-          grid_data.push([g, c]);
-        }
-      }
+      const { grid_data, grid_labels } = buildGridData(tiebreak, options, vert, radius);
 
-      // check if this is a standalone SVG or part of larger SVG
       if (root) {
-        root
-          .attr("width", options.width + "px")
-          .attr("height", options.height + "px");
-
-        fishFrame
-          .attr("width", options.width + "px")
-          .attr("height", options.height + "px");
+        root.attr("width", options.width + "px").attr("height", options.height + "px");
+        fishFrame.attr("width", options.width + "px").attr("height", options.height + "px");
       }
 
-      if (options.display.pointScore) {
-        fish
-          .selectAll(".game_score" + options.id)
-          .data(grid_labels)
-          .join("text")
-          .attr("class", "game_score" + options.id)
-          .attr("font-size", radius * 0.8 + "px")
-          .attr("transform", gscoreT)
-          .attr("text-anchor", "middle")
-          .text(function (d: any) {
-            return d.label;
-          });
-      } else {
-        fish.selectAll(".game_score" + options.id).remove();
-      }
+      renderPointScores(fish, options, grid_labels, radius, gscoreT);
+      renderGrid(fish, options, grid_data, cellSize, lineWidth, gridCT);
+      renderGameCells(game, options, data, cellSize, lineWidth, gameCT);
+      renderResultCircles(game, options, data, lineWidth, zX, zY, circleRadius);
 
-      if (options.display.grid) {
-        fish
-          .selectAll(".gridcell" + options.id)
-          .data(grid_data)
-          .join("rect")
-          .attr("class", "gridcell" + options.id)
-          .attr("stroke", "#ccccdd")
-          .attr(STROKE_WIDTH, lineWidth)
-          .attr("transform", gridCT)
-          .attr("width", cellSize)
-          .attr("height", cellSize)
-          .attr(FILL_OPACITY, 0);
-      } else {
-        fish.selectAll(".gridcell" + options.id).remove();
-      }
-
-      game
-        .selectAll(".gamecell" + options.id)
-        .data(data)
-        .join("rect")
-        .attr("id", (d: any, i: number) => {
-          return options.id + "Gs" + d.set + "g" + d.game + "p" + i;
-        })
-        .attr("class", "gamecell" + options.id)
-        .attr("width", cellSize)
-        .attr("height", cellSize)
-        .attr("transform", gameCT)
-        .attr("stroke", "#ccccdd")
-        .attr(STROKE_WIDTH, lineWidth)
-        .attr("opacity", options.display.player ? 1 : 0)
-        .style("fill", function (d: any) {
-          return options.colors.players[d.winner];
-        });
-
-      game
-        .selectAll(".result" + options.id)
-        .data(data)
-        .join("circle")
-        .attr("id", function (d: any, i: number) {
-          return options.id + "Rs" + d.set + "g" + d.game + "p" + i;
-        })
-        .attr("class", "result" + options.id)
-        .attr("stroke", "black")
-        .attr("opacity", 1)
-        .attr(STROKE_WIDTH, lineWidth)
-        .attr("cx", zX)
-        .attr("cy", zY)
-        .attr("r", circleRadius)
-        .style("fill", function (d: any) {
-          return options.colors.results[d.result];
-        });
-
-      // offset Scale
       const oScale = scaleLinear()
         .range([0, fish_offset * rw])
         .domain([0, maxRally]);
 
-      // lengthScale
       const lScale = scaleBand()
         .domain(range(data.length).map(String))
         .range([0, data.length * radius])
         .round(true);
 
-      if (options.display.rally) {
-        bars
-          .selectAll(".rally_bar" + options.id)
-          .data(data)
-          .join((enter: any) =>
-            enter
-              .append("rect")
-              .on("mouseover", function (this: SVGRectElement, event: any, d: any) {
-                select(this).attr("fill", "yellow");
-                if (events.point.mouseover) events.point.mouseover(d, event);
-              })
-              .on("mouseout", function (this: SVGRectElement, event: any, d: any) {
-                select(this).attr("fill", "#eeeeff");
-                if (events.point.mouseout) events.point.mouseout(d, event);
-              })
-              .on("click", function (event: any, d: any) {
-                if (events.point.click) events.point.click(d, event);
-              }),
-          )
-          .attr("class", "rally_bar" + options.id)
-          .attr("id", function (d: any, i: number) {
-            return options.id + "Bs" + d.set + "g" + d.game + "p" + i;
-          })
-          .attr("opacity", 1)
-          .attr("stroke", "white")
-          .attr(STROKE_WIDTH, lineWidth)
-          .attr("fill", "#eeeeff")
-          .attr("transform", rallyT)
-          .attr("height", vert ? lScale.bandwidth() : rallyCalc)
-          .attr("width", vert ? rallyCalc : lScale.bandwidth());
-      } else {
-        bars.selectAll(".rally_bar" + options.id).remove();
-      }
+      renderRallyBars(bars, options, data, events, lineWidth, oScale, lScale, vert, rallyT, rallyCalc);
+      renderSetScore(bars, options, radius, lineWidth, sscoreT, ssbT);
+      renderService(bars, options, data, radius, lineWidth, lScale, vert, sX, sY, sBoxT, rX, rY, colorShot, colorReturn, circleRadius);
+      renderImages(fishFrame, images, options, events);
 
-      if (options.display.score) {
-        const score = options.score.slice();
-        if (options.display.reverse) score.reverse();
-        bars
-          .selectAll(".set_score" + options.id)
-          .data(score)
-          .join("text")
-          .attr("class", "set_score" + options.id)
-          .attr("transform", sscoreT)
-          .attr("font-size", radius * 0.8 + "px")
-          .attr("text-anchor", "middle")
-          .text(function (d: any) {
-            return d;
-          });
-
-        bars
-          .selectAll(".ssb" + options.id)
-          .data(options.score)
-          .join("rect")
-          .attr("class", "ssb" + options.id)
-          .attr("transform", ssbT)
-          .attr("stroke", "black")
-          .attr(STROKE_WIDTH, lineWidth)
-          .attr(FILL_OPACITY, 0)
-          .attr("height", radius + "px")
-          .attr("width", radius + "px");
-      } else {
-        bars.selectAll(".set_score" + options.id).remove();
-        bars.selectAll(".ssb" + options.id).remove();
-      }
-
-      if (options.display.service) {
-        const serves: any = [];
-        data.forEach(function (s: any, i: number) {
-          let first_serve = false;
-          const serve_outcomes = ["Ace", "Serve Winner", "Double Fault"];
-          if (s.first_serve) {
-            first_serve = true;
-            serves.push({
-              point: i,
-              serve: "first",
-              server: s.server,
-              result: s.first_serve.error,
-            });
-          }
-
-          serves.push({
-            point: i,
-            serve: first_serve ? "second" : "first",
-            server: s.server,
-            result: serve_outcomes.includes(s.result) ? s.result : "In",
-          });
-        });
-
-        bars
-          .selectAll(".serve" + options.id)
-          .data(serves)
-          .join("circle")
-          .attr("class", "serve" + options.id)
-          .attr("cx", sX)
-          .attr("cy", sY)
-          .attr("r", circleRadius)
-          .attr("stroke", colorShot)
-          .attr(STROKE_WIDTH, lineWidth)
-          .attr("fill", colorShot);
-
-        bars
-          .selectAll(".sbox" + options.id)
-          .data(data)
-          .join("rect")
-          .attr("class", "sbox" + options.id)
-          .attr("stroke", "#ccccdd")
-          .attr(FILL_OPACITY, 0)
-          .attr("transform", sBoxT)
-          .attr(STROKE_WIDTH, lineWidth)
-          .attr("height", vert ? lScale.bandwidth() : 1.5 * radius)
-          .attr("width", vert ? 1.5 * radius : lScale.bandwidth());
-
-        bars
-          .selectAll(".return" + options.id)
-          .data(data)
-          .join("circle")
-          .attr("class", "return" + options.id)
-          .attr("cx", rX)
-          .attr("cy", rY)
-          .attr("r", circleRadius)
-          .attr("stroke", colorReturn)
-          .attr(STROKE_WIDTH, lineWidth)
-          .attr("fill", colorReturn);
-      } else {
-        bars.selectAll(".sbox" + options.id).remove();
-        bars.selectAll(".return" + options.id).remove();
-        bars.selectAll(".serve" + options.id).remove();
-      }
-
-      if (options.display.rightImg) {
-        images.right = fishFrame
-          .selectAll("image.rightImage")
-          .data([0])
-          .join((enter: any) =>
-            enter
-              .append("image")
-              .attr("class", "rightImage")
-              .attr("y", 5)
-              .attr("height", "20px")
-              .attr("width", "20px")
-              .attr("opacity", options.display.showImages ? 1 : 0)
-              .on("click", function () {
-                if (events.rightImage.click)
-                  events.rightImage.click(options.id);
-              }),
-          )
-          .attr("x", options.width - 30)
-          .attr("xlink:href", options.display.rightImg);
-      } else if (fishFrame) {
-        fishFrame.selectAll("image.rightImage").remove();
-      }
-
-      if (options.display.leftImg) {
-        images.left = fishFrame
-          .selectAll("image.leftImage")
-          .data([0])
-          .join((enter: any) =>
-            enter
-              .append("image")
-              .attr("class", "leftImage")
-              .attr("x", 10)
-              .attr("y", 5)
-              .attr("height", "20px")
-              .attr("width", "20px")
-              .attr("opacity", options.display.showImages ? 1 : 0)
-              .on("click", function () {
-                if (events.leftImage.click)
-                  events.leftImage.click(options.id);
-              }),
-          )
-          .attr("xlink:href", options.display.leftImg);
-      } else if (fishFrame) {
-        fishFrame.selectAll("image.leftImage").remove();
-      }
-
-      // ancillary functions for update()
       function circleRadius() {
         return options.display.player || options.display.service
           ? radius / 3
@@ -545,7 +242,6 @@ export function gameFish() {
         return translate(o, l, d.rotate);
       }
 
-      // for the momentum chart the midpoint needs to be adjusted
       function gridCT(d: any) {
         const o = midpoint + (d[1] - d[0] + vert - 1 + gridBaseOffset) * radius;
         const l = (d[0] + d[1] + 3 - vert) * radius;
@@ -564,12 +260,6 @@ export function gameFish() {
           d.server === 0
             ? midpoint - (fish_offset / 2) * sw
             : midpoint + (fish_offset / 2) * sw - 1.5 * radius;
-        const l = radius + cL(d, i);
-        return translate(o, l, 0);
-      }
-
-      function _rallyTstart(d: any, i: number) {
-        const o = midpoint;
         const l = radius + cL(d, i);
         return translate(o, l, 0);
       }
@@ -738,6 +428,311 @@ export function gameFish() {
   };
 
   return chart;
+}
 
-  // ancillary functions
+function computeCellSize(options: any, tiebreak: boolean, fish_offset: number, fish_length: number, dataLength: number): number {
+  if (options.fish.cellSize) return options.fish.cellSize;
+
+  const offset_divisor = tiebreak
+    ? options.set.tiebreakTo + 4
+    : options.fish.gridcells.length + 2;
+  const cell_offset =
+    fish_offset /
+    (options.fish.gridcells.length +
+      (options.display.service ? offset_divisor : 0));
+  const cell_length = fish_length / (dataLength + 2);
+  let result = Math.min(cell_offset, cell_length);
+  result = Math.max(options.fish.minCellSize, result);
+  result = Math.min(options.fish.maxCellSize, result);
+
+  if (!result || Number.isNaN(result) || result <= 0) {
+    return options.fish.minCellSize || 5;
+  }
+  return result;
+}
+
+function computeGridBaseOffset(data: any, options: any): number {
+  if (data.length === 0 || !options.fish.school) return 0;
+  const firstPt = data[0];
+  const cumPts = firstPt.setCumulativePoints;
+  const gamePts = firstPt.points;
+  if (!cumPts || !gamePts) return 0;
+  const rev = options.display.reverse;
+  const cumDiff = cumPts[rev ? 0 : 1] - cumPts[rev ? 1 : 0];
+  const gameDiff = gamePts[rev ? 0 : 1] - gamePts[rev ? 1 : 0];
+  return cumDiff - gameDiff;
+}
+
+function buildGridData(tiebreak: boolean, options: any, vert: number, radius: number): { grid_data: number[][]; grid_labels: any[] } {
+  const grid_data: number[][] = [];
+  const grid_labels: any[] = [];
+  const grid_side = tiebreak
+    ? options.set.tiebreakTo
+    : options.fish.gridcells.length - 1;
+  for (let g = 0; g < grid_side; g++) {
+    const label = tiebreak ? g : options.fish.gridcells[g];
+    grid_labels.push({
+      label,
+      l: (g + (vert ? 1.25 : 0.75)) * radius,
+      o: (g + (vert ? 0.75 : 1.25)) * radius,
+      rotate: 45,
+    });
+    grid_labels.push({
+      label,
+      l: (g + 1.25) * radius,
+      o: -1 * (g + 0.75) * radius,
+      rotate: -45,
+    });
+    for (let c = 0; c < grid_side; c++) {
+      grid_data.push([g, c]);
+    }
+  }
+  return { grid_data, grid_labels };
+}
+
+function renderPointScores(fish: any, options: any, grid_labels: any[], radius: number, gscoreT: any): void {
+  if (options.display.pointScore) {
+    fish
+      .selectAll(".game_score" + options.id)
+      .data(grid_labels)
+      .join("text")
+      .attr("class", "game_score" + options.id)
+      .attr("font-size", radius * 0.8 + "px")
+      .attr("transform", gscoreT)
+      .attr("text-anchor", "middle")
+      .text(function (d: any) { return d.label; });
+  } else {
+    fish.selectAll(".game_score" + options.id).remove();
+  }
+}
+
+function renderGrid(fish: any, options: any, grid_data: number[][], cellSize: number, lineWidth: any, gridCT: any): void {
+  if (options.display.grid) {
+    fish
+      .selectAll(".gridcell" + options.id)
+      .data(grid_data)
+      .join("rect")
+      .attr("class", "gridcell" + options.id)
+      .attr("stroke", "#ccccdd")
+      .attr(STROKE_WIDTH, lineWidth)
+      .attr("transform", gridCT)
+      .attr("width", cellSize)
+      .attr("height", cellSize)
+      .attr(FILL_OPACITY, 0);
+  } else {
+    fish.selectAll(".gridcell" + options.id).remove();
+  }
+}
+
+function renderGameCells(game: any, options: any, data: any, cellSize: number, lineWidth: any, gameCT: any): void {
+  game
+    .selectAll(".gamecell" + options.id)
+    .data(data)
+    .join("rect")
+    .attr("id", (d: any, i: number) => options.id + "Gs" + d.set + "g" + d.game + "p" + i)
+    .attr("class", "gamecell" + options.id)
+    .attr("width", cellSize)
+    .attr("height", cellSize)
+    .attr("transform", gameCT)
+    .attr("stroke", "#ccccdd")
+    .attr(STROKE_WIDTH, lineWidth)
+    .attr("opacity", options.display.player ? 1 : 0)
+    .style("fill", function (d: any) { return options.colors.players[d.winner]; });
+}
+
+function renderResultCircles(game: any, options: any, data: any, lineWidth: any, zX: any, zY: any, circleRadius: any): void {
+  game
+    .selectAll(".result" + options.id)
+    .data(data)
+    .join("circle")
+    .attr("id", function (d: any, i: number) { return options.id + "Rs" + d.set + "g" + d.game + "p" + i; })
+    .attr("class", "result" + options.id)
+    .attr("stroke", "black")
+    .attr("opacity", 1)
+    .attr(STROKE_WIDTH, lineWidth)
+    .attr("cx", zX)
+    .attr("cy", zY)
+    .attr("r", circleRadius)
+    .style("fill", function (d: any) { return options.colors.results[d.result]; });
+}
+
+function renderRallyBars(bars: any, options: any, data: any, events: any, lineWidth: any, oScale: any, lScale: any, vert: number, rallyT: any, rallyCalc: any): void {
+  if (options.display.rally) {
+    bars
+      .selectAll(".rally_bar" + options.id)
+      .data(data)
+      .join((enter: any) =>
+        enter
+          .append("rect")
+          .on("mouseover", function (this: SVGRectElement, event: any, d: any) {
+            select(this).attr("fill", "yellow");
+            if (events.point.mouseover) events.point.mouseover(d, event);
+          })
+          .on("mouseout", function (this: SVGRectElement, event: any, d: any) {
+            select(this).attr("fill", "#eeeeff");
+            if (events.point.mouseout) events.point.mouseout(d, event);
+          })
+          .on("click", function (event: any, d: any) {
+            if (events.point.click) events.point.click(d, event);
+          }),
+      )
+      .attr("class", "rally_bar" + options.id)
+      .attr("id", function (d: any, i: number) { return options.id + "Bs" + d.set + "g" + d.game + "p" + i; })
+      .attr("opacity", 1)
+      .attr("stroke", "white")
+      .attr(STROKE_WIDTH, lineWidth)
+      .attr("fill", "#eeeeff")
+      .attr("transform", rallyT)
+      .attr("height", vert ? lScale.bandwidth() : rallyCalc)
+      .attr("width", vert ? rallyCalc : lScale.bandwidth());
+  } else {
+    bars.selectAll(".rally_bar" + options.id).remove();
+  }
+}
+
+function renderSetScore(bars: any, options: any, radius: number, lineWidth: any, sscoreT: any, ssbT: any): void {
+  if (options.display.score) {
+    const score = options.score.slice();
+    if (options.display.reverse) score.reverse();
+    bars
+      .selectAll(".set_score" + options.id)
+      .data(score)
+      .join("text")
+      .attr("class", "set_score" + options.id)
+      .attr("transform", sscoreT)
+      .attr("font-size", radius * 0.8 + "px")
+      .attr("text-anchor", "middle")
+      .text(function (d: any) { return d; });
+
+    bars
+      .selectAll(".ssb" + options.id)
+      .data(options.score)
+      .join("rect")
+      .attr("class", "ssb" + options.id)
+      .attr("transform", ssbT)
+      .attr("stroke", "black")
+      .attr(STROKE_WIDTH, lineWidth)
+      .attr(FILL_OPACITY, 0)
+      .attr("height", radius + "px")
+      .attr("width", radius + "px");
+  } else {
+    bars.selectAll(".set_score" + options.id).remove();
+    bars.selectAll(".ssb" + options.id).remove();
+  }
+}
+
+function renderService(bars: any, options: any, data: any, radius: number, lineWidth: any, lScale: any, vert: number, sX: any, sY: any, sBoxT: any, rX: any, rY: any, colorShot: any, colorReturn: any, circleRadius: any): void {
+  if (options.display.service) {
+    const serves = buildServeData(data);
+
+    bars
+      .selectAll(".serve" + options.id)
+      .data(serves)
+      .join("circle")
+      .attr("class", "serve" + options.id)
+      .attr("cx", sX)
+      .attr("cy", sY)
+      .attr("r", circleRadius)
+      .attr("stroke", colorShot)
+      .attr(STROKE_WIDTH, lineWidth)
+      .attr("fill", colorShot);
+
+    bars
+      .selectAll(".sbox" + options.id)
+      .data(data)
+      .join("rect")
+      .attr("class", "sbox" + options.id)
+      .attr("stroke", "#ccccdd")
+      .attr(FILL_OPACITY, 0)
+      .attr("transform", sBoxT)
+      .attr(STROKE_WIDTH, lineWidth)
+      .attr("height", vert ? lScale.bandwidth() : 1.5 * radius)
+      .attr("width", vert ? 1.5 * radius : lScale.bandwidth());
+
+    bars
+      .selectAll(".return" + options.id)
+      .data(data)
+      .join("circle")
+      .attr("class", "return" + options.id)
+      .attr("cx", rX)
+      .attr("cy", rY)
+      .attr("r", circleRadius)
+      .attr("stroke", colorReturn)
+      .attr(STROKE_WIDTH, lineWidth)
+      .attr("fill", colorReturn);
+  } else {
+    bars.selectAll(".sbox" + options.id).remove();
+    bars.selectAll(".return" + options.id).remove();
+    bars.selectAll(".serve" + options.id).remove();
+  }
+}
+
+function buildServeData(data: any): any[] {
+  const serves: any[] = [];
+  const serve_outcomes = new Set(["Ace", "Serve Winner", "Double Fault"]);
+  data.forEach(function (s: any, i: number) {
+    let first_serve = false;
+    if (s.first_serve) {
+      first_serve = true;
+      serves.push({
+        point: i,
+        serve: "first",
+        server: s.server,
+        result: s.first_serve.error,
+      });
+    }
+    serves.push({
+      point: i,
+      serve: first_serve ? "second" : "first",
+      server: s.server,
+      result: serve_outcomes.has(s.result) ? s.result : "In",
+    });
+  });
+  return serves;
+}
+
+function renderImages(fishFrame: any, images: any, options: any, events: any): void {
+  if (options.display.rightImg) {
+    images.right = fishFrame
+      .selectAll("image.rightImage")
+      .data([0])
+      .join((enter: any) =>
+        enter
+          .append("image")
+          .attr("class", "rightImage")
+          .attr("y", 5)
+          .attr("height", "20px")
+          .attr("width", "20px")
+          .attr("opacity", options.display.showImages ? 1 : 0)
+          .on("click", function () {
+            if (events.rightImage.click) events.rightImage.click(options.id);
+          }),
+      )
+      .attr("x", options.width - 30)
+      .attr("xlink:href", options.display.rightImg);
+  } else if (fishFrame) {
+    fishFrame.selectAll("image.rightImage").remove();
+  }
+
+  if (options.display.leftImg) {
+    images.left = fishFrame
+      .selectAll("image.leftImage")
+      .data([0])
+      .join((enter: any) =>
+        enter
+          .append("image")
+          .attr("class", "leftImage")
+          .attr("x", 10)
+          .attr("y", 5)
+          .attr("height", "20px")
+          .attr("width", "20px")
+          .attr("opacity", options.display.showImages ? 1 : 0)
+          .on("click", function () {
+            if (events.leftImage.click) events.leftImage.click(options.id);
+          }),
+      )
+      .attr("xlink:href", options.display.leftImg);
+  } else if (fishFrame) {
+    fishFrame.selectAll("image.leftImage").remove();
+  }
 }

@@ -12,154 +12,179 @@ export function buildEpisodes(matchUp: any): Episode[] {
   if (!Array.isArray(points) || points.length === 0) return [];
 
   const episodes: Episode[] = [];
-
-  // Track running state
-  let setCumulativePoints: [number, number] = [0, 0];
-  let gamePointCounts: [number, number] = [0, 0];
-  let gamesScore: [number, number] = [0, 0];
-  let setsScore: [number, number] = [0, 0];
-  let currentSet = 0;
-  let currentGame = 0;
-
-  // Build a map of prior game scores per set from the entries timeline.
-  // This accounts for games added via addGame() that have no point data.
   const priorGamesPerSet = buildPriorGamesMap(matchUp);
-
-  // Seed gamesScore for the first point's set
-  const firstPoint = points[0];
-  if (firstPoint) {
-    const setIndex = firstPoint.set ?? 0;
-    gamesScore = [...(priorGamesPerSet.get(setIndex) || [0, 0])] as [number, number];
-    currentSet = setIndex;
-    currentGame = firstPoint.game ?? 0;
-  }
+  const state = initRunningState(points[0], priorGamesPerSet);
 
   for (let i = 0; i < points.length; i++) {
     const point = points[i];
     const nextPoint = points[i + 1];
-
-    // Detect boundaries
-    const gameComplete = nextPoint
-      ? nextPoint.game !== point.game || nextPoint.set !== point.set
-      : isLastPointGameComplete(matchUp, point, gamesScore[0] + gamesScore[1]);
-    const setComplete = nextPoint
-      ? nextPoint.set !== point.set
-      : isLastPointSetComplete(matchUp, point);
     const isLastPoint = i === points.length - 1;
     const matchComplete = isLastPoint && matchUp?.winningSide !== undefined;
 
-    // Handle set transition: reset per-set accumulators
-    if (point.set !== currentSet) {
-      setCumulativePoints = [0, 0];
-      gamePointCounts = [0, 0];
-      // Seed gamesScore from prior games in the new set
-      gamesScore = [...(priorGamesPerSet.get(point.set) || [0, 0])] as [number, number];
-      currentSet = point.set;
-      currentGame = point.game;
-    }
+    handleTransitions(point, state, priorGamesPerSet);
+    updatePointCounts(point, state);
 
-    // Handle game transition: reset within-game point counts
-    if (point.game !== currentGame) {
-      gamePointCounts = [0, 0];
-      currentGame = point.game;
-    }
+    const boundaries = detectBoundaries(matchUp, point, nextPoint, isLastPoint, matchComplete, state.gamesScore);
 
-    // Update cumulative set points
-    if (point.winner === 0) setCumulativePoints[0]++;
-    else setCumulativePoints[1]++;
-
-    // Update within-game point counts
-    if (point.winner === 0) gamePointCounts[0]++;
-    else gamePointCounts[1]++;
-
-    // Determine game winner when game completes
-    const isGameEnd = gameComplete || (isLastPoint && matchComplete);
-    let gameWinner: number | undefined;
-    if (isGameEnd) {
-      gameWinner = point.winner;
-    }
-
-    // Update games score AFTER determining game winner
-    const episodeGamesScore: [number, number] = [...gamesScore];
-    if (isGameEnd && gameWinner !== undefined) {
-      episodeGamesScore[gameWinner]++;
-    }
-
-    // Determine set winner
-    const isSetEnd = setComplete || (isLastPoint && matchComplete);
-    let setWinner: number | undefined;
-    if (isSetEnd) {
-      setWinner = sideToIndex(deriveSetWinner(matchUp, point.set));
-    }
-
-    // Build cumulative sets array with current scores
-    const episodeSetsScore: [number, number] = [...setsScore];
-    if (isSetEnd && setWinner !== undefined) {
-      episodeSetsScore[setWinner]++;
-    }
-    const setsArray = buildSetsArray(matchUp, point.set);
-
-    // Score display: show "G" for game-completing points
-    const displayScore = isGameEnd ? 'G' : point.score || '';
-
-    const episode: Episode = {
-      action: 'addPoint',
-      point: {
-        winner: point.winner,
-        server: point.server,
-        pointNumber: point.pointNumber,
-        index: point.index ?? i,
-        isBreakpoint: point.isBreakpoint ?? false,
-        score: displayScore,
-        set: point.set,
-        game: point.game,
-        rallyLength: point.rallyLength,
-        result: point.result,
-        notation: point.mcpCode,
-        tiebreak: point.tiebreak ?? false,
-        serve: point.serve, // 1 = first serve, 2 = second serve
-        points: [...gamePointCounts] as [number, number],
-        setCumulativePoints: [...setCumulativePoints] as [number, number],
-      },
-      game: {
-        complete: isGameEnd,
-        winner: gameWinner,
-        games: episodeGamesScore,
-        index: point.game,
-      },
-      set: {
-        complete: isSetEnd,
-        winner: setWinner,
-        sets: setsArray,
-        index: point.set,
-      },
-      needed: {
-        pointsToGame: point.pointsToGame ?? [0, 0],
-        pointsToSet: point.pointsToSet ?? [0, 0],
-        gamesToSet: point.gamesToSet ?? [0, 0],
-      },
-      nextService: nextPoint?.server ?? point.server,
-      result: true,
-      complete: isLastPoint && matchComplete,
-    };
-
+    const { episode, gameWinner, setWinner } = buildEpisode(
+      matchUp, point, nextPoint, i, state, boundaries,
+    );
     episodes.push(episode);
 
-    // Update running gamesScore after game completion
-    if (gameComplete && gameWinner !== undefined) {
-      gamesScore[gameWinner]++;
-      gamePointCounts = [0, 0];
-    }
-
-    // Update running setsScore after set completion
-    if (setComplete && setWinner !== undefined) {
-      setsScore[setWinner]++;
-      // Reset gamesScore for new set
-      gamesScore = [0, 0];
-    }
+    advanceRunningState(state, boundaries, gameWinner, setWinner);
   }
 
   return episodes;
+}
+
+interface RunningState {
+  setCumulativePoints: [number, number];
+  gamePointCounts: [number, number];
+  gamesScore: [number, number];
+  setsScore: [number, number];
+  currentSet: number;
+  currentGame: number;
+}
+
+interface Boundaries {
+  gameComplete: boolean;
+  setComplete: boolean;
+  isLastPoint: boolean;
+  matchComplete: boolean;
+  isGameEnd: boolean;
+  isSetEnd: boolean;
+}
+
+function initRunningState(firstPoint: any, priorGamesPerSet: Map<number, [number, number]>): RunningState {
+  const setIndex = firstPoint?.set ?? 0;
+  return {
+    setCumulativePoints: [0, 0],
+    gamePointCounts: [0, 0],
+    gamesScore: [...(priorGamesPerSet.get(setIndex) || [0, 0])] as [number, number],
+    setsScore: [0, 0],
+    currentSet: setIndex,
+    currentGame: firstPoint?.game ?? 0,
+  };
+}
+
+function handleTransitions(point: any, state: RunningState, priorGamesPerSet: Map<number, [number, number]>): void {
+  if (point.set !== state.currentSet) {
+    state.setCumulativePoints = [0, 0];
+    state.gamePointCounts = [0, 0];
+    state.gamesScore = [...(priorGamesPerSet.get(point.set) || [0, 0])] as [number, number];
+    state.currentSet = point.set;
+    state.currentGame = point.game;
+  }
+
+  if (point.game !== state.currentGame) {
+    state.gamePointCounts = [0, 0];
+    state.currentGame = point.game;
+  }
+}
+
+function updatePointCounts(point: any, state: RunningState): void {
+  state.setCumulativePoints[point.winner === 0 ? 0 : 1]++;
+  state.gamePointCounts[point.winner === 0 ? 0 : 1]++;
+}
+
+function detectBoundaries(
+  matchUp: any,
+  point: any,
+  nextPoint: any,
+  isLastPoint: boolean,
+  matchComplete: boolean,
+  gamesScore: [number, number],
+): Boundaries {
+  const gameComplete = nextPoint
+    ? nextPoint.game !== point.game || nextPoint.set !== point.set
+    : isLastPointGameComplete(matchUp, point, gamesScore[0] + gamesScore[1]);
+  const setComplete = nextPoint
+    ? nextPoint.set !== point.set
+    : isLastPointSetComplete(matchUp, point);
+  const isGameEnd = gameComplete || (isLastPoint && matchComplete);
+  const isSetEnd = setComplete || (isLastPoint && matchComplete);
+
+  return { gameComplete, setComplete, isLastPoint, matchComplete, isGameEnd, isSetEnd };
+}
+
+function buildEpisode(
+  matchUp: any,
+  point: any,
+  nextPoint: any,
+  index: number,
+  state: RunningState,
+  boundaries: Boundaries,
+): { episode: Episode; gameWinner: number | undefined; setWinner: number | undefined } {
+  const gameWinner = boundaries.isGameEnd ? point.winner : undefined;
+
+  const episodeGamesScore: [number, number] = [...state.gamesScore];
+  if (boundaries.isGameEnd && gameWinner !== undefined) {
+    episodeGamesScore[gameWinner]++;
+  }
+
+  const setWinner = boundaries.isSetEnd ? sideToIndex(deriveSetWinner(matchUp, point.set)) : undefined;
+
+  const displayScore = boundaries.isGameEnd ? 'G' : point.score || '';
+
+  const episode: Episode = {
+    action: 'addPoint',
+    point: {
+      winner: point.winner,
+      server: point.server,
+      pointNumber: point.pointNumber,
+      index: point.index ?? index,
+      isBreakpoint: point.isBreakpoint ?? false,
+      score: displayScore,
+      set: point.set,
+      game: point.game,
+      rallyLength: point.rallyLength,
+      result: point.result,
+      notation: point.mcpCode,
+      tiebreak: point.tiebreak ?? false,
+      serve: point.serve,
+      points: [...state.gamePointCounts] as [number, number],
+      setCumulativePoints: [...state.setCumulativePoints] as [number, number],
+    },
+    game: {
+      complete: boundaries.isGameEnd,
+      winner: gameWinner,
+      games: episodeGamesScore,
+      index: point.game,
+    },
+    set: {
+      complete: boundaries.isSetEnd,
+      winner: setWinner,
+      sets: buildSetsArray(matchUp, point.set),
+      index: point.set,
+    },
+    needed: {
+      pointsToGame: point.pointsToGame ?? [0, 0],
+      pointsToSet: point.pointsToSet ?? [0, 0],
+      gamesToSet: point.gamesToSet ?? [0, 0],
+    },
+    nextService: nextPoint?.server ?? point.server,
+    result: true,
+    complete: boundaries.isLastPoint && boundaries.matchComplete,
+  };
+
+  return { episode, gameWinner, setWinner };
+}
+
+function advanceRunningState(
+  state: RunningState,
+  boundaries: Boundaries,
+  gameWinner: number | undefined,
+  setWinner: number | undefined,
+): void {
+  if (boundaries.gameComplete && gameWinner !== undefined) {
+    state.gamesScore[gameWinner]++;
+    state.gamePointCounts = [0, 0];
+  }
+
+  if (boundaries.setComplete && setWinner !== undefined) {
+    state.setsScore[setWinner]++;
+    state.gamesScore = [0, 0];
+  }
 }
 
 /**
