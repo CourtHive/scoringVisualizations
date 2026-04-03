@@ -49,8 +49,8 @@ importers:
         specifier: ^10.2.9
         version: 10.2.9(@testing-library/dom@10.4.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       tods-competition-factory:
-        specifier: 2.4.1
-        version: 2.4.1
+        specifier: 2.4.5
+        version: 2.4.5
       typescript:
         specifier: ^5.7.0
         version: 5.9.3
@@ -1479,8 +1479,8 @@ packages:
   tippy.js@6.3.7:
     resolution: {integrity: sha512-E1d3oP2emgJ9dRQZdf3Kkn0qJgI6ZLpyS5z6ZkY1DF3kaQaBsGZsndEpHwx+eC+tYM41HaSNvNtLx8tU57FzTQ==}
 
-  tods-competition-factory@2.4.1:
-    resolution: {integrity: sha512-F6VjnIe8mVPYwyobD2lJUh/7nWl9ch+iBBTigQWkboyGUi9prtm5G+Ws21X9ft+vku47T/2ckVM3dhI/j5qmLA==}
+  tods-competition-factory@2.4.5:
+    resolution: {integrity: sha512-S+fswvRT0Nj/BZGAxD58McZuUVOwaGmPtXS4sRbHtAqHfICvyrCh9pv34jMYxkYOykZFLltyPzJybfeAVw538g==}
     engines: {node: '>=20'}
 
   ts-api-utils@2.4.0:
@@ -2999,7 +2999,7 @@ snapshots:
     dependencies:
       '@popperjs/core': 2.11.8
 
-  tods-competition-factory@2.4.1: {}
+  tods-competition-factory@2.4.5: {}
 
   ts-api-utils@2.4.0(typescript@5.9.3):
     dependencies:
