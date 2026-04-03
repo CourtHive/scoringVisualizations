@@ -30,7 +30,7 @@
     "game-tree",
     "momentum"
   ],
-  "packageManager": "pnpm@10.30.0",
+  "packageManager": "pnpm@10.33.0",
   "license": "MIT",
   "dependencies": {
     "d3": "^7.9.0",
