@@ -180,4 +180,23 @@ describe('LiveEngine', () => {
     live.addPoint({ winner: 0 });
     expect(live.getPointCount()).toBe(1);
   });
+
+  it('getState returns full matchUp state', () => {
+    const live = makeLive();
+    live.addPoint({ winner: 0, server: 0 });
+
+    const state = live.getState();
+    expect(state).toHaveProperty('history');
+    expect(state).toHaveProperty('score');
+    expect(state.history.points).toHaveLength(1);
+  });
+
+  it('getScoreboard returns a score string', () => {
+    const live = makeLive();
+    live.addPoint({ winner: 0, server: 0 });
+
+    const scoreboard = live.getScoreboard();
+    expect(typeof scoreboard).toBe('string');
+    expect(scoreboard.length).toBeGreaterThan(0);
+  });
 });

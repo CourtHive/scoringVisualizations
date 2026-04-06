@@ -66,44 +66,29 @@ export function validateIONSportMatch(options: IONSportValidationOptions): IONSp
   let doubleFaults = 0;
   let pointsProcessed = 0;
 
-  // Parse match data
   const parsedMatch = parseIONSportMatch(jsonData);
 
   if (debug) {
-    const p1 = parsedMatch.side1Players.map((p) => `${p.firstName} ${p.lastName}`).join(' / ');
-    const p2 = parsedMatch.side2Players.map((p) => `${p.firstName} ${p.lastName}`).join(' / ');
-    console.log(`Validating: ${p1} vs ${p2}`);
-    console.log(`Format: ${parsedMatch.matchFormat} → ${parsedMatch.factoryFormat}`);
-    console.log(`Type: ${parsedMatch.matchType} (${parsedMatch.isDoubles ? 'doubles' : 'singles'})`);
-    console.log(`Timed: ${parsedMatch.isTimed}`);
-    console.log(`Sets: ${parsedMatch.sets.length}`);
+    logMatchHeader(parsedMatch);
   }
 
-  // Create ScoringEngine
   const engine = new ScoringEngine({
     matchUpFormat: parsedMatch.factoryFormat,
     isDoubles: parsedMatch.isDoubles,
   });
 
-  // Set up lineUps for substitution tracking
   setupLineUps(engine, parsedMatch.side1Players, parsedMatch.side2Players, parsedMatch.isDoubles);
-
-  // Set player names on sides
   setPlayerNames(engine, parsedMatch.side1Players, parsedMatch.side2Players);
 
-  // Build substitution events from court time log
   const substitutionEvents = buildSubstitutionEvents(parsedMatch.courtTimeLog);
 
   if (debug && substitutionEvents.length > 0) {
     console.log(`Substitution events: ${substitutionEvents.length}`);
   }
 
-  // Track substitution index
   let subIndex = 0;
-
   const setScores: Array<{ side1: number; side2: number }> = [];
 
-  // Process each set
   for (let setIdx = 0; setIdx < parsedMatch.sets.length; setIdx++) {
     const set = parsedMatch.sets[setIdx];
 
@@ -113,92 +98,15 @@ export function validateIONSportMatch(options: IONSportValidationOptions): IONSp
       );
     }
 
-    // Process substitutions that happen at the start of this set
-    while (subIndex < substitutionEvents.length) {
-      const sub = substitutionEvents[subIndex];
-      if (sub.setNumber > set.setNumber) break;
-      if (sub.setNumber === set.setNumber && (sub.pointNumber === undefined || sub.pointNumber <= 1)) {
-        // Substitution at set boundary
-        applySubstitution(engine, sub);
-        subIndex++;
-        if (debug) {
-          console.log(`  Sub at set ${sub.setNumber} start: ${sub.outParticipantId} → ${sub.inParticipantId}`);
-        }
-      } else {
-        break;
-      }
-    }
+    subIndex = processSetBoundarySubstitutions(engine, substitutionEvents, subIndex, set.setNumber, debug);
 
-    // Process each point in the set
-    for (let ptIdx = 0; ptIdx < set.points.length; ptIdx++) {
-      const point = set.points[ptIdx];
+    const setResult = processSetPoints(engine, set, substitutionEvents, subIndex, debug, errors);
+    pointsProcessed += setResult.pointsProcessed;
+    doubleFaults += setResult.doubleFaults;
+    subIndex = setResult.subIndex;
 
-      // Check for mid-set substitutions
-      const globalPointNumber = ptIdx + 1;
-      while (subIndex < substitutionEvents.length) {
-        const sub = substitutionEvents[subIndex];
-        if (sub.setNumber > set.setNumber) break;
-        if (sub.setNumber === set.setNumber && sub.pointNumber !== undefined && sub.pointNumber <= globalPointNumber) {
-          applySubstitution(engine, sub);
-          subIndex++;
-          if (debug) {
-            console.log(
-              `  Sub at set ${sub.setNumber} pt ${sub.pointNumber}: ${sub.outParticipantId} → ${sub.inParticipantId}`,
-            );
-          }
-        } else {
-          break;
-        }
-      }
-
-      try {
-        // Build addPoint options using 0-indexed convention for ScoringEngine
-        const pointOptions: Record<string, any> = {
-          winner: (point.winningSide - 1) as 0 | 1,
-          server: (point.serverSideNumber - 1) as 0 | 1,
-        };
-
-        if (point.timestamp) {
-          pointOptions.timestamp = point.timestamp;
-        }
-
-        if (point.result) {
-          pointOptions.result = point.result;
-        }
-
-        if (point.scoreValue && point.scoreValue > 1) {
-          pointOptions.scoreValue = point.scoreValue;
-        }
-
-        engine.addPoint(pointOptions);
-
-        // Decorate last history point with additional IONSport metadata
-        const state = engine.getState();
-        const lastPoint = state.history?.points[state.history.points.length - 1];
-        if (lastPoint) {
-          if (point.startPointTimeStamp) {
-            (lastPoint as any).startPointTimeStamp = point.startPointTimeStamp;
-          }
-          if (point.serveSide) {
-            // Store the IONSport serve side info
-            (lastPoint as any).ionSportServeSide = point.serveSide;
-          }
-        }
-
-        pointsProcessed++;
-
-        if (point.result === 'Double Fault') {
-          doubleFaults++;
-        }
-      } catch (error) {
-        const msg = error instanceof Error ? error.message : String(error);
-        errors.push(`Set ${set.setNumber} Point ${ptIdx + 1}: ${msg}`);
-      }
-    }
-
-    // End segment for timed sets
     if (parsedMatch.isTimed) {
-      const lastPoint = set.points[set.points.length - 1];
+      const lastPoint = set.points.at(-1);
       engine.endSegment({
         setNumber: set.setNumber,
         timestamp: lastPoint?.timestamp,
@@ -209,43 +117,18 @@ export function validateIONSportMatch(options: IONSportValidationOptions): IONSp
       }
     }
 
-    // Record set score
-    const state = engine.getState();
-    const engineSet = state.score.sets[setIdx];
-    if (engineSet) {
-      setScores.push({
-        side1: engineSet.side1Score || 0,
-        side2: engineSet.side2Score || 0,
-      });
-
-      // Validate set scores match IONSport data
-      if (parsedMatch.isTimed) {
-        const s1 = engineSet.side1Score || 0;
-        const s2 = engineSet.side2Score || 0;
-        if (s1 !== set.side1Score || s2 !== set.side2Score) {
-          warnings.push(
-            `Set ${set.setNumber} score mismatch: engine=${s1}-${s2}, IONSport=${set.side1Score}-${set.side2Score}`,
-          );
-        }
-      }
-    }
+    recordSetScore(engine, setIdx, set, parsedMatch.isTimed, setScores, warnings);
   }
 
-  // Process remaining substitutions
   while (subIndex < substitutionEvents.length) {
-    const sub = substitutionEvents[subIndex];
-    applySubstitution(engine, sub);
+    applySubstitution(engine, substitutionEvents[subIndex]);
     subIndex++;
   }
 
   const matchUp = engine.getState();
 
   if (debug) {
-    console.log(`\nFinal score: ${engine.getScoreboard()}`);
-    console.log(`Match status: ${matchUp.matchUpStatus}`);
-    console.log(`Points processed: ${pointsProcessed}`);
-    console.log(`Double faults: ${doubleFaults}`);
-    console.log(`Substitutions: ${matchUp.history?.substitutions?.length || 0}`);
+    logMatchFooter(engine, matchUp, pointsProcessed, doubleFaults);
   }
 
   return {
@@ -260,6 +143,158 @@ export function validateIONSportMatch(options: IONSportValidationOptions): IONSp
     setScores,
     doubleFaults,
   };
+}
+
+function logMatchHeader(parsedMatch: ParsedIONSportMatch): void {
+  const p1 = parsedMatch.side1Players.map((p) => `${p.firstName} ${p.lastName}`).join(' / ');
+  const p2 = parsedMatch.side2Players.map((p) => `${p.firstName} ${p.lastName}`).join(' / ');
+  console.log(`Validating: ${p1} vs ${p2}`);
+  console.log(`Format: ${parsedMatch.matchFormat} → ${parsedMatch.factoryFormat}`);
+  console.log(`Type: ${parsedMatch.matchType} (${parsedMatch.isDoubles ? 'doubles' : 'singles'})`);
+  console.log(`Timed: ${parsedMatch.isTimed}`);
+  console.log(`Sets: ${parsedMatch.sets.length}`);
+}
+
+function logMatchFooter(engine: any, matchUp: any, pointsProcessed: number, doubleFaults: number): void {
+  console.log(`\nFinal score: ${engine.getScoreboard()}`);
+  console.log(`Match status: ${matchUp.matchUpStatus}`);
+  console.log(`Points processed: ${pointsProcessed}`);
+  console.log(`Double faults: ${doubleFaults}`);
+  console.log(`Substitutions: ${matchUp.history?.substitutions?.length || 0}`);
+}
+
+function processSetBoundarySubstitutions(
+  engine: any,
+  substitutionEvents: SubstitutionInfo[],
+  startIndex: number,
+  setNumber: number,
+  debug: boolean,
+): number {
+  let subIndex = startIndex;
+  while (subIndex < substitutionEvents.length) {
+    const sub = substitutionEvents[subIndex];
+    if (sub.setNumber > setNumber) break;
+    if (sub.setNumber === setNumber && (sub.pointNumber === undefined || sub.pointNumber <= 1)) {
+      applySubstitution(engine, sub);
+      subIndex++;
+      if (debug) {
+        console.log(`  Sub at set ${sub.setNumber} start: ${sub.outParticipantId} → ${sub.inParticipantId}`);
+      }
+    } else {
+      break;
+    }
+  }
+  return subIndex;
+}
+
+function processSetPoints(
+  engine: any,
+  set: any,
+  substitutionEvents: SubstitutionInfo[],
+  startSubIndex: number,
+  debug: boolean,
+  errors: string[],
+): { pointsProcessed: number; doubleFaults: number; subIndex: number } {
+  let subIndex = startSubIndex;
+  let pointsProcessed = 0;
+  let doubleFaults = 0;
+
+  for (let ptIdx = 0; ptIdx < set.points.length; ptIdx++) {
+    const point = set.points[ptIdx];
+    const globalPointNumber = ptIdx + 1;
+
+    subIndex = processMidSetSubstitutions(engine, substitutionEvents, subIndex, set.setNumber, globalPointNumber, debug);
+
+    try {
+      addIONSportPoint(engine, point);
+      pointsProcessed++;
+      if (point.result === 'Double Fault') doubleFaults++;
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      errors.push(`Set ${set.setNumber} Point ${ptIdx + 1}: ${msg}`);
+    }
+  }
+
+  return { pointsProcessed, doubleFaults, subIndex };
+}
+
+function processMidSetSubstitutions(
+  engine: any,
+  substitutionEvents: SubstitutionInfo[],
+  startIndex: number,
+  setNumber: number,
+  globalPointNumber: number,
+  debug: boolean,
+): number {
+  let subIndex = startIndex;
+  while (subIndex < substitutionEvents.length) {
+    const sub = substitutionEvents[subIndex];
+    if (sub.setNumber > setNumber) break;
+    if (sub.setNumber === setNumber && sub.pointNumber !== undefined && sub.pointNumber <= globalPointNumber) {
+      applySubstitution(engine, sub);
+      subIndex++;
+      if (debug) {
+        console.log(
+          `  Sub at set ${sub.setNumber} pt ${sub.pointNumber}: ${sub.outParticipantId} → ${sub.inParticipantId}`,
+        );
+      }
+    } else {
+      break;
+    }
+  }
+  return subIndex;
+}
+
+function addIONSportPoint(engine: any, point: any): void {
+  const pointOptions: Record<string, any> = {
+    winner: (point.winningSide - 1) as 0 | 1,
+    server: (point.serverSideNumber - 1) as 0 | 1,
+  };
+
+  if (point.timestamp) pointOptions.timestamp = point.timestamp;
+  if (point.result) pointOptions.result = point.result;
+  if (point.scoreValue && point.scoreValue > 1) pointOptions.scoreValue = point.scoreValue;
+
+  engine.addPoint(pointOptions);
+
+  const state = engine.getState();
+  const lastPoint = state.history?.points?.at(-1);
+  if (lastPoint) {
+    if (point.startPointTimeStamp) {
+      (lastPoint as any).startPointTimeStamp = point.startPointTimeStamp;
+    }
+    if (point.serveSide) {
+      (lastPoint as any).ionSportServeSide = point.serveSide;
+    }
+  }
+}
+
+function recordSetScore(
+  engine: any,
+  setIdx: number,
+  set: any,
+  isTimed: boolean,
+  setScores: Array<{ side1: number; side2: number }>,
+  warnings: string[],
+): void {
+  const state = engine.getState();
+  const engineSet = state.score.sets[setIdx];
+  if (!engineSet) return;
+
+  setScores.push({
+    side1: engineSet.side1Score || 0,
+    side2: engineSet.side2Score || 0,
+  });
+
+  if (isTimed) {
+    const s1 = engineSet.side1Score || 0;
+    const s2 = engineSet.side2Score || 0;
+    if (s1 !== set.side1Score || s2 !== set.side2Score) {
+      warnings.push(
+        `Set ${set.setNumber} score mismatch: engine=${s1}-${s2}, IONSport=${set.side1Score}-${set.side2Score}`,
+      );
+    }
+  }
 }
 
 // ============================================================================

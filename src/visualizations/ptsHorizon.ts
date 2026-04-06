@@ -114,7 +114,6 @@ export function ptsHorizon() {
 
         if (setMapData.length === 0) return;
 
-        // Calculate pixels per point
         const totalPoints = setMapData.reduce((sum, sm) => sum + sm.p2sdiff.length, 0);
         if (totalPoints === 0) return;
 
@@ -123,99 +122,9 @@ export function ptsHorizon() {
 
         root.attr('id', `ptsHorizon${options.id}`).attr('width', options.width).attr('height', options.height);
 
-        let xadd = 0;
-        let yadd = 0;
+        updateHorizonSets(horizonCharts, horizonSets, setMapData, options, events, data, ppp, horizontal);
 
-        for (let s = 0; s < horizonCharts.length; s++) {
-          if (setMapData[s]) {
-            const sdata: [number, number][] = setMapData[s].p2sdiff.map((d, idx) => [idx + 1, d]);
-            if (!sdata.length) continue;
-
-            const hc = horizonCharts[s];
-            hc.height(options.height);
-            hc.width(options.width);
-            hc.options({
-              id: `${options.id}c${s}`,
-              display: {
-                ppp,
-                bands: options.display.bands,
-                orientation: options.display.orientation,
-                interpolate: options.display.interpolate,
-              },
-              position: {
-                x: options.position.x + xadd,
-                y: options.position.y + yadd,
-              },
-              bounds: { vRangeMax: options.bounds.vRangeMax },
-            });
-            hc.events({
-              chart: { click: events.chart.click ? (d: any) => events.chart.click!(d) : null },
-              path: {
-                mouseover: options.elements.brush ? null : events.mouseover ?? null,
-                mouseout: options.elements.brush ? null : (events.mouseout as any) ?? null,
-              },
-            });
-            hc.duration(options.display.transitionTime);
-            hc.colors(options.color.range);
-            hc.mode(options.display.mode);
-            hc.data(data);
-            hc.sdata(sdata);
-            hc.update();
-
-            if (horizontal) {
-              xadd += ppp * setMapData[s].p2sdiff.length + options.margins.spacing;
-            } else {
-              yadd += ppp * setMapData[s].p2sdiff.length + options.margins.spacing;
-            }
-
-            horizonSets[s].style('display', 'inline');
-          } else {
-            horizonSets[s].style('display', 'none');
-          }
-        }
-
-        // Brush overlay
-        if (options.elements.brush) {
-          const brushScale = scaleLinear().domain([0, totalPoints]).range([0, options.width]);
-
-          const brush = brushX()
-            .extent([
-              [0, 0],
-              [options.width, options.height],
-            ])
-            .on('start', (event) => {
-              if (!event.selection) return;
-              const extent = event.selection.map((d: number) => brushScale.invert(d)) as [number, number];
-              if (events.brush.start) events.brush.start(extent);
-            })
-            .on('brush', (event) => {
-              if (!event.selection) return;
-              const extent = event.selection.map((d: number) => brushScale.invert(d)) as [number, number];
-              if (events.brush.brushing) events.brush.brushing(extent);
-            })
-            .on('end', (event) => {
-              if (!event.selection) {
-                // Brush cleared — emit full range
-                if (events.brush.end) events.brush.end([0, totalPoints]);
-                return;
-              }
-              const extent = event.selection.map((d: number) => brushScale.invert(d)) as [number, number];
-              if (events.brush.end) events.brush.end(extent);
-            });
-
-          // Remove old brush, add new
-          root.selectAll(`.brush${options.id}`).remove();
-
-          root
-            .append('g')
-            .attr('class', `brush${options.id}`)
-            .style('stroke', '#fff')
-            .style('fill-opacity', 0.125)
-            .style('shape-rendering', 'crispEdges')
-            .call(brush);
-        } else {
-          root.selectAll(`.brush${options.id}`).remove();
-        }
+        renderBrushOverlay(root, options, events, totalPoints);
       };
     });
   }
@@ -297,6 +206,125 @@ export function ptsHorizon() {
   };
 
   return chart;
+}
+
+function updateHorizonSets(
+  horizonCharts: ReturnType<typeof horizonChart>[],
+  horizonSets: any[],
+  setMapData: SetMap[],
+  options: PtsHorizonOptions,
+  events: PtsHorizonEvents,
+  data: any,
+  ppp: number,
+  horizontal: boolean,
+): void {
+  let xadd = 0;
+  let yadd = 0;
+
+  for (let s = 0; s < horizonCharts.length; s++) {
+    if (!setMapData[s]) {
+      horizonSets[s].style('display', 'none');
+      continue;
+    }
+
+    const sdata: [number, number][] = setMapData[s].p2sdiff.map((d, idx) => [idx + 1, d]);
+    if (!sdata.length) continue;
+
+    configureHorizonChart(horizonCharts[s], s, options, events, data, sdata, ppp, xadd, yadd);
+
+    if (horizontal) {
+      xadd += ppp * setMapData[s].p2sdiff.length + options.margins.spacing;
+    } else {
+      yadd += ppp * setMapData[s].p2sdiff.length + options.margins.spacing;
+    }
+
+    horizonSets[s].style('display', 'inline');
+  }
+}
+
+function configureHorizonChart(
+  hc: ReturnType<typeof horizonChart>,
+  index: number,
+  options: PtsHorizonOptions,
+  events: PtsHorizonEvents,
+  data: any,
+  sdata: [number, number][],
+  ppp: number,
+  xadd: number,
+  yadd: number,
+): void {
+  hc.height(options.height);
+  hc.width(options.width);
+  hc.options({
+    id: `${options.id}c${index}`,
+    display: {
+      ppp,
+      bands: options.display.bands,
+      orientation: options.display.orientation,
+      interpolate: options.display.interpolate,
+    },
+    position: {
+      x: options.position.x + xadd,
+      y: options.position.y + yadd,
+    },
+    bounds: { vRangeMax: options.bounds.vRangeMax },
+  });
+  hc.events({
+    chart: { click: events.chart.click ? (d: any) => events.chart.click!(d) : null },
+    path: {
+      mouseover: options.elements.brush ? null : events.mouseover ?? null,
+      mouseout: options.elements.brush ? null : (events.mouseout as any) ?? null,
+    },
+  });
+  hc.duration(options.display.transitionTime);
+  hc.colors(options.color.range);
+  hc.mode(options.display.mode);
+  hc.data(data);
+  hc.sdata(sdata);
+  hc.update();
+}
+
+function renderBrushOverlay(root: any, options: PtsHorizonOptions, events: PtsHorizonEvents, totalPoints: number): void {
+  if (!options.elements.brush) {
+    root.selectAll(`.brush${options.id}`).remove();
+    return;
+  }
+
+  const brushScale = scaleLinear().domain([0, totalPoints]).range([0, options.width]);
+
+  const brush = brushX()
+    .extent([
+      [0, 0],
+      [options.width, options.height],
+    ])
+    .on('start', (event) => {
+      if (!event.selection) return;
+      const extent = event.selection.map((d: number) => brushScale.invert(d)) as [number, number];
+      if (events.brush.start) events.brush.start(extent);
+    })
+    .on('brush', (event) => {
+      if (!event.selection) return;
+      const extent = event.selection.map((d: number) => brushScale.invert(d)) as [number, number];
+      if (events.brush.brushing) events.brush.brushing(extent);
+    })
+    .on('end', (event) => {
+      if (!event.selection) {
+        if (events.brush.end) events.brush.end([0, totalPoints]);
+        return;
+      }
+      const extent = event.selection.map((d: number) => brushScale.invert(d)) as [number, number];
+      if (events.brush.end) events.brush.end(extent);
+    });
+
+  root.selectAll(`.brush${options.id}`).remove();
+
+  root
+    .append('g')
+    .attr('class', `brush${options.id}`)
+    .style('stroke', '#fff')
+    .style('fill-opacity', 0.125)
+    .style('shape-rendering', 'crispEdges')
+    .call(brush);
 }
 
 /**
