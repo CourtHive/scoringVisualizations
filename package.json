@@ -44,7 +44,7 @@
   "dependencies": {
     "d3": "^7.9.0",
     "tippy.js": "^6.3.7",
-    "tods-competition-factory": "link:../factory"
+    "tods-competition-factory": "^2.4.6-beta.43"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -60,7 +60,7 @@
     "globals": "^17.3.0",
     "storybook": "^10.2.9",
     "typescript": "^6.0.2",
-    "vite": "^8.0.3",
+    "vite": "^7.3.1",
     "vite-plugin-dts": "^4.5.4",
     "vitest": "^4.1.2"
   },
