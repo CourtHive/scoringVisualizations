@@ -15,20 +15,20 @@ importers:
         specifier: ^6.3.7
         version: 6.3.7
       tods-competition-factory:
-        specifier: ^2.4.6-beta.43
-        version: 2.4.6-beta.43
+        specifier: '>=2.0.0'
+        version: 2.4.5
     devDependencies:
       '@eslint/js':
         specifier: ^10.0.1
         version: 10.0.1(eslint@10.1.0)
       '@storybook/addon-docs':
-        specifier: ^10.2.9
+        specifier: ^10.3.5
         version: 10.3.5(@types/react@19.2.14)(esbuild@0.27.7)(rollup@4.60.1)(storybook@10.3.5(@testing-library/dom@10.4.1)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(vite@8.0.8(esbuild@0.27.7))
       '@storybook/addon-links':
-        specifier: ^10.2.9
+        specifier: ^10.3.5
         version: 10.3.5(react@19.2.5)(storybook@10.3.5(@testing-library/dom@10.4.1)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))
       '@storybook/html-vite':
-        specifier: ^10.2.9
+        specifier: ^10.3.5
         version: 10.3.5(esbuild@0.27.7)(rollup@4.60.1)(storybook@10.3.5(@testing-library/dom@10.4.1)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(vite@8.0.8(esbuild@0.27.7))
       '@types/d3':
         specifier: ^7.4.3
@@ -52,7 +52,7 @@ importers:
         specifier: ^17.3.0
         version: 17.3.0
       storybook:
-        specifier: ^10.2.9
+        specifier: ^10.3.5
         version: 10.3.5(@testing-library/dom@10.4.1)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       typescript:
         specifier: ^6.0.2
@@ -1954,8 +1954,8 @@ packages:
   tippy.js@6.3.7:
     resolution: {integrity: sha512-E1d3oP2emgJ9dRQZdf3Kkn0qJgI6ZLpyS5z6ZkY1DF3kaQaBsGZsndEpHwx+eC+tYM41HaSNvNtLx8tU57FzTQ==}
 
-  tods-competition-factory@2.4.6-beta.43:
-    resolution: {integrity: sha512-giZkZj9MnSvPpqQ28NetHXJeze5mVh1l0SFVJ126dJ547QXZpJcVtj2roM44JGrbkqs/7b/Y1432XBtRTmkCRQ==}
+  tods-competition-factory@2.4.5:
+    resolution: {integrity: sha512-S+fswvRT0Nj/BZGAxD58McZuUVOwaGmPtXS4sRbHtAqHfICvyrCh9pv34jMYxkYOykZFLltyPzJybfeAVw538g==}
     engines: {node: '>=20'}
 
   ts-api-utils@2.5.0:
@@ -3966,7 +3966,7 @@ snapshots:
     dependencies:
       '@popperjs/core': 2.11.8
 
-  tods-competition-factory@2.4.6-beta.43: {}
+  tods-competition-factory@2.4.5: {}
 
   ts-api-utils@2.5.0(typescript@5.9.3):
     dependencies:
