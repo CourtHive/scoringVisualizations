@@ -9,6 +9,7 @@ import { validateProTrackerMatch } from '../parsers/proTrackerValidator';
 import { validateIONSportMatch } from '../parsers/ionSportValidator';
 
 const FULL_WIDTH = 'width:100%;';
+const CONTAINER_STYLE = 'width:100%; min-height:650px; padding:12px;';
 
 interface MatchUpDashboardArgs {
   matchIndex: number;
@@ -84,7 +85,7 @@ export const LivePlayback: Story = {
   },
   render: (args) => {
     const container = document.createElement('div');
-    container.style.cssText = 'width:100%; min-height:650px; padding:12px;';
+    container.style.cssText = CONTAINER_STYLE;
 
     const dashboardDiv = document.createElement('div');
     dashboardDiv.style.cssText = FULL_WIDTH;
@@ -128,7 +129,7 @@ export const UndoRedo: Story = {
   },
   render: (args) => {
     const container = document.createElement('div');
-    container.style.cssText = 'width:100%; min-height:650px; padding:12px;';
+    container.style.cssText = CONTAINER_STYLE;
 
     const dashboardDiv = document.createElement('div');
     dashboardDiv.style.cssText = FULL_WIDTH;
@@ -170,7 +171,7 @@ export const FileUpload: Story = {
   },
   render: () => {
     const container = document.createElement('div');
-    container.style.cssText = 'width:100%; min-height:650px; padding:12px;';
+    container.style.cssText = CONTAINER_STYLE;
 
     const statusBar = document.createElement('div');
     statusBar.style.cssText =
