@@ -9,6 +9,14 @@
 
 import type { PointResult, StrokeType, ServeLocation, RallyShot } from './types';
 
+// Duplicated string constants (sonarjs/no-duplicate-string)
+const NEAR_COURT = 'Near Court';
+const FAR_COURT = 'Far Court';
+const TIEBREAK_6_6 = '7-point Tiebreak at 6-6';
+const FIRST_SERVE = 'First Serve';
+const SECOND_SERVE = 'Second Serve';
+const SERVE_WINNER = 'Serve Winner';
+
 // ============================================================================
 // Types
 // ============================================================================
@@ -71,7 +79,7 @@ export interface PTFPoint {
 export interface PTFShot {
   player: string;
   stroke: string; // 'Serve', 'Forehand', 'Backhand', 'Return', etc.
-  strokeType: string; // 'First Serve', 'Drive', 'Slice', etc.
+  strokeType: string; // FIRST_SERVE, 'Drive', 'Slice', etc.
   result: string; // 'In', 'Winner', 'Ace', 'Out', 'Netted', etc.
   x1: number;
   y1: number;
@@ -116,22 +124,22 @@ const SERVICE_LOCATIONS: Record<
   }
 > = {
   'Near Deuce': {
-    court: 'Near Court',
+    court: NEAR_COURT,
     x: [120, 180],
     placements: { Wide: [45, 65], Body: [65, 78], T: [78, 90], O: [90, 180] },
   },
   'Near Ad': {
-    court: 'Near Court',
+    court: NEAR_COURT,
     x: [60, 120],
     placements: { Wide: [115, 135], Body: [102, 115], T: [90, 102], O: [45, 90] },
   },
   'Far Deuce': {
-    court: 'Far Court',
+    court: FAR_COURT,
     x: [60, 120],
     placements: { Wide: [115, 135], Body: [102, 115], T: [90, 102], O: [45, 90] },
   },
   'Far Ad': {
-    court: 'Far Court',
+    court: FAR_COURT,
     x: [120, 180],
     placements: { Wide: [45, 65], Body: [65, 78], T: [78, 90], O: [90, 180] },
   },
@@ -152,8 +160,8 @@ export function parsePTFContent(csvRows: string[][]): PTFMatch {
   let format: PTFFormat = {
     numberOfSets: 3,
     gamesForSet: 6,
-    setFormat: '7-point Tiebreak at 6-6',
-    finalSetFormat: '7-point Tiebreak at 6-6',
+    setFormat: TIEBREAK_6_6,
+    finalSetFormat: TIEBREAK_6_6,
     advantages: true,
     lets: true,
   };
@@ -272,8 +280,11 @@ export function parsePTFContent(csvRows: string[][]): PTFMatch {
       score[g.winner] = String(Number(score[g.winner] || 0) + 1);
       finishTime = g.finishTime;
     }
-    const winner =
-      Number(score[p1]) > Number(score[p2]) ? p1 : Number(score[p2]) > Number(score[p1]) ? p2 : '';
+    const scoreP1 = Number(score[p1]);
+    const scoreP2 = Number(score[p2]);
+    let winner = '';
+    if (scoreP1 > scoreP2) winner = p1;
+    else if (scoreP2 > scoreP1) winner = p2;
 
     sets.push({
       setNumber: sets.length + 1,
@@ -282,7 +293,6 @@ export function parsePTFContent(csvRows: string[][]): PTFMatch {
       games: [...games],
       finishTime,
     });
-    games = [];
   }
 
   return {
@@ -335,7 +345,7 @@ export function parsePTFPoint(point: PTFPoint, players: [string, string]): Parse
 
   // Extract serve location from first serve
   const firstServe = point.shots.find(
-    (s) => s.strokeType === 'First Serve' || s.strokeType === 'Second Serve',
+    (s) => s.strokeType === FIRST_SERVE || s.strokeType === SECOND_SERVE,
   );
   if (firstServe) {
     parsed.serveLocation = mapServeLocation(firstServe);
@@ -402,18 +412,18 @@ export function classifyResult(shots: PTFShot[]): PointResult {
   if (lastShot.result === 'Ace') return 'Ace';
 
   // Serve Winner
-  if (lastShot.result === 'Serve Winner') return 'Serve Winner';
+  if (lastShot.result === SERVE_WINNER) return SERVE_WINNER;
 
   // Winner
   if (lastShot.result === 'Winner') return 'Winner';
 
   // Check for double fault: two consecutive serve faults
   const serves = shots.filter(
-    (s) => s.strokeType === 'First Serve' || s.strokeType === 'Second Serve',
+    (s) => s.strokeType === FIRST_SERVE || s.strokeType === SECOND_SERVE,
   );
   if (serves.length >= 2) {
-    const firstServe = serves.find((s) => s.strokeType === 'First Serve');
-    const secondServe = serves.find((s) => s.strokeType === 'Second Serve');
+    const firstServe = serves.find((s) => s.strokeType === FIRST_SERVE);
+    const secondServe = serves.find((s) => s.strokeType === SECOND_SERVE);
     if (firstServe && secondServe) {
       const isFault = (r: string) => ['Out', 'Netted', 'Out Off-Net'].includes(r);
       if (isFault(firstServe.result) && isFault(secondServe.result)) {
@@ -445,7 +455,7 @@ export function mapServeLocation(shot: PTFShot): ServeLocation | undefined {
   if (!shot.x1 && !shot.y1 && !shot.x2 && !shot.y2) return undefined;
 
   // Determine which court the impact is on
-  const impactCourt = shot.y1 < NET_Y ? 'Far Court' : 'Near Court';
+  const impactCourt = shot.y1 < NET_Y ? FAR_COURT : NEAR_COURT;
 
   // Calculate angle
   const deltaX = shot.x1 - shot.x2;
@@ -479,7 +489,7 @@ function parseFormatLine(line: string[], defaults: PTFFormat): PTFFormat {
     // Standard 7-field format line
     format.numberOfSets = parseInt(line[1] || '3', 10);
     format.gamesForSet = parseInt(line[2] || '6', 10);
-    format.setFormat = (line[3] || '7-point Tiebreak at 6-6').trim();
+    format.setFormat = (line[3] || TIEBREAK_6_6).trim();
     format.finalSetFormat = (line[4] || format.setFormat).trim();
     format.advantages = (line[5] || '').trim() === 'Ad';
     format.lets = (line[6] || '').trim() === 'Let';
@@ -503,7 +513,7 @@ function parseFormatLine(line: string[], defaults: PTFFormat): PTFFormat {
     format.numberOfSets = parseInt(line[1] || '3', 10);
     format.gamesForSet = parseInt(line[2] || '6', 10);
     format.advantages = (line[4] || '').trim() === 'Ad';
-    format.setFormat = '7-point Tiebreak at 6-6';
+    format.setFormat = TIEBREAK_6_6;
     format.finalSetFormat = '10-point Tie-Break Only';
   }
 
@@ -518,7 +528,7 @@ function parseShotLine(line: string[], players: Record<string, string>): PTFShot
   let actualStrokeType = strokeType;
 
   // Normalize serve/return strokes
-  if (['First Serve', 'Second Serve'].includes(strokeType)) {
+  if ([FIRST_SERVE, SECOND_SERVE].includes(strokeType)) {
     stroke = 'Serve';
     actualStrokeType = strokeType;
   } else if (['First Return', 'Second Return'].includes(strokeType)) {
@@ -528,8 +538,8 @@ function parseShotLine(line: string[], players: Record<string, string>): PTFShot
 
   const result = (line[6] || '').trim();
   const isKeyShot =
-    ['Ace', 'Serve Winner'].includes(result) ||
-    !['First Serve', 'Second Serve', 'First Return', 'Second Return'].includes(strokeType);
+    ['Ace', SERVE_WINNER].includes(result) ||
+    ![FIRST_SERVE, SECOND_SERVE, 'First Return', 'Second Return'].includes(strokeType);
 
   return {
     player: players[playerKey] || playerKey,
@@ -676,7 +686,7 @@ function buildPTFRallySequence(
 
   for (const shot of shots) {
     // Skip first serve faults (they're retried)
-    if (shot.strokeType === 'First Serve' && shot.result !== 'In' && shot.result !== 'Ace' && shot.result !== 'Serve Winner') {
+    if (shot.strokeType === FIRST_SERVE && shot.result !== 'In' && shot.result !== 'Ace' && shot.result !== SERVE_WINNER) {
       continue;
     }
 

@@ -66,5 +66,10 @@
   },
   "peerDependencies": {
     "tods-competition-factory": ">=2.0.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "tods-competition-factory": "link:../factory"
+    }
   }
 }
