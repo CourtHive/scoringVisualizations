@@ -26,6 +26,8 @@ export { gameFish } from './visualizations/gameFish';
 export { statView } from './visualizations/statView';
 export { matchUpDashboard } from './visualizations/matchUpDashboard';
 export { simpleChart } from './visualizations/simpleChart';
+export { donutChart, donutChartFromMatchUps, aggregateMatchUps } from './visualizations/donutChart';
+export type { DonutChartOptions, DonutDatum, CompetitivenessBucket } from './visualizations/donutChart';
 
 // Statistics
 export { computeMatchStats, computeMatchStatsFromMatchUp } from './statistics';
