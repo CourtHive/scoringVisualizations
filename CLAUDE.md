@@ -8,9 +8,9 @@ Before doing anything else, read `../Mentat/CLAUDE.md`, `../Mentat/TASKS.md`, `.
 
 ## Project Overview
 
-`@tennisvisuals/scoring-visualizations` is a standalone library of D3-based match visualizations for tennis scoring data. It transforms TODS match data into episode sequences and renders interactive charts: GameTree, Momentum, PTS (Point Timeline Series), GameFish, Corona, and statistics panels.
+`@courthive/scoring-visualizations` is a standalone library of D3-based match visualizations for tennis scoring data. It transforms TODS match data into episode sequences and renders interactive charts: GameTree, Momentum, PTS (Point Timeline Series), GameFish, Corona, and statistics panels.
 
-Published to npm as `@tennisvisuals/scoring-visualizations`. Consumed by `epixodic` (point-by-point match tracker).
+Published to npm as `@courthive/scoring-visualizations`. Consumed by `epixodic` (point-by-point match tracker).
 
 ## Commands
 

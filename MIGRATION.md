@@ -258,7 +258,7 @@ Each chart now exports an options interface:
 import {
   gameTree,
   type GameTreeOptions,
-} from "@tennisvisuals/scoring-visualizations";
+} from "@courthive/scoring-visualizations";
 
 const tree = gameTree();
 const opts: Partial<GameTreeOptions> = {
