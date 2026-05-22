@@ -24,6 +24,7 @@
     "lint": "eslint src --ext .ts",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
+    "prepare": "husky",
     "prerelease": "pnpm lint && pnpm test && pnpm build && pnpm build-storybook",
     "release": "pnpm prerelease && pnpm version"
   },
@@ -47,6 +48,8 @@
     "tods-competition-factory": "4.1.0"
   },
   "devDependencies": {
+    "@commitlint/cli": "21.0.1",
+    "@commitlint/config-conventional": "21.0.1",
     "@eslint/js": "^10.0.1",
     "@storybook/addon-docs": "^10.2.17",
     "@storybook/addon-links": "^10.2.17",
@@ -58,6 +61,7 @@
     "eslint": "^10.1.0",
     "eslint-plugin-sonarjs": "^4.0.2",
     "globals": "^17.3.0",
+    "husky": "9.1.7",
     "storybook": "^10.2.17",
     "typescript": "^6.0.2",
     "vite": "^8.0.0",

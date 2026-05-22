@@ -1,0 +1,113 @@
+name: Publish to npm
+
+# Fires when a GitHub release is published. release-please creates
+# the release via a GitHub-App-issued token (see release-please.yml),
+# so the `release: published` event is delivered to this workflow.
+# (The default GITHUB_TOKEN would silently drop the event under
+# GitHub's loop-prevention rules.)
+#
+# `workflow_dispatch` is kept as a manual escape hatch — pass a
+# `tag` input (e.g. `v0.2.3`) to publish a tag that already exists.
+#
+# Auth: per-package Trusted Publishers on npmjs.com (OIDC). No
+# NPM_TOKEN secret required — `actions/setup-node` exchanges the
+# workflow's id-token for a publish token at the moment of
+# `npm publish`. Trusted Publisher must be configured at
+# npmjs.com → @courthive/scoring-visualizations → Settings →
+# Trusted Publishers (workflow filename `npm-publish.yml`,
+# repository `CourtHive/scoringVisualizations`, owner `CourtHive`).
+#
+# Setup standard: Mentat/standards/RELEASE_PLEASE_SETUP.md
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to publish (e.g. v0.2.3). Must already exist.'
+        required: true
+        type: string
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Resolve tag
+        id: ref
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG="${{ inputs.tag }}"
+          else
+            TAG="${{ github.event.release.tag_name }}"
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ steps.ref.outputs.tag }}
+
+      - uses: pnpm/action-setup@v6
+        # pnpm version is resolved from package.json's `packageManager` field.
+        # Specifying `version:` here too makes the action error out with
+        # "Multiple versions of pnpm specified" (ERR_PNPM_BAD_PM_VERSION).
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          cache: pnpm
+
+      - name: Strip link overrides for CI
+        # Local dev uses `tods-competition-factory: link:../factory`. CI has
+        # no sibling factory checkout, so strip the link override (in both
+        # package.json and pnpm-workspace.yaml) and delete the lockfile so
+        # pnpm resolves against the real published version pinned in deps.
+        run: |
+          node -e "
+          const fs = require('fs');
+          const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+          if (pkg.pnpm?.overrides) {
+            for (const k of Object.keys(pkg.pnpm.overrides))
+              if (pkg.pnpm.overrides[k].startsWith('link:')) delete pkg.pnpm.overrides[k];
+            if (!Object.keys(pkg.pnpm.overrides).length) delete pkg.pnpm.overrides;
+            if (pkg.pnpm && !Object.keys(pkg.pnpm).length) delete pkg.pnpm;
+          }
+          fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+          "
+          node -e "
+          const fs = require('fs');
+          const ws = 'pnpm-workspace.yaml';
+          if (fs.existsSync(ws)) {
+            let y = fs.readFileSync(ws, 'utf8');
+            y = y.replace(/^overrides:\n(  [^\n]*\n)*/m, '');
+            fs.writeFileSync(ws, y);
+          }
+          "
+          rm -f pnpm-lock.yaml
+
+      - run: pnpm install
+
+      - run: pnpm lint
+
+      - run: pnpm test
+
+      - run: pnpm build
+
+      - name: Determine npm dist-tag
+        id: distTag
+        run: |
+          VERSION="${{ steps.ref.outputs.version }}"
+          if [[ "$VERSION" == *"-alpha"* ]]; then
+            echo "tag=alpha" >> "$GITHUB_OUTPUT"
+          elif [[ "$VERSION" == *"-beta"* ]]; then
+            echo "tag=beta" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=latest" >> "$GITHUB_OUTPUT"
+          fi
+
+      - run: npm publish --provenance --access public --tag ${{ steps.distTag.outputs.tag }}

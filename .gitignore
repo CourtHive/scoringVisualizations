@@ -5,3 +5,4 @@ storybook-static/
 .eslintcache
 .DS_Store
 package-lock.json
+.husky/_
