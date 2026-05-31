@@ -45,7 +45,7 @@
   "dependencies": {
     "d3": "^7.9.0",
     "tippy.js": "^6.3.7",
-    "tods-competition-factory": "4.2.0"
+    "tods-competition-factory": "5.0.0"
   },
   "devDependencies": {
     "@commitlint/cli": "21.0.1",
@@ -69,6 +69,6 @@
     "vitest": "^4.1.2"
   },
   "peerDependencies": {
-    "tods-competition-factory": ">=4.0.0"
+    "tods-competition-factory": ">=5.0.0"
   }
 }
