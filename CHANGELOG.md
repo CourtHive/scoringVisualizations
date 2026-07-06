@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.2.8](https://github.com/CourtHive/scoringVisualizations/compare/v0.2.7...v0.2.8) (2026-07-06)
+
+
+### Bug Fixes
+
+* **deps:** update tods-competition-factory to 6.2.0 ([bc44399](https://github.com/CourtHive/scoringVisualizations/commit/bc44399073067d66d74053bcd28dc5a2dd7a3d48))
+* **deps:** update tods-competition-factory to 6.3.0 ([d47500e](https://github.com/CourtHive/scoringVisualizations/commit/d47500e5be8dd86ea9128793e9937c122abe5e03))
+* **donut:** keep competitiveness donut text dark on its white background ([d60fd94](https://github.com/CourtHive/scoringVisualizations/commit/d60fd94ee003aee9af9a2d34579fdfe92944d0ff))
+
 ## [0.2.7](https://github.com/CourtHive/scoringVisualizations/compare/v0.2.6...v0.2.7) (2026-07-04)
 
 
