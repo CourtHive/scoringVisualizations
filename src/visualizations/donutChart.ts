@@ -41,9 +41,13 @@ const DEFAULT_LABELS: Record<CompetitivenessBucket, string> = {
 const WALKOVER_STATUSES = new Set(['WALKOVER', 'DOUBLE_WALKOVER', 'DEFAULTED', 'DOUBLE_DEFAULT']);
 const COMPETITIVENESS_VALUES = new Set<CompetitivenessBucket>(['COMPETITIVE', 'ROUTINE', 'DECISIVE']);
 
-const TEXT_PRIMARY = 'var(--tmx-text-primary, #333)';
-const TEXT_SECONDARY = 'var(--tmx-text-secondary, #555)';
-const TEXT_MUTED = 'var(--tmx-text-muted, #888)';
+// The donut renders on a white background in BOTH light and dark modes, so its
+// on-background text (title, center total, "matches", legend) must stay dark in
+// both — do NOT use themed --tmx-text-* tokens here, which flip to white in dark
+// mode and become invisible (white-on-white). Fixed dark values, readable on white.
+const TEXT_PRIMARY = '#333';
+const TEXT_SECONDARY = '#555';
+const TEXT_MUTED = '#888';
 const ANCHOR_MIDDLE = 'middle';
 const FONT_WEIGHT_BOLD = 'bold';
 const ATTR_TEXT_ANCHOR = 'text-anchor';
