@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.9](https://github.com/CourtHive/scoringVisualizations/compare/v0.2.8...v0.2.9) (2026-07-06)
+
+
+### Bug Fixes
+
+* make donut chart on-background text readable in dark mode ([42bfaff](https://github.com/CourtHive/scoringVisualizations/commit/42bfaffcb28d8f6b610eeb525fdf42a4e2f9bd44))
+
 ## [0.2.8](https://github.com/CourtHive/scoringVisualizations/compare/v0.2.7...v0.2.8) (2026-07-06)
 
 
