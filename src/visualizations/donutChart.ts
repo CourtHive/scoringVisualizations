@@ -41,13 +41,16 @@ const DEFAULT_LABELS: Record<CompetitivenessBucket, string> = {
 const WALKOVER_STATUSES = new Set(['WALKOVER', 'DOUBLE_WALKOVER', 'DEFAULTED', 'DOUBLE_DEFAULT']);
 const COMPETITIVENESS_VALUES = new Set<CompetitivenessBucket>(['COMPETITIVE', 'ROUTINE', 'DECISIVE']);
 
-// The donut renders on a white background in BOTH light and dark modes, so its
-// on-background text (title, center total, "matches", legend) must stay dark in
-// both — do NOT use themed --tmx-text-* tokens here, which flip to white in dark
-// mode and become invisible (white-on-white). Fixed dark values, readable on white.
-const TEXT_PRIMARY = '#333';
-const TEXT_SECONDARY = '#555';
-const TEXT_MUTED = '#888';
+// On-background text (title, center total, "matches", legend) is rendered on the
+// consumer's panel background, which is THEMED (e.g. TMX's --tmx-panel-green-bg:
+// light green in light mode, dark green in dark mode) — NOT white. Hardcoded dark
+// values were unreadable on the dark panel in dark mode. Use theme-flipping tokens
+// (dark on light, light on dark), matching the burst chart on the same panel; the
+// hex fallbacks apply for consumers that don't define the token. These must be set
+// via `.style('fill', …)` — SVG's `fill` *attribute* does not resolve `var()`.
+const TEXT_PRIMARY = 'var(--chc-text-primary, #333)';
+const TEXT_SECONDARY = 'var(--chc-text-secondary, #555)';
+const TEXT_MUTED = 'var(--chc-text-secondary, #888)';
 const ANCHOR_MIDDLE = 'middle';
 const FONT_WEIGHT_BOLD = 'bold';
 const ATTR_TEXT_ANCHOR = 'text-anchor';
@@ -141,7 +144,7 @@ export function donutChart(
       .attr(ATTR_TEXT_ANCHOR, ANCHOR_MIDDLE)
       .attr('font-size', '14px')
       .attr(ATTR_FONT_WEIGHT, FONT_WEIGHT_BOLD)
-      .attr('fill', TEXT_PRIMARY)
+      .style('fill', TEXT_PRIMARY)
       .text(title);
   }
 
@@ -202,14 +205,14 @@ export function donutChart(
       .attr('dy', '-0.2em')
       .attr('font-size', '28px')
       .attr(ATTR_FONT_WEIGHT, FONT_WEIGHT_BOLD)
-      .attr('fill', TEXT_PRIMARY)
+      .style('fill', TEXT_PRIMARY)
       .text(total);
     center
       .append('text')
       .attr(ATTR_TEXT_ANCHOR, ANCHOR_MIDDLE)
       .attr('dy', '1.2em')
       .attr('font-size', '11px')
-      .attr('fill', TEXT_SECONDARY)
+      .style('fill', TEXT_SECONDARY)
       .text('matches');
   }
 
@@ -232,7 +235,7 @@ export function donutChart(
       .attr('x', 14)
       .attr('y', 9)
       .attr('font-size', '11px')
-      .attr('fill', TEXT_SECONDARY)
+      .style('fill', TEXT_SECONDARY)
       .text(`${display[bucket]} (${present?.count ?? 0})`);
   }
 }
