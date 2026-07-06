@@ -1,6 +1,6 @@
 {
   "name": "@courthive/scoring-visualizations",
-  "version": "0.2.7",
+  "version": "0.2.8",
   "description": "Standalone scoring visualizations for tennis match data — episode transforms, D3 charts (GameTree, Momentum, PTS, GameFish, Corona)",
   "type": "module",
   "main": "dist/scoring-visualizations.es.js",
