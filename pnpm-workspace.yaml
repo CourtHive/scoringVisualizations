@@ -14,6 +14,9 @@ allowBuilds:
 overrides:
   typescript: 6.0.3 # block native TS7 (no classic JS API — crashes tsc/nest/sonarjs); pairs with renovate TS-major block
   tods-competition-factory: link:../factory
+  # Security override — js-yaml GHSA-52cp-r559-cp3m (patched 4.3.0). Dev-only,
+  # via @commitlint/cli>cosmiconfig. Scoped to the v4 line.
+  js-yaml@4: '>=4.3.0'
 
 # pnpm v11 reads project-level settings from pnpm-workspace.yaml (not from
 # .npmrc, which pnpm v11.1.3 no longer merges for non-auth keys).
