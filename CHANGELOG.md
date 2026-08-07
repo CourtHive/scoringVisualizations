@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.2.10](https://github.com/CourtHive/scoringVisualizations/compare/v0.2.9...v0.2.10) (2026-08-07)
+
+
+### Bug Fixes
+
+* **deps:** override vulnerable transitive dep to clear audit high ([35d0add](https://github.com/CourtHive/scoringVisualizations/commit/35d0add6dd96b2fe3fdc16af2d41b335ff601180))
+* **deps:** pin typescript to 6.0.3 to block native ts7 ([0f0c4ed](https://github.com/CourtHive/scoringVisualizations/commit/0f0c4edcfa22192ecb9fa6be05935d236a227b6d))
+* **deps:** update tods-competition-factory to 6.10.0 ([2860c2b](https://github.com/CourtHive/scoringVisualizations/commit/2860c2b64d63c016a57b5da973d7987808cf80d7))
+* **deps:** update tods-competition-factory to 6.11.0 ([5e0a71d](https://github.com/CourtHive/scoringVisualizations/commit/5e0a71daa675752dcb3e86ffb0eb7662784ecce9))
+* **deps:** update tods-competition-factory to 6.12.0 ([65f452c](https://github.com/CourtHive/scoringVisualizations/commit/65f452ce4a90278e17e547ef149b26c7fabd0706))
+* **deps:** update tods-competition-factory to 6.13.0 ([b66eae1](https://github.com/CourtHive/scoringVisualizations/commit/b66eae1f913f3807a6395b00ac1dad1f6edbbc18))
+* **deps:** update tods-competition-factory to 6.13.1 ([58022d0](https://github.com/CourtHive/scoringVisualizations/commit/58022d091bda6691d004002d1f46d7f527031920))
+* **deps:** update tods-competition-factory to 6.13.2 ([87e02bd](https://github.com/CourtHive/scoringVisualizations/commit/87e02bd7a5398bff3b29f51b75de16a34edbac2f))
+* **deps:** update tods-competition-factory to 6.14.0 ([74471c1](https://github.com/CourtHive/scoringVisualizations/commit/74471c16eab1ed56873da98b79fd4256d4d58a95))
+* **deps:** update tods-competition-factory to 6.14.1 ([36fcb43](https://github.com/CourtHive/scoringVisualizations/commit/36fcb43d58c5e36e4b5c7203a027d48f09a33f74))
+* **deps:** update tods-competition-factory to 6.15.0 ([40e38fe](https://github.com/CourtHive/scoringVisualizations/commit/40e38fe99e5cfc505b26d7ad5eadfd69ed37c304))
+* **deps:** update tods-competition-factory to 6.16.0 ([ea7fbb4](https://github.com/CourtHive/scoringVisualizations/commit/ea7fbb45b3b1510cb7bf3afb7f09361f9d5ce21b))
+* **deps:** update tods-competition-factory to 6.17.0 ([ea270a7](https://github.com/CourtHive/scoringVisualizations/commit/ea270a7bcb2acff4582d3386dda8963cd263475c))
+* **deps:** update tods-competition-factory to 6.18.0 ([58aa183](https://github.com/CourtHive/scoringVisualizations/commit/58aa183324ddaa216f15a81a6b8a6d890a85e416))
+* **deps:** update tods-competition-factory to 6.19.0 ([eed2780](https://github.com/CourtHive/scoringVisualizations/commit/eed27802f3ab9ae3e6b85a90dc5d6fa72ca5ebf0))
+* **deps:** update tods-competition-factory to 6.4.0 ([90e6217](https://github.com/CourtHive/scoringVisualizations/commit/90e6217581112d5af5dd8546c5819e82e8053d17))
+* **deps:** update tods-competition-factory to 6.5.0 ([877681c](https://github.com/CourtHive/scoringVisualizations/commit/877681cdc92db5fd6e0748c88b3107634f892c38))
+* **deps:** update tods-competition-factory to 6.6.0 ([80c0640](https://github.com/CourtHive/scoringVisualizations/commit/80c0640b154c8f38813c1324d16b2cd80b327cc8))
+* **deps:** update tods-competition-factory to 6.7.0 ([3b7d168](https://github.com/CourtHive/scoringVisualizations/commit/3b7d1684f667a07b2d2a06d88b5e386a7f222e70))
+* **types:** add a type gate ([07d9f18](https://github.com/CourtHive/scoringVisualizations/commit/07d9f18d57bfbf1731e1f054be281d825b0a322d))
+
 ## [0.2.9](https://github.com/CourtHive/scoringVisualizations/compare/v0.2.8...v0.2.9) (2026-07-06)
 
 
