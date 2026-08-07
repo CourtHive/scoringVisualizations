@@ -251,7 +251,8 @@ pnpm build            # Vite library build → dist/
 pnpm build:types      # Emit .d.ts declarations only
 pnpm test             # Vitest single run
 pnpm test:watch       # Vitest watch mode
-pnpm lint             # ESLint on src/
+pnpm lint             # ESLint — non-mutating, fails on any warning
+pnpm lint:fix         # ESLint with auto-fix (rewrites source)
 pnpm storybook        # Storybook dev server on :6006
 pnpm build-storybook  # Build static Storybook
 ```
