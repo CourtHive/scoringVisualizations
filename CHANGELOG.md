@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.12](https://github.com/CourtHive/scoringVisualizations/compare/v0.2.11...v0.2.12) (2026-08-10)
+
+
+### Bug Fixes
+
+* **deps:** update tods-competition-factory to 6.21.0 ([5a08f07](https://github.com/CourtHive/scoringVisualizations/commit/5a08f07d0b2cf66a15173c0aa01621b51ae0a97a))
+
 ## [0.2.11](https://github.com/CourtHive/scoringVisualizations/compare/v0.2.10...v0.2.11) (2026-08-09)
 
 
