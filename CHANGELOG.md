@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.2.14](https://github.com/CourtHive/scoringVisualizations/compare/v0.2.13...v0.2.14) (2026-08-17)
+
+
+### Bug Fixes
+
+* **deps:** update tods-competition-factory to 6.27.0 ([2551480](https://github.com/CourtHive/scoringVisualizations/commit/25514805ba0de968a5e2aa729ef9e55d55c6d716))
+* **deps:** update tods-competition-factory to 6.28.0 ([91ac565](https://github.com/CourtHive/scoringVisualizations/commit/91ac5655a4133c51a06e9d6cd3f9b4c0a6782120))
+* **deps:** update tods-competition-factory to 6.28.1 ([98e4b25](https://github.com/CourtHive/scoringVisualizations/commit/98e4b25bc086f67923f7f2ee551cb3995e1a068c))
+
 ## [0.2.13](https://github.com/CourtHive/scoringVisualizations/compare/v0.2.12...v0.2.13) (2026-08-15)
 
 
