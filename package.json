@@ -34,6 +34,7 @@
     "type": "git",
     "url": "git+ssh://git@github.com/CourtHive/scoringVisualizations.git"
   },
+  "homepage": "https://www.tennisvisuals.com/",
   "keywords": [
     "tennis",
     "scoring",
