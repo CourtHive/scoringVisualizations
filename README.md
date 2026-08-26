@@ -4,6 +4,8 @@ Standalone scoring visualizations for tennis match data. Transforms [TODS](https
 
 Part of the [CourtHive](https://github.com/CourtHive) ecosystem. Consumed by `epixodic` (point-by-point match tracker) and `competition-factory-server`.
 
+**[Live Storybook →](https://www.tennisvisuals.com/)** — every chart in the set, interactive, with live-playback and format-awareness demos.
+
 ## Install
 
 ```bash
@@ -257,7 +259,7 @@ pnpm storybook        # Storybook dev server on :6006
 pnpm build-storybook  # Build static Storybook
 ```
 
-Storybook (11 stories across the chart set, with live-playback and format-awareness demos) is the primary surface for visual development and testing — run `pnpm storybook` and open <http://localhost:6006>.
+Storybook (11 stories across the chart set, with live-playback and format-awareness demos) is the primary surface for visual development and testing — run `pnpm storybook` and open <http://localhost:6006>. The same Storybook is published to <https://www.tennisvisuals.com/> on every push to `main` by `.github/workflows/deploy-storybook.yml`, so a merged change is live without any manual step.
 
 ### Key dependencies
 
