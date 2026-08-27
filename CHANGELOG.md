@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.2.17](https://github.com/CourtHive/scoringVisualizations/compare/v0.2.16...v0.2.17) (2026-08-27)
+
+
+### Bug Fixes
+
+* **deps:** update tods-competition-factory to 6.31.0 ([#112](https://github.com/CourtHive/scoringVisualizations/issues/112)) ([c4b8e8b](https://github.com/CourtHive/scoringVisualizations/commit/c4b8e8bab8b4c464233db67e0834296d60f105ea))
+* **deps:** update tods-competition-factory to 6.32.0 ([db0db6e](https://github.com/CourtHive/scoringVisualizations/commit/db0db6ece82ad177bc3b6bd1fbd8ecb5864a4b74))
+* **deps:** update tods-competition-factory to 6.33.0 ([e6dac0e](https://github.com/CourtHive/scoringVisualizations/commit/e6dac0ef21ed509ae2ebaf949ff32ace1eda2249))
+
+
+### Documentation
+
+* link the published Storybook from the README ([#114](https://github.com/CourtHive/scoringVisualizations/issues/114)) ([8876a06](https://github.com/CourtHive/scoringVisualizations/commit/8876a0636f78e68892abcf6511f86f7cdd5aef19))
+* set the package homepage to the published Storybook ([#116](https://github.com/CourtHive/scoringVisualizations/issues/116)) ([09a3612](https://github.com/CourtHive/scoringVisualizations/commit/09a3612c05daf5bd588e4024a624afc36a7a4836))
+
 ## [0.2.16](https://github.com/CourtHive/scoringVisualizations/compare/v0.2.15...v0.2.16) (2026-08-23)
 
 
