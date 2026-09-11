@@ -1,3 +1,5 @@
+import type { EpisodeNeeded } from 'tods-competition-factory';
+
 import type { Episode } from './types';
 
 /**
@@ -7,6 +9,23 @@ import type { Episode } from './types';
  * @param matchUp - A MatchUp object from ScoringEngine.getState()
  * @returns Episode[] - Array of episodes, one per point played
  */
+/**
+ * The `needed` block, read from the point the ScoringEngine already decorated.
+ *
+ * Nothing is computed here — `calculatePointsTo` did that, and the values arrive on the point. This
+ * is the same mapping the factory performs in `getEpisodes`, kept in step with it deliberately:
+ * `pointsToMatch` used to be dropped on the floor here, so no chart could render it.
+ */
+function buildNeeded(point: any): EpisodeNeeded {
+  const needed: EpisodeNeeded = {};
+  if (point.pointsToGame) needed.pointsToGame = point.pointsToGame;
+  if (point.pointsToSet) needed.pointsToSet = point.pointsToSet;
+  if (point.pointsToMatch) needed.pointsToMatch = point.pointsToMatch;
+  if (point.gamesToSet) needed.gamesToSet = point.gamesToSet;
+  if (point.isBreakpoint !== undefined) needed.isBreakpoint = point.isBreakpoint;
+  return needed;
+}
+
 export function buildEpisodes(matchUp: any): Episode[] {
   const points = matchUp?.history?.points;
   if (!Array.isArray(points) || points.length === 0) return [];
@@ -157,11 +176,11 @@ function buildEpisode(
       sets: buildSetsArray(matchUp, point.set),
       index: point.set,
     },
-    needed: {
-      pointsToGame: point.pointsToGame ?? [0, 0],
-      pointsToSet: point.pointsToSet ?? [0, 0],
-      gamesToSet: point.gamesToSet ?? [0, 0],
-    },
+    // Absent stays absent. These were `?? [0, 0]`, and `[0, 0]` is not "unknown" — it reads as
+    // "this side needs no more points", i.e. already won. A renderer given that for a point the
+    // engine never decorated draws a finished game. Mirrors the factory's own `buildNeeded`, which
+    // omits a field rather than inventing a value for it.
+    needed: buildNeeded(point),
     nextService: nextPoint?.server ?? point.server,
     result: true,
     complete: boundaries.isLastPoint && boundaries.matchComplete,
