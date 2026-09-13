@@ -72,6 +72,6 @@
     "vitest": "^5.0.0"
   },
   "peerDependencies": {
-    "tods-competition-factory": ">=5.0.0"
+    "tods-competition-factory": ">=5.0.0 <7.0.0"
   }
 }
