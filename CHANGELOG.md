@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.19](https://github.com/CourtHive/scoringVisualizations/compare/v0.2.18...v0.2.19) (2026-09-13)
+
+
+### Bug Fixes
+
+* **ci:** strip the factory link override before install, not after ([23d5a2a](https://github.com/CourtHive/scoringVisualizations/commit/23d5a2affa841987f0eda7d5971697741673ff68))
+
 ## [0.2.18](https://github.com/CourtHive/scoringVisualizations/compare/v0.2.17...v0.2.18) (2026-09-06)
 
 
