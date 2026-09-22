@@ -1,5 +1,7 @@
 /* eslint-disable */
 // @ts-nocheck
+
+import type { EpisodeNeeded } from 'tods-competition-factory';
 /**
  * Type definitions for visualization data structures
  * Based on Universal Match Object (UMO) data model
@@ -38,12 +40,18 @@ export interface Episode {
     index: number;
     complete: boolean;
   };
-  needed: {
-    pointsToGame: [number, number]; // points needed for each player to win current game
-    pointsToSet: [number, number]; // points needed for each player to win current set
-    gamesToSet: [number, number]; // games needed for each player to win current set
-    isBreakpoint?: boolean;
-  };
+  /**
+   * Points/games each side still needs — the FACTORY's type, not ours.
+   *
+   * Produced by `calculatePointsTo` and stamped on each point by the ScoringEngine. We used to
+   * redeclare this shape, and the copy drifted: it never carried `pointsToMatch`, so no chart here
+   * could plot "points to win the match" without someone first noticing the field existed.
+   *
+   * Every field is OPTIONAL, which matters. `buildEpisodes` used to default the absent ones to
+   * `[0, 0]`, and "0 points needed" does not mean "unknown" — it means the side has already won.
+   * Absent now stays absent, and a renderer must decide what to draw for it.
+   */
+  needed: EpisodeNeeded;
 }
 
 /**
