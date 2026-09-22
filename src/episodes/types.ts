@@ -1,3 +1,5 @@
+import type { EpisodeNeeded } from 'tods-competition-factory';
+
 export interface EpisodePoint {
   winner: number;
   server: number;
@@ -31,11 +33,19 @@ export interface EpisodeSet {
   index: number;
 }
 
-export interface EpisodeNeeded {
-  pointsToGame: number[];
-  pointsToSet: number[];
-  gamesToSet: number[];
-}
+/**
+ * Re-exported from the factory rather than redeclared.
+ *
+ * The local copy required `pointsToGame` / `pointsToSet` / `gamesToSet` as `number[]`, while the
+ * factory declares each as an OPTIONAL `[number, number]` and carries two more members
+ * (`pointsToMatch`, `isBreakpoint`). A required field cannot represent "no points-to applies here",
+ * which is what forced the `[0, 0]` default this branch removes — a rendered zero that means
+ * "absent" is indistinguishable from one that means zero.
+ *
+ * Same remedy courthive-components #581 applied to `SideExitProvenanceEntry`: re-export the
+ * authority instead of keeping a copy free to drift from it.
+ */
+export type { EpisodeNeeded } from 'tods-competition-factory';
 
 export interface Episode {
   action: 'addPoint';
