@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.2.19](https://github.com/CourtHive/scoringVisualizations/compare/v0.2.18...v0.2.19) (2026-09-22)
+
+
+### Bug Fixes
+
+* **ci:** strip the factory link override before install, not after ([23d5a2a](https://github.com/CourtHive/scoringVisualizations/commit/23d5a2affa841987f0eda7d5971697741673ff68))
+* **deps:** admit factory 7 in the peer range, which [#130](https://github.com/CourtHive/scoringVisualizations/issues/130) wrongly left closed ([#131](https://github.com/CourtHive/scoringVisualizations/issues/131)) ([e27cba3](https://github.com/CourtHive/scoringVisualizations/commit/e27cba3b6f9e845b9e185a11fbff591e22ecc204))
+* **episodes:** take `needed` from the factory, and stop defaulting absent points-to to [0, 0] ([#127](https://github.com/CourtHive/scoringVisualizations/issues/127)) ([b337226](https://github.com/CourtHive/scoringVisualizations/commit/b3372267bd10a986e492641fc00703c392499d05))
+
 ## [0.2.18](https://github.com/CourtHive/scoringVisualizations/compare/v0.2.17...v0.2.18) (2026-09-06)
 
 
