@@ -112,7 +112,7 @@ const meta: Meta<CoronaChartArgs> = {
     reverseColors: { control: 'boolean' },
     matchIndex: {
       control: 'select',
-      options: { 'Federer vs Djokovic': 0, 'Federer vs Wawrinka': 1, 'Djokovic vs Nadal': 2, 'Schwartzman vs Cervantes': 3 },
+      options: { 'Lindqvist vs Okafor': 0, 'Varga vs Rehnquist': 1, 'Arbuckle vs Mbeki': 2, 'Tremblay vs Castellanos': 3 },
     },
     delayMs: { control: { type: 'range', min: 50, max: 2000, step: 50 } },
   },
@@ -160,7 +160,7 @@ export const ExtraLarge: Story = {
       {
         p2sdiff: generateScoreDiffs(80),
         gamesScore: [7, 6] as [number, number],
-        players: ['Federer', 'Nadal'] as [string, string],
+        players: ['Lindqvist', 'Varga'] as [string, string],
         winnerIndex: 0 as 0 | 1,
       },
     ];
@@ -264,7 +264,7 @@ export const WithBadge: Story = {
       {
         p2sdiff: generateScoreDiffs(55),
         gamesScore: [7, 5] as [number, number],
-        players: ['Djokovic', 'Murray'] as [string, string],
+        players: ['Arbuckle', 'Mbeki'] as [string, string],
         winnerIndex: 0 as 0 | 1,
       },
     ];

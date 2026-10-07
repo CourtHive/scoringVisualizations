@@ -29,7 +29,7 @@ const meta: Meta<SimpleChartArgs> = {
     container.style.height = '500px';
     container.style.padding = '20px';
 
-    // Real MCP match data: Federer vs Djokovic
+    // Demo match data: Lindqvist vs Okafor
     const fixture = getMcpFixture(0);
     const matchUp = feedMatchUp(0);
     const data = extractRallyLengths(matchUp);
@@ -47,7 +47,7 @@ const meta: Meta<SimpleChartArgs> = {
     minPoints: { control: { type: 'range', min: 10, max: 100, step: 10 } },
     matchIndex: {
       control: 'select',
-      options: { 'Federer vs Djokovic': 0, 'Federer vs Wawrinka': 1, 'Djokovic vs Nadal': 2, 'Schwartzman vs Cervantes': 3 },
+      options: { 'Lindqvist vs Okafor': 0, 'Varga vs Rehnquist': 1, 'Arbuckle vs Mbeki': 2, 'Tremblay vs Castellanos': 3 },
     },
     delayMs: { control: { type: 'range', min: 50, max: 2000, step: 50 } },
   },
@@ -83,7 +83,7 @@ export const ShortMatch: Story = {
     container.style.height = '400px';
     container.style.padding = '20px';
 
-    // Real MCP match data: Djokovic vs Nadal (shorter match, 99 points)
+    // Demo match data: Arbuckle vs Mbeki (shorter match, 99 points)
     const fixture = getMcpFixture(2);
     const matchUp = feedMatchUp(2);
     const data = extractRallyLengths(matchUp);
@@ -112,7 +112,7 @@ export const LongRallies: Story = {
     container.style.height = '400px';
     container.style.padding = '20px';
 
-    // Real MCP match data: Federer vs Wawrinka (127 points)
+    // Demo match data: Varga vs Rehnquist (127 points)
     const fixture = getMcpFixture(1);
     const matchUp = feedMatchUp(1);
     const data = extractRallyLengths(matchUp);
@@ -136,7 +136,7 @@ export const ContrastingStyles: Story = {
     container.style.height = '400px';
     container.style.padding = '20px';
 
-    // Real MCP match data: Schwartzman vs Cervantes Huegun (135 points)
+    // Demo match data: Tremblay vs Castellanos Huegun (135 points)
     const fixture = getMcpFixture(3);
     const matchUp = feedMatchUp(3);
     const data = extractRallyLengths(matchUp);

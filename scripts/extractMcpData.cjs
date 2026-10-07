@@ -101,7 +101,9 @@ p.parseArchive('example', function(result) {
   });
 
   // Write fixture file
-  const outDir = path.resolve(__dirname, '../src/visualizations/standalone/data');
+  // Local only and gitignored: Match Charting Project data is CC BY-NC-SA 4.0 and must never be
+  // committed to, or bundled into, this MIT package. The package ships scripts/generateSyntheticMatches.mjs output.
+  const outDir = path.resolve(__dirname, '../.local-mcp-data');
   const outPath = path.join(outDir, 'mcpFixtures.json');
   fs.mkdirSync(outDir, { recursive: true });
   fs.writeFileSync(outPath, JSON.stringify(fixtures, null, 2));

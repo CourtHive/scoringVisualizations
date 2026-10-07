@@ -29,10 +29,10 @@ const meta: Meta<MatchUpDashboardArgs> = {
     matchIndex: {
       control: 'select',
       options: {
-        'Federer vs Djokovic': 0,
-        'Federer vs Wawrinka': 1,
-        'Djokovic vs Nadal': 2,
-        'Schwartzman vs Cervantes': 3,
+        'Lindqvist vs Okafor': 0,
+        'Varga vs Rehnquist': 1,
+        'Arbuckle vs Mbeki': 2,
+        'Tremblay vs Castellanos': 3,
       },
     },
     delayMs: { control: { type: 'range', min: 50, max: 2000, step: 50 } },

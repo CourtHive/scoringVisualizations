@@ -68,7 +68,7 @@ const meta: Meta<MomentumChartArgs> = {
       },
     });
 
-    // Real MCP match data: Federer vs Djokovic
+    // Demo match data: Lindqvist vs Okafor
     const matchUp = feedMatchUp(0);
     const episodes = buildEpisodes(matchUp);
     chart.data(episodes);
@@ -92,7 +92,7 @@ const meta: Meta<MomentumChartArgs> = {
     continuous: { control: 'boolean' },
     matchIndex: {
       control: 'select',
-      options: { 'Federer vs Djokovic': 0, 'Federer vs Wawrinka': 1, 'Djokovic vs Nadal': 2, 'Schwartzman vs Cervantes': 3 },
+      options: { 'Lindqvist vs Okafor': 0, 'Varga vs Rehnquist': 1, 'Arbuckle vs Mbeki': 2, 'Tremblay vs Castellanos': 3 },
     },
     delayMs: { control: { type: 'range', min: 50, max: 2000, step: 50 } },
   },
@@ -208,7 +208,7 @@ export const CompactHorizontal: Story = {
       },
     });
 
-    // Real MCP match data: Djokovic vs Nadal
+    // Demo match data: Arbuckle vs Mbeki
     const matchUp = feedMatchUp(2);
     const episodes = buildEpisodes(matchUp);
     chart.data(episodes);

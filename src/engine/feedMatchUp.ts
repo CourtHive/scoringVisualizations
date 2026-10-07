@@ -1,12 +1,17 @@
 /**
- * Feed MCP fixture data into the factory ScoringEngine
+ * Feed the bundled demo matches into the factory ScoringEngine
  *
  * Thin wrapper: iterates points, calls addPoint(), returns getState().
  * No scoring logic lives here — the ScoringEngine is the single source of truth.
+ *
+ * The demo matches are SYNTHETIC: `scripts/generateSyntheticMatches.mjs` plays them through the
+ * ScoringEngine from fixed seeds, with fictional players. They replaced real Match Charting Project
+ * matches (CC BY-NC-SA 4.0), whose non-commercial and share-alike terms cannot ride inside this MIT
+ * package. The shape — and the `Mcp*` names below, kept so the API is unchanged — is the MCP one.
  */
 
 import { scoreGovernor } from 'tods-competition-factory';
-import mcpFixtures from '../visualizations/data/mcpFixtures.json';
+import mcpFixtures from '../visualizations/data/syntheticMatches.json';
 
 const { ScoringEngine } = scoreGovernor;
 
