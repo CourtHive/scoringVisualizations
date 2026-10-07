@@ -13,3 +13,7 @@ package-lock.json
 # change in every `git status` — and it is not merely cosmetic: a dirty repo
 # aborts the whole `bump-factory-consumers.sh` fan-out at preflight.
 .claude
+
+# Match Charting Project data (CC BY-NC-SA 4.0) written by scripts/extractMcpData.cjs.
+# Local study only: it must never be committed to, or bundled into, this MIT package.
+.local-mcp-data/

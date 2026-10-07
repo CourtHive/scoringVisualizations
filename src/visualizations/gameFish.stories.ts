@@ -69,7 +69,7 @@ const meta: Meta<GameFishArgs> = {
       score: [1, 0],
     });
 
-    // Real MCP match data: first game of Federer vs Djokovic
+    // Demo match data: first game of Lindqvist vs Okafor
     const matchUp = feedMatchUp(0);
     chart.data(extractGamePoints(matchUp, 0, 0));
 
@@ -91,7 +91,7 @@ const meta: Meta<GameFishArgs> = {
     cellSize: { control: { type: 'range', min: 10, max: 40, step: 5 } },
     matchIndex: {
       control: 'select',
-      options: { 'Federer vs Djokovic': 0, 'Federer vs Wawrinka': 1, 'Djokovic vs Nadal': 2, 'Schwartzman vs Cervantes': 3 },
+      options: { 'Lindqvist vs Okafor': 0, 'Varga vs Rehnquist': 1, 'Arbuckle vs Mbeki': 2, 'Tremblay vs Castellanos': 3 },
     },
     delayMs: { control: { type: 'range', min: 50, max: 2000, step: 50 } },
   },
@@ -148,7 +148,7 @@ export const Horizontal: Story = {
       score: [1, 0],
     });
 
-    // Real MCP match data: second game of Federer vs Djokovic
+    // Demo match data: second game of Lindqvist vs Okafor
     const matchUp = feedMatchUp(0);
     chart.data(extractGamePoints(matchUp, 0, 1));
 
@@ -301,7 +301,7 @@ export const CompactView: Story = {
       score: [1, 0],
     });
 
-    // Real MCP match data: first game of Djokovic vs Nadal
+    // Demo match data: first game of Arbuckle vs Mbeki
     const matchUp = feedMatchUp(2);
     chart.data(extractGamePoints(matchUp, 0, 0));
 

@@ -24,7 +24,7 @@ import { gameTree, buildEpisodes } from '@courthive/scoring-visualizations';
 
 const chart = gameTree();
 chart.options({ display: { sizeToFit: true } });
-chart.players(['Federer', 'Djokovic']);
+chart.players(['Lindqvist', 'Okafor']);
 chart.data(buildEpisodes(matchUp)); // or chart.matchUp(matchUp)
 
 select(container).call(chart);
@@ -109,7 +109,7 @@ import { coronaChartFromMatchUp, momentumChart, buildEpisodes } from '@courthive
 
 // Direct one-call render
 coronaChartFromMatchUp(document.getElementById('corona'), matchUp, {
-  players: ['Federer', 'Djokovic'],
+  players: ['Lindqvist', 'Okafor'],
 });
 
 // Reusable-chart pattern

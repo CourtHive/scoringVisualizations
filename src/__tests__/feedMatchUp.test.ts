@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { feedMatchUp, feedAllMatchUps, getMcpFixture, extractRallyLengths, extractGamePoints } from '../engine/feedMatchUp';
 
 describe('feedMatchUp', () => {
-  it('produces a valid MatchUp for fixture 0 (Federer vs Djokovic)', () => {
+  it('produces a valid MatchUp for fixture 0 (Lindqvist vs Okafor)', () => {
     const matchUp = feedMatchUp(0);
     expect(matchUp).toBeDefined();
     expect(matchUp.history.points.length).toBeGreaterThan(0);

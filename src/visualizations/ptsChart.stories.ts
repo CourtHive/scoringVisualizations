@@ -76,7 +76,7 @@ const meta: Meta<PtsChartArgs> = {
       },
     });
 
-    // Real MCP match data: Federer vs Djokovic
+    // Demo match data: Lindqvist vs Okafor
     const fixture = getMcpFixture(0);
     const matchUp = feedMatchUp(0);
     const episodes = buildEpisodes(matchUp);
@@ -123,7 +123,7 @@ const meta: Meta<PtsChartArgs> = {
     topMargin: { control: { type: 'range', min: 10, max: 80, step: 10 } },
     matchIndex: {
       control: 'select',
-      options: { 'Federer vs Djokovic': 0, 'Federer vs Wawrinka': 1, 'Djokovic vs Nadal': 2, 'Schwartzman vs Cervantes': 3 },
+      options: { 'Lindqvist vs Okafor': 0, 'Varga vs Rehnquist': 1, 'Arbuckle vs Mbeki': 2, 'Tremblay vs Castellanos': 3 },
     },
     delayMs: { control: { type: 'range', min: 50, max: 2000, step: 50 } },
   },
@@ -201,7 +201,7 @@ export const SingleSet: Story = {
       },
     });
 
-    // Real MCP match data: Federer vs Djokovic — filter to first set only
+    // Demo match data: Lindqvist vs Okafor — filter to first set only
     const matchUp = feedMatchUp(0);
     const episodes = buildEpisodes(matchUp);
     const set1Data = episodes.filter((ep) => ep.point.set === 0);
@@ -254,7 +254,7 @@ export const WithRallyBars: Story = {
       },
     });
 
-    // Real MCP match data: Federer vs Djokovic — filter to first set only
+    // Demo match data: Lindqvist vs Okafor — filter to first set only
     const matchUp = feedMatchUp(0);
     const episodes = buildEpisodes(matchUp);
     const set1Data = episodes.filter((ep) => ep.point.set === 0);

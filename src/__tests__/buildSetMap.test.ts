@@ -24,7 +24,7 @@ describe('buildSetMap', () => {
 
   it('each SetMap has correct shape', () => {
     const matchUp = feedMatchUp(0);
-    const result = buildSetMap(matchUp, ['Federer', 'Djokovic']);
+    const result = buildSetMap(matchUp, ['Lindqvist', 'Okafor']);
     for (const setMap of result) {
       expect(setMap).toHaveProperty('p2sdiff');
       expect(setMap).toHaveProperty('gamesScore');
@@ -33,7 +33,7 @@ describe('buildSetMap', () => {
       expect(Array.isArray(setMap.p2sdiff)).toBe(true);
       expect(setMap.p2sdiff.length).toBeGreaterThan(0);
       expect(setMap.gamesScore).toHaveLength(2);
-      expect(setMap.players).toEqual(['Federer', 'Djokovic']);
+      expect(setMap.players).toEqual(['Lindqvist', 'Okafor']);
       expect([0, 1]).toContain(setMap.winnerIndex);
     }
   });
