@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.2.20](https://github.com/CourtHive/scoringVisualizations/compare/v0.2.19...v0.2.20) (2026-10-07)
+
+
+### Bug Fixes
+
+* **data:** ship synthetic demo matches instead of Match Charting Project data ([#138](https://github.com/CourtHive/scoringVisualizations/issues/138)) ([a9734ab](https://github.com/CourtHive/scoringVisualizations/commit/a9734abac266f32e12ca9794b40aee94bef71e48))
+* **deps:** update tods-competition-factory to 7.1.1 ([74a78b3](https://github.com/CourtHive/scoringVisualizations/commit/74a78b3ca1b531e4c00fef7fc5c089bdcc4fe0cf))
+* **deps:** update tods-competition-factory to 7.2.0 ([072ff1b](https://github.com/CourtHive/scoringVisualizations/commit/072ff1b315e589a039d95210ec138d226b27803b))
+* **deps:** update tods-competition-factory to 7.3.1 ([a7c6988](https://github.com/CourtHive/scoringVisualizations/commit/a7c6988289d2f6bc456658dffb512ca9a691031a))
+* **deps:** update tods-competition-factory to 7.4.0 ([b357883](https://github.com/CourtHive/scoringVisualizations/commit/b3578833fd9fa464e4dac2cc16223e1ac95bd929))
+* **deps:** update tods-competition-factory to 7.6.0 ([efdba63](https://github.com/CourtHive/scoringVisualizations/commit/efdba63a89bd8aa1ac303e3cf977503e9f104859))
+* **deps:** update tods-competition-factory to 7.7.0 ([4eb2d74](https://github.com/CourtHive/scoringVisualizations/commit/4eb2d74c9b936c7e282c50bbdf0c0e934e8fcbec))
+
 ## [0.2.19](https://github.com/CourtHive/scoringVisualizations/compare/v0.2.18...v0.2.19) (2026-09-22)
 
 
