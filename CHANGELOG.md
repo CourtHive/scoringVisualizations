@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.2.21](https://github.com/CourtHive/scoringVisualizations/compare/v0.2.20...v0.2.21) (2026-10-09)
+
+
+### Bug Fixes
+
+* **deps:** update tods-competition-factory to 7.8.0 ([09d3a73](https://github.com/CourtHive/scoringVisualizations/commit/09d3a73755a0c13ec9eb7f3ed2dae76332af9cce))
+* **deps:** update tods-competition-factory to 7.9.0 ([874d97e](https://github.com/CourtHive/scoringVisualizations/commit/874d97e42a07beb1cb693b2f8a37f033c9510f08))
+
+
+### Documentation
+
+* add AGENTS.md as a pointer to CLAUDE.md for agents that read it ([f03a1ae](https://github.com/CourtHive/scoringVisualizations/commit/f03a1aec7e73aab3966435621bfbb36312c8240b))
+
 ## [0.2.20](https://github.com/CourtHive/scoringVisualizations/compare/v0.2.19...v0.2.20) (2026-10-07)
 
 
