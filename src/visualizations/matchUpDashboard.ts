@@ -42,6 +42,9 @@ export function matchUpDashboard() {
   let allEpisodes: Episode[] = [];
   let matchUpState: any;
   let mounted = false;
+  let destroyed = false;
+  // The pending render frame, so a newer update or destroy can cancel it.
+  let pendingFrame: number | undefined;
 
   const options: DashboardOptions = {
     colors: ["#a55194", "#6b6ecf"],
@@ -262,11 +265,14 @@ export function matchUpDashboard() {
   };
 
   dashboard.update = function () {
-    if (!mounted) return;
+    if (!mounted || destroyed) return;
 
     // Defer to requestAnimationFrame so the browser has completed grid
     // layout — sizeToFit measurements need accurate getBoundingClientRect.
-    requestAnimationFrame(() => {
+    // One render per frame: a newer update supersedes a pending one.
+    if (pendingFrame !== undefined) cancelAnimationFrame(pendingFrame);
+    pendingFrame = requestAnimationFrame(() => {
+      pendingFrame = undefined;
       charts.ptsHorizonChart.update();
       charts.statViewChart.update();
       charts.gameTreeChart.update();
@@ -290,6 +296,19 @@ export function matchUpDashboard() {
       if (values.players) options.players = values.players;
       if (values.display) Object.assign(options.display, values.display);
     }
+    return dashboard;
+  };
+
+  /**
+   * End the dashboard's lifetime: cancel a pending render and release what the
+   * sub-charts own outside the container (rallyTree's tooltips and listener).
+   * Removing the container alone does not. Idempotent.
+   */
+  dashboard.destroy = function () {
+    destroyed = true;
+    if (pendingFrame !== undefined) cancelAnimationFrame(pendingFrame);
+    pendingFrame = undefined;
+    charts.rallyTreeChart.destroy();
     return dashboard;
   };
 
