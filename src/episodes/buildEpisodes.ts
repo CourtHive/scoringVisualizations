@@ -3,13 +3,6 @@ import type { EpisodeNeeded } from 'tods-competition-factory';
 import type { Episode } from './types';
 
 /**
- * Transforms a ScoringEngine MatchUp into an Episode array
- * suitable for visualization components (GameTree, Momentum, PTS, GameFish, Corona).
- *
- * @param matchUp - A MatchUp object from ScoringEngine.getState()
- * @returns Episode[] - Array of episodes, one per point played
- */
-/**
  * The `needed` block, read from the point the ScoringEngine already decorated.
  *
  * Nothing is computed here — `calculatePointsTo` did that, and the values arrive on the point. This
@@ -26,104 +19,176 @@ function buildNeeded(point: any): EpisodeNeeded {
   return needed;
 }
 
+/**
+ * Transforms a ScoringEngine MatchUp into an Episode array
+ * suitable for visualization components (GameTree, Momentum, PTS, GameFish, Corona).
+ *
+ * Games and sets are read from the engine's unified timeline (`history.entries`),
+ * so games awarded with addGame/addSet count, and a game they interrupted is not
+ * credited to its last tracked point.
+ *
+ * @param matchUp - A MatchUp object from ScoringEngine.getState()
+ * @returns Episode[] - Array of episodes, one per point played
+ */
 export function buildEpisodes(matchUp: any): Episode[] {
   const points = matchUp?.history?.points;
   if (!Array.isArray(points) || points.length === 0) return [];
 
+  const resolved = resolveGames(matchUp, points, readGaps(matchUp, points.length));
   const episodes: Episode[] = [];
-  const priorGamesPerSet = buildPriorGamesMap(matchUp);
-  const state = initRunningState(points[0], priorGamesPerSet);
+  const counts: PointCounts = { setCumulativePoints: [0, 0], gamePointCounts: [0, 0] };
 
   for (let i = 0; i < points.length; i++) {
     const point = points[i];
-    const nextPoint = points[i + 1];
+    const previous = points[i - 1];
     const isLastPoint = i === points.length - 1;
     const matchComplete = isLastPoint && matchUp?.winningSide !== undefined;
 
-    handleTransitions(point, state, priorGamesPerSet);
-    updatePointCounts(point, state);
+    if (previous && previous.set !== point.set) counts.setCumulativePoints = [0, 0];
+    if (previous && (previous.set !== point.set || previous.game !== point.game)) counts.gamePointCounts = [0, 0];
+    counts.setCumulativePoints[point.winner === 0 ? 0 : 1]++;
+    counts.gamePointCounts[point.winner === 0 ? 0 : 1]++;
 
-    const boundaries = detectBoundaries(matchUp, point, nextPoint, isLastPoint, matchComplete, state.gamesScore);
-
-    const { episode, gameWinner, setWinner } = buildEpisode(
-      matchUp, point, nextPoint, i, state, boundaries,
-    );
-    episodes.push(episode);
-
-    advanceRunningState(state, boundaries, gameWinner, setWinner);
+    const boundaries: Boundaries = {
+      isLastPoint,
+      matchComplete,
+      isGameEnd: resolved[i].completesGame || matchComplete,
+      isSetEnd: resolved[i].completesSet || matchComplete,
+    };
+    episodes.push(buildEpisode(matchUp, point, points[i + 1], i, resolved[i].gamesBefore, counts, boundaries));
   }
 
   return episodes;
 }
 
-interface RunningState {
+interface PointCounts {
   setCumulativePoints: [number, number];
   gamePointCounts: [number, number];
-  gamesScore: [number, number];
-  setsScore: [number, number];
-  currentSet: number;
-  currentGame: number;
 }
 
 interface Boundaries {
-  gameComplete: boolean;
-  setComplete: boolean;
   isLastPoint: boolean;
   matchComplete: boolean;
   isGameEnd: boolean;
   isSetEnd: boolean;
 }
 
-function initRunningState(firstPoint: any, priorGamesPerSet: Map<number, [number, number]>): RunningState {
-  const setIndex = firstPoint?.set ?? 0;
-  return {
-    setCumulativePoints: [0, 0],
-    gamePointCounts: [0, 0],
-    gamesScore: [...(priorGamesPerSet.get(setIndex) || [0, 0])] as [number, number],
-    setsScore: [0, 0],
-    currentSet: setIndex,
-    currentGame: firstPoint?.game ?? 0,
-  };
+/** A non-point entry of the history timeline: an addGame award or an addSet. */
+type Marker = { kind: 'game'; winner: 0 | 1 } | { kind: 'set' };
+
+/** What the timeline says about one point. */
+interface ResolvedPoint {
+  /** Games in the point's set before its own game was decided, by side. */
+  gamesBefore: [number, number];
+  /** The point won its game. False for the last point of a game an addGame or addSet interrupted. */
+  completesGame: boolean;
+  /** The point won its game and, with it, the set. */
+  completesSet: boolean;
 }
 
-function handleTransitions(point: any, state: RunningState, priorGamesPerSet: Map<number, [number, number]>): void {
-  if (point.set !== state.currentSet) {
-    state.setCumulativePoints = [0, 0];
-    state.gamePointCounts = [0, 0];
-    state.gamesScore = [...(priorGamesPerSet.get(point.set) || [0, 0])] as [number, number];
-    state.currentSet = point.set;
-    state.currentGame = point.game;
+/**
+ * The game and set entries around each point, from the engine's unified timeline
+ * (`history.entries`): `gaps[k]` holds those between point k-1 and point k, and
+ * `gaps[points.length]` those after the last point. Without a timeline (a
+ * points-only producer) every gap is empty.
+ */
+function readGaps(matchUp: any, pointCount: number): Marker[][] {
+  const gaps: Marker[][] = Array.from({ length: pointCount + 1 }, () => []);
+  const entries = matchUp?.history?.entries;
+  if (!Array.isArray(entries)) return gaps;
+
+  let nextPoint = 0;
+  for (const entry of entries) {
+    if (entry?.type === 'point') {
+      nextPoint = (typeof entry.pointIndex === 'number' ? entry.pointIndex : nextPoint) + 1;
+    } else if (entry?.type === 'game') {
+      gaps[Math.min(nextPoint, pointCount)].push({ kind: 'game', winner: entry.data?.winner === 0 ? 0 : 1 });
+    } else if (entry?.type === 'set') {
+      gaps[Math.min(nextPoint, pointCount)].push({ kind: 'set' });
+    }
   }
+  return gaps;
+}
 
-  if (point.game !== state.currentGame) {
-    state.gamePointCounts = [0, 0];
-    state.currentGame = point.game;
+/**
+ * Decide, for every point, whether it won its game, from the engine's own
+ * accounting rather than from where the game index changes.
+ *
+ * Within a set the engine numbers a point's game as the games won on points
+ * before it plus the addGame entries before it, and an addGame that interrupts a
+ * game abandons the partial game and awards it. So between two points of one set
+ * with `m` addGame entries between them, the earlier point won its game exactly
+ * when the game index advanced by `m + 1`, not `m`. The last point of a set has
+ * no successor in it; the set's own score (`score.sets`) settles it: its games
+ * are the games before that point, plus the point's game if it won it, plus the
+ * addGame entries that follow in the same set.
+ */
+function resolveGames(matchUp: any, points: any[], gaps: Marker[][]): ResolvedPoint[] {
+  const sets = matchUp?.score?.sets;
+  const resolved: ResolvedPoint[] = [];
+  let games: [number, number] = [0, 0];
+  applyAwards(games, leadingAwards(gaps[0], points[0]?.game));
+
+  for (let i = 0; i < points.length; i++) {
+    const point = points[i];
+    const next = points[i + 1];
+    const between = gaps[i + 1];
+    const entry: ResolvedPoint = { gamesBefore: [...games], completesGame: false, completesSet: false };
+    resolved.push(entry);
+
+    if (next && next.set === point.set) {
+      if (next.game === point.game) continue;
+      const awards = between.filter(isGameMarker);
+      entry.completesGame = clampToOne(next.game - point.game - awards.length);
+      if (entry.completesGame) games[point.winner === 0 ? 0 : 1]++;
+      applyAwards(games, awards);
+      continue;
+    }
+
+    // The point's set ends here (or the history does). Of the entries in between,
+    // the addGame entries before any addSet belong to this set, except those the
+    // next point's game index says opened its own set.
+    const nextSetAwards = next ? leadingAwards(between, next.game) : [];
+    const firstSet = between.findIndex((marker) => marker.kind === 'set');
+    const upToSet = firstSet === -1 ? between : between.slice(0, firstSet);
+    const trailing = upToSet
+      .filter(isGameMarker)
+      .slice(0, firstSet === -1 ? upToSet.length - nextSetAwards.length : undefined);
+
+    const set = Array.isArray(sets) ? sets[point.set] : undefined;
+    const total = set ? (set.side1Score ?? 0) + (set.side2Score ?? 0) : undefined;
+    entry.completesGame =
+      total === undefined
+        ? !!next || matchUp?.winningSide !== undefined
+        : clampToOne(total - games[0] - games[1] - trailing.length);
+    entry.completesSet = entry.completesGame && trailing.length === 0 && set?.winningSide !== undefined;
+
+    games = [0, 0];
+    applyAwards(games, nextSetAwards);
   }
+  return resolved;
 }
 
-function updatePointCounts(point: any, state: RunningState): void {
-  state.setCumulativePoints[point.winner === 0 ? 0 : 1]++;
-  state.gamePointCounts[point.winner === 0 ? 0 : 1]++;
+function isGameMarker(marker: Marker): marker is { kind: 'game'; winner: 0 | 1 } {
+  return marker.kind === 'game';
 }
 
-function detectBoundaries(
-  matchUp: any,
-  point: any,
-  nextPoint: any,
-  isLastPoint: boolean,
-  matchComplete: boolean,
-  gamesScore: [number, number],
-): Boundaries {
-  const gameComplete = nextPoint
-    ? nextPoint.game !== point.game || nextPoint.set !== point.set
-    : isLastPointGameComplete(matchUp, point, gamesScore[0] + gamesScore[1]);
-  const setComplete = nextPoint
-    ? nextPoint.set !== point.set
-    : isLastPointSetComplete(matchUp, point);
-  const isGameEnd = gameComplete || (isLastPoint && matchComplete);
-  const isSetEnd = setComplete || (isLastPoint && matchComplete);
+/** The addGame entries that opened a point's set: the last `game` of them, after any addSet. */
+function leadingAwards(markers: Marker[], game: unknown): Array<{ kind: 'game'; winner: 0 | 1 }> {
+  if (typeof game !== 'number' || game <= 0) return [];
+  const lastSet = markers.map((marker) => marker.kind).lastIndexOf('set');
+  return markers
+    .slice(lastSet + 1)
+    .filter(isGameMarker)
+    .slice(-game);
+}
 
-  return { gameComplete, setComplete, isLastPoint, matchComplete, isGameEnd, isSetEnd };
+function applyAwards(games: [number, number], awards: Array<{ winner: 0 | 1 }>): void {
+  for (const award of awards) games[award.winner]++;
+}
+
+function clampToOne(advance: number): boolean {
+  return advance >= 1;
 }
 
 function buildEpisode(
@@ -131,12 +196,13 @@ function buildEpisode(
   point: any,
   nextPoint: any,
   index: number,
-  state: RunningState,
+  gamesBefore: [number, number],
+  counts: PointCounts,
   boundaries: Boundaries,
-): { episode: Episode; gameWinner: number | undefined; setWinner: number | undefined } {
+): Episode {
   const gameWinner = boundaries.isGameEnd ? point.winner : undefined;
 
-  const episodeGamesScore: [number, number] = [...state.gamesScore];
+  const episodeGamesScore: [number, number] = [...gamesBefore];
   if (boundaries.isGameEnd && gameWinner !== undefined) {
     episodeGamesScore[gameWinner]++;
   }
@@ -145,7 +211,7 @@ function buildEpisode(
 
   const displayScore = boundaries.isGameEnd ? 'G' : point.score || '';
 
-  const episode: Episode = {
+  return {
     action: 'addPoint',
     point: {
       winner: point.winner,
@@ -161,8 +227,8 @@ function buildEpisode(
       notation: point.mcpCode,
       tiebreak: point.tiebreak ?? false,
       serve: point.serve,
-      points: [...state.gamePointCounts] as [number, number],
-      setCumulativePoints: [...state.setCumulativePoints] as [number, number],
+      points: [...counts.gamePointCounts] as [number, number],
+      setCumulativePoints: [...counts.setCumulativePoints] as [number, number],
     },
     game: {
       complete: boundaries.isGameEnd,
@@ -185,100 +251,6 @@ function buildEpisode(
     result: true,
     complete: boundaries.isLastPoint && boundaries.matchComplete,
   };
-
-  return { episode, gameWinner, setWinner };
-}
-
-function advanceRunningState(
-  state: RunningState,
-  boundaries: Boundaries,
-  gameWinner: number | undefined,
-  setWinner: number | undefined,
-): void {
-  if (boundaries.gameComplete && gameWinner !== undefined) {
-    state.gamesScore[gameWinner]++;
-    state.gamePointCounts = [0, 0];
-  }
-
-  if (boundaries.setComplete && setWinner !== undefined) {
-    state.setsScore[setWinner]++;
-    state.gamesScore = [0, 0];
-  }
-}
-
-/**
- * Build a map of prior game scores per set from the unified entries timeline.
- *
- * Counts 'game' entries (from addGame()) that precede any 'point' entries
- * within each set, so gamesScore can be seeded correctly.
- */
-function buildPriorGamesMap(matchUp: any): Map<number, [number, number]> {
-  const result = new Map<number, [number, number]>();
-  const entries = matchUp?.history?.entries;
-  if (!Array.isArray(entries)) return result;
-
-  // Track which set each entry belongs to by replaying the entry sequence
-  let currentSetIndex = 0;
-  const setsWithPoints = new Set<number>();
-  const gameScoresPerSet = new Map<number, [number, number]>();
-
-  for (const entry of entries) {
-    if (entry.type === 'set') {
-      // A set entry means a completed set was added; next entries are in the next set
-      currentSetIndex++;
-    } else if (entry.type === 'game') {
-      // Track the set this game belongs to
-      if (!setsWithPoints.has(currentSetIndex)) {
-        if (!gameScoresPerSet.has(currentSetIndex)) {
-          gameScoresPerSet.set(currentSetIndex, [0, 0]);
-        }
-        const scores = gameScoresPerSet.get(currentSetIndex)!;
-        if (entry.data?.winner === 0) scores[0]++;
-        else scores[1]++;
-      }
-    } else if (entry.type === 'point') {
-      // Once we see a point in a set, stop counting game entries for that set
-      // Determine which set this point belongs to from its data
-      const pointSet = entry.data?.set ?? currentSetIndex;
-      setsWithPoints.add(pointSet);
-    }
-  }
-
-  // Copy results
-  for (const [setIndex, scores] of gameScoresPerSet) {
-    result.set(setIndex, scores);
-  }
-
-  return result;
-}
-
-/**
- * Check if the last point in history completed its game.
- * Used when there's no nextPoint to compare against.
- *
- * Compares the set's total game count against the running games total
- * (prior addGame'd games + point-based games completed so far).
- * This avoids relying on point.game which may or may not include
- * the addGame offset depending on the factory version.
- */
-function isLastPointGameComplete(matchUp: any, point: any, currentGamesTotal: number): boolean {
-  if (matchUp?.winningSide !== undefined) return true;
-
-  const setObj = matchUp?.score?.sets?.[point.set];
-  if (!setObj) return false;
-
-  const totalSetGames = (setObj.side1Score ?? 0) + (setObj.side2Score ?? 0);
-  return totalSetGames > currentGamesTotal;
-}
-
-/**
- * Check if the last point in history completed its set.
- */
-function isLastPointSetComplete(matchUp: any, point: any): boolean {
-  if (matchUp?.winningSide !== undefined) return true;
-
-  const setObj = matchUp?.score?.sets?.[point.set];
-  return setObj?.winningSide !== undefined;
 }
 
 /**
