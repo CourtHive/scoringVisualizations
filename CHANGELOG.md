@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.2.21](https://github.com/CourtHive/scoringVisualizations/compare/v0.2.20...v0.2.21) (2026-10-16)
+
+
+### Bug Fixes
+
+* **charts:** rallyTree listener accumulation and a destroy contract ([#140](https://github.com/CourtHive/scoringVisualizations/issues/140)) ([32e483b](https://github.com/CourtHive/scoringVisualizations/commit/32e483b5f74156dd9d5f713bbe08f725dee2b824))
+* **deps:** update tods-competition-factory to 7.10.0 ([fc7d96b](https://github.com/CourtHive/scoringVisualizations/commit/fc7d96b67bc6429137a77bdfcabe1ba4d7dc72c5))
+* **deps:** update tods-competition-factory to 7.11.0 ([b329f82](https://github.com/CourtHive/scoringVisualizations/commit/b329f82c9148434c607e9ee1b6efcac009c41156))
+* **deps:** update tods-competition-factory to 7.12.0 ([9272e37](https://github.com/CourtHive/scoringVisualizations/commit/9272e37bc9b0cbb70bf72d228c82eda98c828428))
+* **deps:** update tods-competition-factory to 7.13.0 ([11d3699](https://github.com/CourtHive/scoringVisualizations/commit/11d369984e8008232d8049c138b8da0c3728881f))
+* **deps:** update tods-competition-factory to 7.14.0 ([337f14a](https://github.com/CourtHive/scoringVisualizations/commit/337f14a6d5aa72f4728f503de51c2f7e2c705ba0))
+* **deps:** update tods-competition-factory to 7.14.1 ([09e5509](https://github.com/CourtHive/scoringVisualizations/commit/09e55099f29a253f66cc3306cbb71aa8adef1b28))
+* **deps:** update tods-competition-factory to 7.15.0 ([0298cce](https://github.com/CourtHive/scoringVisualizations/commit/0298cce942a130c2a30725de61c285884f69e8d1))
+* **deps:** update tods-competition-factory to 7.8.0 ([09d3a73](https://github.com/CourtHive/scoringVisualizations/commit/09d3a73755a0c13ec9eb7f3ed2dae76332af9cce))
+* **deps:** update tods-competition-factory to 7.9.0 ([874d97e](https://github.com/CourtHive/scoringVisualizations/commit/874d97e42a07beb1cb693b2f8a37f033c9510f08))
+* **episodes:** read games from the entry timeline, not from game index changes ([#141](https://github.com/CourtHive/scoringVisualizations/issues/141)) ([b41f1f4](https://github.com/CourtHive/scoringVisualizations/commit/b41f1f4041a7870891aa634d83975835aea0f173))
+
+
+### Documentation
+
+* add AGENTS.md as a pointer to CLAUDE.md for agents that read it ([f03a1ae](https://github.com/CourtHive/scoringVisualizations/commit/f03a1aec7e73aab3966435621bfbb36312c8240b))
+
 ## [0.2.20](https://github.com/CourtHive/scoringVisualizations/compare/v0.2.19...v0.2.20) (2026-10-07)
 
 
