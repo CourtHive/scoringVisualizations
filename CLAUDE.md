@@ -39,13 +39,10 @@ src/
 ├── parsers/              # Score/stats parsers
 ├── statistics/           # Statistical computations
 ├── utils/                # Shared helpers
-├── visualizations/       # D3 chart implementations
-│   ├── gameTree/
-│   ├── momentum/
-│   ├── pts/
-│   ├── gameFish/
-│   └── corona/
-└── __tests__/            # Test files
+├── visualizations/       # D3 chart implementations, one flat file per chart
+│                         # (gameTree.ts, momentumChart.ts, ptsChart.ts, gameFish.ts, coronaChart.ts,
+│                         # rallyTree.ts, …) with its .stories.ts beside it; see visualizations/README.md
+└── __tests__/            # Test files (DOM tests opt in with `// @vitest-environment happy-dom`)
 ```
 
 ### Build
