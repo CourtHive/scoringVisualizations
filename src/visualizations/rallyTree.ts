@@ -6,7 +6,7 @@
  * Shows how rally lengths are distributed by player and outcome
  */
 
-import { max, scaleLinear, area, curveLinear, curveBasis } from 'd3';
+import { max, scaleLinear, area, curveLinear, curveBasis, select } from 'd3';
 import tippy, { Instance as TippyInstance, followCursor as followCursorPlugin } from 'tippy.js';
 import { buildEpisodes } from '../episodes/buildEpisodes';
 import { generateId } from './utils/generateId';
@@ -286,7 +286,10 @@ export function rallyTree() {
         appendTo: document.body,
       });
       tippyInstances.push(statTip);
-      statBarEl.addEventListener('mousemove', (event: MouseEvent) => {
+      // Namespaced, so each update REPLACES the handler: the stat bar element
+      // survives updates, and an anonymous listener per update piled up, each
+      // holding a tooltip that destroyTooltips had already destroyed.
+      select(statBarEl).on('mousemove.statTip', (event: MouseEvent) => {
         const rect = statBarEl.getBoundingClientRect();
         let rallyLen: number;
         if (options.orientation === 'horizontal') {
@@ -479,6 +482,20 @@ export function rallyTree() {
   };
 
   chart.update = update;
+
+  /**
+   * Release what the chart owns outside its SVG: tooltips appended to
+   * document.body, the stat bar's listener, and running transitions. Removing
+   * the host container does not do this. Idempotent.
+   */
+  chart.destroy = function () {
+    destroyTooltips();
+    if (rtroot) {
+      rtroot.selectAll('rect.stat-bar').on('mousemove.statTip', null);
+      rtroot.selectAll('*').interrupt();
+    }
+    return chart;
+  };
 
   return chart;
 }
