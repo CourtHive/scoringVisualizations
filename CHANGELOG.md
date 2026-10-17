@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.22](https://github.com/CourtHive/scoringVisualizations/compare/v0.2.21...v0.2.22) (2026-10-17)
+
+
+### Bug Fixes
+
+* **ionsport:** the observed court half, server and point start reach the engine as inputs ([#142](https://github.com/CourtHive/scoringVisualizations/issues/142)) ([a3115c5](https://github.com/CourtHive/scoringVisualizations/commit/a3115c58e3b737e5f26d2086da3079a09c976ddd))
+
 ## [0.2.21](https://github.com/CourtHive/scoringVisualizations/compare/v0.2.20...v0.2.21) (2026-10-16)
 
 
