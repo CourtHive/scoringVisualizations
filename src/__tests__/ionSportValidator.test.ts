@@ -144,3 +144,15 @@ describe('validateIONSportMatch', () => {
     expect(result.pointsProcessed).toBe(3);
   });
 });
+
+describe('validateIONSportMatch — what IONSport observed reaches the engine', () => {
+  it('records the observed court half, the server participant and the point start time', () => {
+    const data = buildMinimalIONSportData();
+    (data.sets[0].games[0].points[0] as any).startPointTimeStamp = '2024-01-01T09:59:50Z';
+    const result = validateIONSportMatch({ jsonData: data });
+    const points: any[] = result.matchUp.history!.points;
+    expect(points.map((p) => p.observedServeSide)).toEqual(['deuce', 'ad', 'deuce']);
+    expect(points.map((p) => p.serverParticipantId)).toEqual(['p1', 'p1', 'p2']);
+    expect(points[0].startPointTimeStamp).toBe('2024-01-01T09:59:50Z');
+  });
+});

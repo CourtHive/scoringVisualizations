@@ -254,19 +254,13 @@ function addIONSportPoint(engine: any, point: any): void {
   if (point.timestamp) pointOptions.timestamp = point.timestamp;
   if (point.result) pointOptions.result = point.result;
   if (point.scoreValue && point.scoreValue > 1) pointOptions.scoreValue = point.scoreValue;
+  if (point.serverParticipantId) pointOptions.serverParticipantId = point.serverParticipantId;
+  // The engine records every input it is given, so what IONSport observed is passed in, not written onto
+  // a getState() copy (a deep copy: that write was lost). The receiver's court half is the server's.
+  if (point.serveSide) pointOptions.observedServeSide = point.serveSide === 'AD' ? 'ad' : 'deuce';
+  if (point.startPointTimeStamp) pointOptions.startPointTimeStamp = point.startPointTimeStamp;
 
   engine.addPoint(pointOptions);
-
-  const state = engine.getState();
-  const lastPoint = state.history?.points?.at(-1);
-  if (lastPoint) {
-    if (point.startPointTimeStamp) {
-      (lastPoint as any).startPointTimeStamp = point.startPointTimeStamp;
-    }
-    if (point.serveSide) {
-      (lastPoint as any).ionSportServeSide = point.serveSide;
-    }
-  }
 }
 
 function recordSetScore(
