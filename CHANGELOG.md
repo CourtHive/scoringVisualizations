@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.23](https://github.com/CourtHive/scoringVisualizations/compare/v0.2.22...v0.2.23) (2026-10-19)
+
+
+### Bug Fixes
+
+* adapt to tods-competition-factory 7.16.0 scoring fixes, bump to 7.16.0 ([#145](https://github.com/CourtHive/scoringVisualizations/issues/145)) ([e5c6890](https://github.com/CourtHive/scoringVisualizations/commit/e5c689007b6710752bc1ba98f9d892f23d40ad9e))
+
 ## [0.2.22](https://github.com/CourtHive/scoringVisualizations/compare/v0.2.21...v0.2.22) (2026-10-17)
 
 
