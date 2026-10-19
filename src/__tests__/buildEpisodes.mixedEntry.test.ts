@@ -43,7 +43,7 @@ function play(format: string, steps: Step[]) {
     }
   }
   const state = engine.getState();
-  return { state, expected, wonGame, episodes: buildEpisodes(state) };
+  return { state, expected, wonGame, episodes: buildEpisodes(state), factoryEpisodes: engine.getEpisodes() };
 }
 
 const points = (winner: 0 | 1, count: number): Step[] => Array.from({ length: count }, () => ['point', winner]);
@@ -74,6 +74,11 @@ describe('buildEpisodes on interleaved points, games and sets', () => {
     ],
     ['addSet first, then points', 'SET3-S:6/TB7', [['set', 1, 6, 3], ...points(1, 5)]],
     ['a partial set closed by addSet', 'SET3-S:6/TB7', [...points(1, 2), ['set', 1, 6, 4], ['point', 0]]],
+    [
+      'a game won on points, then a total closes the set',
+      'SET3-S:6/TB7',
+      [...points(0, 4), ['set', 1, 6, 4], ['point', 1]]
+    ],
     [
       'a set finished by addGame, then points in the next set',
       'SET3-S:6/TB7',
@@ -107,6 +112,27 @@ describe('buildEpisodes on interleaved points, games and sets', () => {
     for (const episode of episodes) {
       if (episode.game.complete) expect(episode.game.winner).toBe(episode.point.winner);
     }
+  });
+
+  // Factory 7.16 (#5614, ruling 2): a set total entered while a set is in play closes that set. The point
+  // before it won its game only if it scored one, and it did not win the set. The factory's getEpisodes
+  // applies the same rule; buildEpisodes must agree with it.
+  it.each(cases)('agrees with the factory getEpisodes on game and set ends: %s', (_label, format, steps) => {
+    const { episodes, factoryEpisodes } = play(format, steps);
+    const ends = (list: any[]) => list.map((episode) => [episode.game.complete, episode.set.complete]);
+    expect(ends(episodes)).toEqual(ends(factoryEpisodes));
+  });
+
+  it('a total that closes the set in play: the game won on points counts, the set is not won by a point', () => {
+    const { episodes, state } = play('SET3-S:6/TB7', [...points(0, 4), ['set', 1, 6, 4], ['point', 1]]);
+    expect(state.score.sets.map((set: any) => [set.side1Score, set.side2Score, set.winningSide])).toEqual([
+      [6, 4, 1],
+      [0, 0, undefined]
+    ]);
+    expect(episodes[3].game.complete).toBe(true);
+    expect(episodes[3].game.games).toEqual([1, 0]);
+    expect(episodes[3].set.complete).toBe(false);
+    expect(episodes[4].set.index).toBe(1);
   });
 
   it('marks the set complete on the point that won it on points, and not on an abandoned one', () => {

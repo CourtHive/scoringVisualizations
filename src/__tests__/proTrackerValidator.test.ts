@@ -104,3 +104,62 @@ describe('validateProTrackerBuffer', () => {
     expect(result.pointsProcessed).toBe(4);
   });
 });
+
+/** PTF content: a Format line, then one Game row per list of point winners ('T' | 'O'). */
+function buildPTF(formatLine: string, games: Array<Array<'T' | 'O'>>): string {
+  const lines = ['Match Details, Alice, Bob, 2024-06-15, Test, Hard, Outdoor, R1', formatLine];
+  for (const winners of games) {
+    for (const winner of winners) lines.push(`Point, ${winner}, 0, 0, 10:00, 1`);
+    lines.push(`Game, ${winners.at(-1)}, 0, 0, 10:00`);
+  }
+  return lines.join('\n');
+}
+
+const gamesWonBy = (winner: 'T' | 'O', count: number): Array<Array<'T' | 'O'>> =>
+  Array.from({ length: count }, () => [winner, winner, winner, winner]);
+
+// Factory 7.16 (#5618, decision 13a): the scoreboard reads the format governing the set in play, so a
+// tiebreak-only set and a match tiebreak show numeric points (they showed tennis points, 30-15, before).
+describe('validateProTrackerMatch: actualScore reads the governing format', () => {
+  it('a tiebreak-only set in play shows numeric points', () => {
+    const content = buildPTF('Format, 1, 6, 10-point Tie-Break Only, 10-point Tie-Break Only, Ad, Let', [
+      ['T', 'T', 'O']
+    ]);
+    const result = validateProTrackerMatch({ content });
+    expect(result.matchUp.matchUpFormat).toBe('SET1-S:TB10');
+    expect(result.actualScore).toBe('0-0 (2-1)');
+  });
+
+  it('a final-set match tiebreak in play shows numeric points', () => {
+    const content = buildPTF('Format, 3, 6, 7-point Tiebreak at 6-6, 10-point Tie-Break Only, Ad, Let', [
+      ...gamesWonBy('T', 6),
+      ...gamesWonBy('O', 6),
+      ['T', 'T', 'O']
+    ]);
+    const result = validateProTrackerMatch({ content });
+    expect(result.matchUp.matchUpFormat).toBe('SET3-S:6/TB7-F:TB10');
+    expect(result.actualScore).toBe('6-0, 0-6, 0-0 (2-1)');
+  });
+
+  it('a standard game in play still shows tennis points, and a set tiebreak numeric ones', () => {
+    const format = 'Format, 3, 6, 7-point Tiebreak at 6-6, 7-point Tiebreak at 6-6, Ad, Let';
+    expect(validateProTrackerMatch({ content: buildPTF(format, [['T', 'T', 'O']]) }).actualScore).toBe(
+      '0-0 (30-15)'
+    );
+
+    const toSixAll = Array.from({ length: 12 }, (_, g) => gamesWonBy(g % 2 ? 'O' : 'T', 1)).flat();
+    const tiebreak = validateProTrackerMatch({ content: buildPTF(format, [...toSixAll, ['T', 'T', 'O']]) });
+    expect(tiebreak.actualScore).toBe('6-6 (2-1)');
+  });
+
+  it('points after the match is decided are ignored by the engine, warned about and not counted', () => {
+    const content = buildPTF('Format, 1, 6, 10-point Tie-Break Only, 10-point Tie-Break Only, Ad, Let', [
+      [...Array.from({ length: 10 }, () => 'T' as const), 'O']
+    ]);
+    const result = validateProTrackerMatch({ content });
+    expect(result.matchUp.matchUpStatus).toBe('COMPLETED');
+    expect(result.pointsProcessed).toBe(10);
+    expect(result.warnings).toEqual(['Set 1 Game 1 Point 11: ignored by the engine (MATCH_COMPLETED)']);
+    expect(result.errors).toEqual([]);
+  });
+});

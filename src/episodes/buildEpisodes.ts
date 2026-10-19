@@ -156,17 +156,55 @@ function resolveGames(matchUp: any, points: any[], gaps: Marker[][]): ResolvedPo
       .slice(0, firstSet === -1 ? upToSet.length - nextSetAwards.length : undefined);
 
     const set = Array.isArray(sets) ? sets[point.set] : undefined;
-    const total = set ? (set.side1Score ?? 0) + (set.side2Score ?? 0) : undefined;
-    entry.completesGame =
-      total === undefined
-        ? !!next || matchUp?.winningSide !== undefined
-        : clampToOne(total - games[0] - games[1] - trailing.length);
-    entry.completesSet = entry.completesGame && trailing.length === 0 && set?.winningSide !== undefined;
+    const end = resolveSetEnd({ matchUp, point, next, set, gamesBefore: games, trailing: trailing.length, firstSet });
+    entry.completesGame = end.completesGame;
+    entry.completesSet = end.completesSet;
 
     games = [0, 0];
     applyAwards(games, nextSetAwards);
   }
   return resolved;
+}
+
+interface SetEnd {
+  matchUp: any;
+  point: any;
+  next: any;
+  set: any;
+  gamesBefore: [number, number];
+  /** The addGame entries after the point that belong to its set. */
+  trailing: number;
+  /** Where the first addSet entry sits among those after the point; -1 for none. */
+  firstSet: number;
+}
+
+/**
+ * Whether the last point of a set (or of the history) won its game and its set. The set's own score
+ * settles it: its games are the games before the point, plus the point's game if it won it, plus the
+ * addGame entries that follow in the same set.
+ */
+function resolveSetEnd({ matchUp, point, next, set, gamesBefore, trailing, firstSet }: SetEnd) {
+  if (!set) return { completesGame: !!next || matchUp?.winningSide !== undefined, completesSet: false };
+
+  const total = (set.side1Score ?? 0) + (set.side2Score ?? 0);
+  // A set total entered while this set was in play closed it with the declared score (factory 7.16,
+  // scoring-engine spec § 2.3): the point won its game only if it scored one, and the total, not the
+  // point, closed the set. The same rule as the factory's getEpisodes.
+  if (firstSet !== -1 && closedByTotal(point, total, gamesBefore, trailing))
+    return { completesGame: point.score === '0-0', completesSet: false };
+
+  const completesGame = clampToOne(total - gamesBefore[0] - gamesBefore[1] - trailing);
+  return { completesGame, completesSet: completesGame && trailing === 0 && set.winningSide !== undefined };
+}
+
+/**
+ * Whether the set total after a point closed the point's own set: the point left its game unfinished, or
+ * the set's declared games are more than the games before the point, the game it won, and the games
+ * awarded after it.
+ */
+function closedByTotal(point: any, total: number, gamesBefore: [number, number], awards: number): boolean {
+  if (point.score !== '0-0') return true;
+  return total !== gamesBefore[0] + gamesBefore[1] + 1 + awards;
 }
 
 function isGameMarker(marker: Marker): marker is { kind: 'game'; winner: 0 | 1 } {

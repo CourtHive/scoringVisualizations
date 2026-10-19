@@ -100,17 +100,13 @@ export function validateIONSportMatch(options: IONSportValidationOptions): IONSp
 
     subIndex = processSetBoundarySubstitutions(engine, substitutionEvents, subIndex, set.setNumber, debug);
 
-    const setResult = processSetPoints(engine, set, substitutionEvents, subIndex, debug, errors);
+    const setResult = processSetPoints(engine, set, substitutionEvents, subIndex, debug, errors, warnings);
     pointsProcessed += setResult.pointsProcessed;
     doubleFaults += setResult.doubleFaults;
     subIndex = setResult.subIndex;
 
     if (parsedMatch.isTimed) {
-      const lastPoint = set.points.at(-1);
-      engine.endSegment({
-        setNumber: set.setNumber,
-        timestamp: lastPoint?.timestamp,
-      });
+      endTimedSegment(engine, set, warnings);
 
       if (debug) {
         console.log(`  endSegment → ${engine.getScoreboard()}`);
@@ -187,6 +183,34 @@ function processSetBoundarySubstitutions(
   return subIndex;
 }
 
+/**
+ * End the timed segment the set's points were played in, when there is one to end.
+ *
+ * The engine ends timed segments only, and refuses a segment end with no segment in play or on one
+ * already closed (factory 7.16, scoring-engine spec § 2.4). IONSport lists a set with no valid points
+ * (timer expiry), and a set the engine has already closed, so the call is made only on an open set,
+ * and whatever the engine still refuses or ignores is reported as a warning instead of aborting.
+ */
+function endTimedSegment(engine: any, set: any, warnings: string[]): void {
+  if (set.points.length === 0) {
+    warnings.push(`Set ${set.setNumber}: no points, so no timed segment to end`);
+    return;
+  }
+
+  const sets = engine.getState().score?.sets ?? [];
+  const open = sets.at(-1);
+  if (!open || open.winningSide !== undefined || open.segmentComplete) return;
+
+  try {
+    // The segment in play holds this set's points: name it by the engine's numbering.
+    const result = engine.endSegment({ setNumber: sets.length, timestamp: set.points.at(-1)?.timestamp });
+    if (result?.recorded === false) warnings.push(`Set ${set.setNumber}: endSegment ignored (${result.ignored})`);
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    warnings.push(`Set ${set.setNumber}: endSegment refused: ${msg}`);
+  }
+}
+
 function processSetPoints(
   engine: any,
   set: any,
@@ -194,6 +218,7 @@ function processSetPoints(
   startSubIndex: number,
   debug: boolean,
   errors: string[],
+  warnings: string[],
 ): { pointsProcessed: number; doubleFaults: number; subIndex: number } {
   let subIndex = startSubIndex;
   let pointsProcessed = 0;
@@ -206,7 +231,12 @@ function processSetPoints(
     subIndex = processMidSetSubstitutions(engine, substitutionEvents, subIndex, set.setNumber, globalPointNumber, debug);
 
     try {
-      addIONSportPoint(engine, point);
+      const result = addIONSportPoint(engine, point);
+      if (result?.recorded === false) {
+        // The engine records nothing once the match is over (factory 7.16): the point was not processed.
+        warnings.push(`Set ${set.setNumber} Point ${ptIdx + 1}: ignored by the engine (${result.ignored})`);
+        continue;
+      }
       pointsProcessed++;
       if (point.result === 'Double Fault') doubleFaults++;
     } catch (error) {
@@ -245,7 +275,7 @@ function processMidSetSubstitutions(
   return subIndex;
 }
 
-function addIONSportPoint(engine: any, point: any): void {
+function addIONSportPoint(engine: any, point: any): { recorded: boolean; ignored?: string } | undefined {
   const pointOptions: Record<string, any> = {
     winner: (point.winningSide - 1) as 0 | 1,
     server: (point.serverSideNumber - 1) as 0 | 1,
@@ -260,7 +290,7 @@ function addIONSportPoint(engine: any, point: any): void {
   if (point.serveSide) pointOptions.observedServeSide = point.serveSide === 'AD' ? 'ad' : 'deuce';
   if (point.startPointTimeStamp) pointOptions.startPointTimeStamp = point.startPointTimeStamp;
 
-  engine.addPoint(pointOptions);
+  return engine.addPoint(pointOptions);
 }
 
 function recordSetScore(

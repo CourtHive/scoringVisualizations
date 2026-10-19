@@ -98,7 +98,7 @@ export function validateProTrackerMatch(options: ProTrackerValidationOptions): P
 
   setPTFPlayerNames(engine, ptfMatch.players);
 
-  const stats = processPTFSets(engine, ptfMatch, debug, errors);
+  const stats = processPTFSets(engine, ptfMatch, debug, errors, warnings);
 
   const matchUp = engine.getState();
   const actualScore = engine.getScoreboard();
@@ -156,6 +156,7 @@ function processPTFSets(
   ptfMatch: PTFMatch,
   debug: boolean,
   errors: string[],
+  warnings: string[],
 ): PTFStats {
   const stats: PTFStats = {
     pointsProcessed: 0,
@@ -172,7 +173,14 @@ function processPTFSets(
       for (const point of game.points) {
         try {
           const parsed = parsePTFPoint(point, ptfMatch.players);
-          addPTFPoint(engine, parsed);
+          const result = addPTFPoint(engine, parsed);
+          if (result?.recorded === false) {
+            // The engine records nothing once the match is over (factory 7.16): the point was not processed.
+            warnings.push(
+              `Set ${set.setNumber} Game ${game.gameNumber} Point ${point.pointNumber}: ignored by the engine (${result.ignored})`,
+            );
+            continue;
+          }
           stats.pointsProcessed++;
           updatePTFStats(stats, parsed.result);
 
@@ -192,11 +200,12 @@ function processPTFSets(
   return stats;
 }
 
-function addPTFPoint(engine: any, parsed: any): void {
-  engine.addPoint({
+function addPTFPoint(engine: any, parsed: any): { recorded: boolean; ignored?: string } | undefined {
+  const result = engine.addPoint({
     winner: (parsed.winningSide - 1) as 0 | 1,
     server: (parsed.serverSideNumber - 1) as 0 | 1,
   });
+  if (result?.recorded === false) return result;
 
   const currentState = engine.getState();
   const lastPoint = currentState.history?.points?.at(-1);
@@ -211,6 +220,7 @@ function addPTFPoint(engine: any, parsed: any): void {
       (lastPoint as any).metadata = parsed.metadata;
     }
   }
+  return result;
 }
 
 const ptfStatMap: Record<string, keyof PTFStats> = {
