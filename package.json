@@ -69,7 +69,7 @@
     "happy-dom": "^21.0.3",
     "husky": "9.1.7",
     "storybook": "^10.2.17",
-    "tods-competition-factory": "7.25.0",
+    "tods-competition-factory": "7.26.0",
     "typescript": "^6.0.2",
     "vite": "^8.0.0",
     "vite-plugin-dts": "^5.0.0",
