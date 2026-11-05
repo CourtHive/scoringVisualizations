@@ -6,6 +6,26 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Before doing anything else, read `../Mentat/CLAUDE.md`, `../Mentat/TASKS.md`, `../Mentat/standards/coding-standards.md`, and every file in `../Mentat/in-flight/`. Mentat is the orchestration layer for the entire CourtHive ecosystem; its standards override per-repo conventions when they conflict. If you are about to start **building** (not just planning), you must claim a surface in `../Mentat/in-flight/` and run the air-traffic-control conflict check first. See the parent `../CLAUDE.md` "Mentat Orchestration" section for the full protocol.
 
+## Branching — cut from `dev`, not `main` (CA, 2026-11-05)
+
+`dev` is this repo's integration branch, as in factory, TMX, components, CFS and the dev-flow services. **Branch from
+`origin/dev` and open PRs against `dev`.** `main` advances only at checkpoints, by merging `dev` into it. `dev` was
+created from `main` at `82d2a03f`, byte-identical. **Renovate targets `dev`** (`baseBranches` in `renovate.json`).
+
+| workflow | trigger | consequence |
+| --- | --- | --- |
+| `ci.yml` | `pull_request: [main, dev]` | a PR into `dev` gets the full gate. A direct push to `dev` gets **no** run, so land work by PR |
+| `release-please.yml` | `push: [main]` ONLY | a checkpoint merge **refreshes** the release PR. Nothing is tagged or published |
+| `npm-publish.yml` | `release: published` | publishes only when the release PR on `main` is merged |
+| `back-merge.yml` | `release: published` + `workflow_dispatch` | after a release, opens the `main` → `dev` PR with the release-bot App token |
+| `deploy-storybook.yml` | `push: [main]` | storybook publishes only from `main`, i.e. at a checkpoint |
+
+**`dev` and `main` are protected** (no deletion, no force-push) and `delete_branch_on_merge` is on: merged feature
+branches delete themselves, and the protected heads of checkpoint and back-merge PRs survive. The checkpoint merge
+(`dev` → `main`) is a **merge commit**, never a squash, so release-please's changelog keeps every conventional commit;
+so is the back-merge (`main` → `dev`) after each release. Judge local branches by PR **state**, not ancestry
+(`gh pr list --repo CourtHive/scoringVisualizations --state merged --head <branch>`).
+
 ## Project Overview
 
 `@courthive/scoring-visualizations` is a standalone library of D3-based match visualizations for tennis scoring data. It transforms TODS match data into episode sequences and renders interactive charts: GameTree, Momentum, PTS (Point Timeline Series), GameFish, Corona, and statistics panels.
