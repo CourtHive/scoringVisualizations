@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.2.27](https://github.com/CourtHive/scoringVisualizations/compare/v0.2.26...v0.2.27) (2026-11-14)
+
+
+### Bug Fixes
+
+* **deps:** update tods-competition-factory to 7.28.0 ([b60e90d](https://github.com/CourtHive/scoringVisualizations/commit/b60e90ded138ccd112f0bde381d5c2287a7d41f6))
+* **deps:** update tods-competition-factory to 7.29.0 ([82d2a03](https://github.com/CourtHive/scoringVisualizations/commit/82d2a03f9525ad22304e7c2e5a8bc7ee3d0a30b2))
+* **deps:** update tods-competition-factory to 7.30.0 ([1fa0315](https://github.com/CourtHive/scoringVisualizations/commit/1fa03156142e67946be46d382b110ffbcf1a5d50))
+* **deps:** update tods-competition-factory to 7.32.0 ([974acae](https://github.com/CourtHive/scoringVisualizations/commit/974acaed73c19852d26550d5cfd2d3e80c33f1fb))
+* **deps:** update tods-competition-factory to 7.33.0 ([ac1b1d7](https://github.com/CourtHive/scoringVisualizations/commit/ac1b1d7ccfe4381ce778301f6af0b3ece1a5caee))
+* **deps:** update tods-competition-factory to 7.36.0 ([#161](https://github.com/CourtHive/scoringVisualizations/issues/161)) ([25cc6f2](https://github.com/CourtHive/scoringVisualizations/commit/25cc6f2d347081972b0cb964d47537b07550be8f))
+* **deps:** update tods-competition-factory to 7.36.1 ([#162](https://github.com/CourtHive/scoringVisualizations/issues/162)) ([cb7cdbb](https://github.com/CourtHive/scoringVisualizations/commit/cb7cdbb7ae5a56710aca86856a61358685029086))
+* **deps:** update tods-competition-factory to 7.37.0 ([#166](https://github.com/CourtHive/scoringVisualizations/issues/166)) ([59e0383](https://github.com/CourtHive/scoringVisualizations/commit/59e03832b68f48c167b5402f414c6ab98cb5a2f7))
+* **deps:** update tods-competition-factory to 7.38.0 ([#167](https://github.com/CourtHive/scoringVisualizations/issues/167)) ([b65566f](https://github.com/CourtHive/scoringVisualizations/commit/b65566f9324454a72b1fbd07b4262ea454c53144))
+
 ## [0.2.26](https://github.com/CourtHive/scoringVisualizations/compare/v0.2.25...v0.2.26) (2026-11-01)
 
 
