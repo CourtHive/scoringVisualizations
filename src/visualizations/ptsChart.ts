@@ -32,6 +32,21 @@ function groupGames(point_episodes: any[]) {
   return games;
 }
 
+/**
+ * A points-to-set tuple when the episode carries one, else undefined. The factory's v2 kernel omits
+ * `needed` for timed, aggregate and outs sets, so a set (or a run of points) may have none.
+ */
+function pointsToSetTuple(episode: any): [number, number] | undefined {
+  const tuple = episode?.needed?.pointsToSet;
+  return Array.isArray(tuple) && Number.isFinite(tuple[0]) && Number.isFinite(tuple[1]) ? tuple : undefined;
+}
+
+/** True when at least one point of the set at `setIndex` carries a points-to-set tuple. */
+function setHasPointsToSet(set: any, setIndex: number): boolean {
+  const episodes = set?.history?.action?.('addPoint') ?? [];
+  return episodes.some((ep: any) => ep?.point?.set == setIndex && pointsToSetTuple(ep));
+}
+
 function add_index(d: any[], i: number) {
   for (const item of d) {
     item['_i'] = i;
@@ -160,7 +175,8 @@ export function ptsMatch() {
 
       let true_height = 0;
       for (let s = 0; s < pts_charts.length; s++) {
-        if (sets?.[s]?.history.points().length) {
+        // A set with no points-to-set tuples (timed, aggregate, outs) has no series to draw: hide it
+        if (sets?.[s]?.history.points().length && setHasPointsToSet(sets[s], s)) {
           pts_sets[s].style('display', 'inline');
           pts_charts[s].width(options.width);
           pts_charts[s].height(options.height);
@@ -575,18 +591,20 @@ function ptsChart() {
 
         const range_start = points[0].point.index;
 
-        game_data = groupGames(points);
-        pointsToSet = points.map((p: any) => p.needed?.pointsToSet);
-        const pts_max = Math.max(
-          ...[].concat(
-            pointsToSet.map((p: number[]) => p[0]),
-            pointsToSet.map((p: number[]) => p[1]),
-          ),
-        );
-        const pts_start = Math.max(...pointsToSet[0]);
+        // Points without a tuple stay undefined in place (point order is kept) and draw as a gap
+        const tuples = points.map(pointsToSetTuple);
+        const present = tuples.filter(Boolean) as [number, number][];
+        if (!present.length) {
+          return false;
+        }
 
-        // add pts prior to first point
-        pointsToSet.unshift([pts_start, pts_start]);
+        game_data = groupGames(points);
+        pointsToSet = tuples;
+        const pts_max = Math.max(...present.map((p) => p[0]), ...present.map((p) => p[1]));
+
+        // add pts prior to first point; unknown (a gap) when the first point has no tuple
+        const pts_start = tuples[0] ? Math.max(...tuples[0]) : undefined;
+        pointsToSet.unshift(pts_start === undefined ? undefined : [pts_start, pts_start]);
 
         const longest_rally =
           Math.max.apply(
@@ -699,6 +717,7 @@ function ptsChart() {
 
         // Player PTS Lines
         const lineGen = line()
+          .defined((d: number | undefined) => d !== undefined)
           .x((_: any, i: number) => {
             return xScale(i);
           })
@@ -730,15 +749,15 @@ function ptsChart() {
           })
           // .attr('d', function(d: any) { return lineGen(player_data[d]) })
           .attr('d', (d: any) => {
-            return lineGen(pointsToSet.map((p: any) => p[d]));
+            return lineGen(pointsToSet.map((p: any) => p?.[d]));
           });
 
         const bp_data = [
           pointsToSet.map((p: any) => {
-            return { pts: p[0] };
+            return { pts: p?.[0] };
           }),
           pointsToSet.map((p: any) => {
-            return { pts: p[1] };
+            return { pts: p?.[1] };
           }),
         ];
         const bp_wrappers = pts.selectAll('.' + options.class + 'BPWrapper').data(bp_data)
@@ -768,6 +787,7 @@ function ptsChart() {
             }
           })
           .style('opacity', (d: any, i: any) => {
+            if (d.pts === undefined) return 0;
             if (points[i - 1] && points[i - 1].point.isBreakpoint != undefined) {
               // return points[i - 1].point.isBreakpoint == d._i ? 1 : 0
               return points[i - 1].point.server == 1 - d._i ? 1 : 0;
@@ -777,7 +797,7 @@ function ptsChart() {
             return xScale(i);
           })
           .attr('cy', (d: any) => {
-            return yScale(pts_max - d.pts);
+            return d.pts === undefined ? 0 : yScale(pts_max - d.pts);
           })
           .attr('r', 2);
 
