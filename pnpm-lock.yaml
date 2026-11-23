@@ -173,7 +173,7 @@ settings:
 
 overrides:
   typescript: 6.0.3
-  tods-competition-factory: link:../factory
+  tods-competition-factory: link:../factory/packages/competition-factory
   js-yaml@4: '>=4.3.0'
 
 importers:
@@ -236,8 +236,8 @@ importers:
         specifier: ^10.2.17
         version: 10.6.7(@types/react@19.3.0)(react@19.3.1)
       tods-competition-factory:
-        specifier: link:../factory
-        version: link:../factory
+        specifier: link:../factory/packages/competition-factory
+        version: link:../factory/packages/competition-factory
       typescript:
         specifier: 6.0.3
         version: 6.0.3
