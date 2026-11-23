@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.2.30](https://github.com/CourtHive/scoringVisualizations/compare/v0.2.29...v0.2.30) (2026-11-23)
+
+
+### Bug Fixes
+
+* **deps:** update tods-competition-factory to 7.44.0 ([#184](https://github.com/CourtHive/scoringVisualizations/issues/184)) ([8bad9a2](https://github.com/CourtHive/scoringVisualizations/commit/8bad9a2b92b9eb450f6bb3f31665a904284f43b3))
+* **deps:** update tods-competition-factory to 7.45.0 ([#185](https://github.com/CourtHive/scoringVisualizations/issues/185)) ([5dd3766](https://github.com/CourtHive/scoringVisualizations/commit/5dd376628b2b4e666b3c0175d2316e6a072a1758))
+* **deps:** update tods-competition-factory to 7.46.0 ([#186](https://github.com/CourtHive/scoringVisualizations/issues/186)) ([4b0ece9](https://github.com/CourtHive/scoringVisualizations/commit/4b0ece9f977dc626fb1254192e79ffc1f8d3bc8f))
+* **ptsChart:** tolerate sets without points-to-set tuples (SCORING-102) ([#183](https://github.com/CourtHive/scoringVisualizations/issues/183)) ([136b125](https://github.com/CourtHive/scoringVisualizations/commit/136b1259383f68972eb3903ee605ac50f7628342))
+
 ## [0.2.29](https://github.com/CourtHive/scoringVisualizations/compare/v0.2.28...v0.2.29) (2026-11-19)
 
 
