@@ -17,3 +17,7 @@ package-lock.json
 # Match Charting Project data (CC BY-NC-SA 4.0) written by scripts/extractMcpData.cjs.
 # Local study only: it must never be committed to, or bundled into, this MIT package.
 .local-mcp-data/
+
+# Machine-local agent instructions. Claude Code loads CLAUDE.local.md beside CLAUDE.md; it is kept
+# per machine and never committed.
+CLAUDE.local.md
