@@ -2,10 +2,6 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Mentat Orchestration (READ FIRST)
-
-Before doing anything else, read `../Mentat/CLAUDE.md`, `../Mentat/TASKS.md`, `../Mentat/standards/coding-standards.md`, and every file in `../Mentat/in-flight/`. Mentat is the orchestration layer for the entire CourtHive ecosystem; its standards override per-repo conventions when they conflict. If you are about to start **building** (not just planning), you must claim a surface in `../Mentat/in-flight/` and run the air-traffic-control conflict check first. See the parent `../CLAUDE.md` "Mentat Orchestration" section for the full protocol.
-
 ## Branching — cut from `dev`, not `main` (CA, 2026-11-05)
 
 `dev` is this repo's integration branch, as in factory, TMX, components, CFS and the dev-flow services. **Branch from
@@ -88,7 +84,6 @@ Vite library mode outputs ES and UMD bundles to `dist/`. TypeScript declarations
 ## Ecosystem Coding Standards
 
 This project follows the CourtHive ecosystem coding standards.
-See [CourtHive/Mentat/standards/coding-standards.md](https://github.com/CourtHive/Mentat/blob/main/standards/coding-standards.md) for the full reference.
 
 Key repo-specific notes:
 - Package manager: pnpm only
