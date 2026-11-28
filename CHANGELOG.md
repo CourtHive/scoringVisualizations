@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.2.32](https://github.com/CourtHive/scoringVisualizations/compare/v0.2.31...v0.2.32) (2026-11-28)
+
+
+### Bug Fixes
+
+* **deps:** update tods-competition-factory to 7.49.0 ([#198](https://github.com/CourtHive/scoringVisualizations/issues/198)) ([b49d1ec](https://github.com/CourtHive/scoringVisualizations/commit/b49d1ec2b8a1e435c12fb1218688035e039ea1ec))
+* **deps:** update tods-competition-factory to 7.50.0 ([#200](https://github.com/CourtHive/scoringVisualizations/issues/200)) ([4deece9](https://github.com/CourtHive/scoringVisualizations/commit/4deece905560455fde778ab934c924fa157f6071))
+* **deps:** update tods-competition-factory to 7.51.0 ([#201](https://github.com/CourtHive/scoringVisualizations/issues/201)) ([3b1fd2c](https://github.com/CourtHive/scoringVisualizations/commit/3b1fd2ca6b432c87b6f59090a5939fb3aa2f743d))
+
+
+### Documentation
+
+* keep the agent guide self-contained and ignore CLAUDE.local.md ([#199](https://github.com/CourtHive/scoringVisualizations/issues/199)) ([e6be1a9](https://github.com/CourtHive/scoringVisualizations/commit/e6be1a94bb67aa918d7f1e86499f9a791932f819))
+
 ## [0.2.31](https://github.com/CourtHive/scoringVisualizations/compare/v0.2.30...v0.2.31) (2026-11-23)
 
 
